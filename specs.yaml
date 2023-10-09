@@ -1,0 +1,1119 @@
+openapi: 3.0.3 
+info:
+  title: Workflow Managemant Specification
+  version: 1.0.0
+  description: Workflow Managemant API specification
+
+servers:
+  - url: '{protocol}://{ip}:{port}/{base-api}'
+    variables:
+      protocol:
+        enum:
+          - http
+          - https
+        default: http
+      ip:
+        enum:
+          - localhost
+          - 34.199.12.114
+        default: localhost
+      port:
+        enum:
+          - '9000'
+          - '5057'
+        default: '9000'
+      base-api:
+        enum:
+          - api
+        default: api
+tags: 
+  - name: Project
+    description: perform CRUD operations on Project Table
+  - name: UseCase
+    description: perform CRUD operations on Usecase Table
+  - name: Stage
+    description: perform CRUD operations on Stage Table
+  - name: SubStage
+    description: perform CRUD operations on subStage Table
+  - name: Resource
+    description: perform CRUD operations on Resources Table
+  - name: Task
+    description: perform CRUD operations on Task table
+  - name: ProjectTeam
+    description: perform CRUD operations on Project_Team table
+  
+
+paths:
+  /project:
+    get:
+      tags: 
+        - Project
+      summary: Get all projects
+      operationId: getProjectList
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectDTO'
+        '404':
+          description: "Service Not found"
+        '500':
+          description: "Internal Server Error"
+    post:
+      tags:
+        - Project
+      summary: Create a new project
+      operationId: addProject
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectDTO'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectDTO'
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectDTO'
+        '404':
+          description: "Service Not found"
+        '500':
+          description: "Internal Server Error"
+  /project/{id}:
+    parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          format: int64
+        required: true
+    get:
+      tags:
+        - Project
+      summary: Get details of a specific project
+      operationId: getProject
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectDTO'
+        404:
+          description: "Service Not found"
+        500:
+          description: "Internal Server Error"
+    put:
+      tags:
+        - Project
+      summary: Update project details of given id
+      operationId: updateProject
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectDTO'
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectDTO'
+        201:
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectDTO'
+        404:
+          description: "Service Not found"
+        500:
+          description: "Internal Server Error"
+    delete:
+      tags: 
+        - Project
+      summary: Delete a project of given id
+      operationId: deleteProject
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectDTO'
+        404:
+          description: "Service Not found"
+        500:
+          description: "Internal Server Error"
+  /project/{id}/usecases:
+    parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          format: int64
+        required: true
+    get:
+      tags:
+        - Project
+        - UseCase
+      summary: Get all use cases for a project
+      operationId: getProjectUsecases
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UsecaseDTO'
+        404:
+          description: "Service Not found"
+        500:
+          description: "Internal Server Error"
+  /usecase:       
+     post:
+      tags:
+        - UseCase
+      summary: Add Usecase
+      operationId: addUsecaseStage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsecaseDTO'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsecaseDTO'
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsecaseDTO'
+        '404':
+          description: "Service Not found"
+        '500':
+          description: "Internal Server Error"
+  /usecase/{id}:
+    parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          format: int64
+        required: true
+    get:
+      tags:
+        - UseCase
+      summary: Fetch an Usecase of given id
+      operationId: getUsecase
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsecaseDTO'
+        404:
+          description: "Service Not found"
+        500:
+          description: "Internal Server Error"
+    put:
+      tags:
+        - UseCase
+      summary: Update Usecase
+      operationId: updateUsecase
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsecaseDTO'
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsecaseDTO'
+        201:
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsecaseDTO'
+        404:
+          description: "Service Not found"
+        500:
+          description: "Internal Server Error"
+    delete:
+      tags: 
+        - UseCase
+      summary: Delete Usecase of given id
+      operationId: deleteUsecase
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsecaseDTO'
+        404:
+          description: "Service Not found"
+        500:
+          description: "Internal Server Error"
+  /usecase/{usecaseId}/stages:
+    parameters:
+      - in: path
+        name: usecaseId
+        schema:
+          type: integer
+          format: int64
+        required: true
+    get:
+      tags: 
+        - UseCase
+        - Stage
+      summary: Get all stages for a use case
+      operationId: getUsecaseStages
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StageDTO'
+        '404':
+          description: "Service Not found"
+        500:
+          description: "Internal Server Error"
+  /stage:       
+     post:
+      tags:
+        - Stage
+      summary: Add  Stages
+      operationId: addStages
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StageDTO'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StageDTO'
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StageDTO'
+        '404':
+          description: "Service Not found"
+        '500':
+          description: "Internal Server Error"
+  /stage/{id}:
+    parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          format: int64
+        required: true
+    get:
+      tags:
+        - Stage
+      summary: Fetch an Stage of given id
+      operationId: getStage
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StageDTO'
+        404:
+          description: "Service Not found"
+        500:
+          description: "Internal Server Error"
+    put:
+      tags:
+        - Stage
+      summary: Update Stage
+      operationId: updateStage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StageDTO'
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StageDTO'
+        201:
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StageDTO'
+        404:
+          description: "Service Not found"
+        500:
+          description: "Internal Server Error"
+    delete:
+      tags:
+        - Stage
+      summary: Delete a Stage
+      operationId: deleteStage
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StageDTO'
+        404:
+          description: "Service Not found"
+        500:
+          description: "Internal Server Error"
+          
+  /stage/{id}/sub-stages:
+    parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          format: int64
+        required: true
+    get:
+      tags: 
+        - UseCase
+        - Stage
+      summary: Get all stages for a use case
+      operationId: getStageSubStages
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StageDTO'
+        '404':
+          description: "Service Not found"
+        500:
+          description: "Internal Server Error"
+  /sub-stage:
+    post:
+      tags:
+        - SubStage
+      summary: Add sub stage
+      operationId: addSubStages
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubStageDTO'
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubStageDTO'
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubStageDTO'
+        404:
+          description: "Service Not found"
+        500:
+          description: "Internal Server Error"
+  /sub-stage/{id}:
+    parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          format: int64
+        required: true
+    get:
+      tags: 
+        - SubStage
+      summary: Fetch an sub stage of given id
+      operationId: getSubStage
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SubStageDTO'
+        404:
+          description: "Service Not found"
+        500:
+          description: "Internal Server Error"
+    put:
+      tags:
+        - SubStage
+      summary: Update sub stage
+      operationId: updateSubStage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubStageDTO'
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubStageDTO'
+        201:
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubStageDTO'
+        404:
+          description: "Service Not found"
+        500:
+          description: "Internal Server Error"
+    delete:
+      tags:
+        - SubStage
+      summary: delete a sub stage
+      operationId: deleteSubstage
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubStageDTO'
+        404:
+          description: "Service Not found"
+        500:
+          description: "Internal Server Error"
+          
+  /sub-stages/{id}/tasks:
+    parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          format: int64
+        required: true
+    get:
+      tags: 
+        - Task
+        - Stage
+      summary: Get all Tasks for a Sub-stages
+      operationId: getSubStagesTasks
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskDTO'
+        '404':
+          description: "Service Not found"
+        500:
+          description: "Internal Server Error"
+  /resource:
+    get:
+      tags:
+        - Resource
+      summary: Fetch list of Resources
+      operationId: getResources
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ResourcesDTO'
+        '404':
+          description: Service Not found
+        '500':
+          description: Internal Server Error
+    post:
+      tags:
+        - Resource
+      summary: Add Resources
+      operationId: addResources
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResourcesDTO'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourcesDTO'
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourcesDTO'
+        '404':
+          description: Service Not found
+        '500':
+          description: Internal Server Error
+  /resource/{id}:
+    parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          format: int64
+        required: true
+    put:
+      tags:
+        - Resource
+      summary: Update Resources
+      operationId: updateResources
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResourcesDTO'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourcesDTO'
+        '201':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourcesDTO'
+        '404':
+          description: Service Not found
+        '500':
+          description: Internal Server Error
+    get:
+      tags:
+        - Resource
+      summary: Fetch an Resource of given id
+      operationId: getResource
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourcesDTO'
+        '404':
+          description: Service Not found
+        '500':
+          description: Internal Server Error
+          
+    delete:
+      tags:
+        - Resource
+      summary: Delete Resource of given id
+      operationId: deleteResource
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourcesDTO'
+        '404':
+          description: "Service Not found"
+        '500':
+          description: "Internal Server Error"
+  /task:
+    get:
+      tags:
+        - Task
+      summary: Fetch list of task
+      operationId: getTaskList
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskDTO'
+        '404':
+          description: "Service Not found"
+        '500':
+          description: "Internal Server Error"
+    post:
+      tags:
+        - Task
+      summary: Add task
+      operationId: addTask
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskDTO'
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskDTO'
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskDTO'
+        '404':
+          description: "Service Not found"
+        '500':
+          description: "Internal Server Error"
+  /task/{id}:
+    parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          format: int64
+        required: true
+    get:
+      tags:
+        - Task
+      summary: Fetch an Task of given id
+      operationId: getTask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskDTO'
+        '404':
+          description: "Service Not found"
+        '500':
+          description: "Internal Server Error"
+    put:
+      tags:
+        - Task
+      summary: Update an Task of given id
+      operationId: updateTask
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskDTO'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskDTO'
+        '201':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskDTO'
+        '404':
+          description: "Service Not found"
+        '500':
+          description: "Internal Server Error"
+    delete:
+      tags:
+        - Task
+      summary: Delete Task of given id
+      operationId: deleteTask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskDTO'
+        '404':
+          description: "Service Not found"
+        '500':
+          description: "Internal Server Error"
+          
+  /project-team:
+    get:
+      tags:
+        - ProjectTeam
+      summary: Fetch list of Project Teams
+      operationId: getProjectTeamList
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectTeamDTO'
+        '404':
+          description: "Service Not found"
+        '500':
+          description: "Internal Server Error"
+    post:
+      tags:
+        - ProjectTeam
+      summary: Add Project Team
+      operationId: addProjectTeam
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectTeamDTO'
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectTeamDTO'
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectTeamDTO'
+        '404':
+          description: "Service Not found"
+        '500':
+          description: "Internal Server Error"
+  /project-team/{id}:
+    parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          format: int64
+        required: true
+    get:
+      tags:
+        - ProjectTeam
+      summary: Fetch an Project Team of given id
+      operationId: getProjectTeam
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectTeamDTO'
+        '404':
+          description: "Service Not found"
+        '500':
+          description: "Internal Server Error"
+    put:
+      tags:
+        - ProjectTeam
+      summary: Update an Project Team of given id
+      operationId: updateProjectTeam
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectTeamDTO'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectTeamDTO'
+        '201':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectTeamDTO'
+        '404':
+          description: "Service Not found"
+        '500':
+          description: "Internal Server Error"
+    delete:
+      tags:
+        - ProjectTeam
+      summary: Delete Project Team of given id
+      operationId: deleteProjectTeam
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectTeamDTO'
+        '404':
+          description: "Service Not found"
+        '500':
+          description: "Internal Server Error"
+    
+
+
+
+components:
+  schemas:
+    ProjectDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+        department:
+          type: string
+        startDate:
+          type: string
+        endDate:
+          type: string
+        budget:
+          type: string
+        createdBy:
+          type: string
+        updatedBy:
+          type: string
+        createdOn:
+          type: string
+        updatedOn:
+          type: string
+        status:
+          type: string
+    ProjectTeamDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        description:
+          type: string
+        role:
+          type: string
+        createdBy:
+          type: string
+        updatedBy:
+          type: string
+        createdOn:
+          type: string
+        updatedOn:
+          type: string
+        status:
+          type: string  
+        resourceId:
+           type: integer
+           format: int64
+        projectId:
+           type: integer
+           format: int64  
+    UsecaseDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+        createdBy:
+          type: string
+        updatedBy:
+          type: string
+        createdOn:
+          type: string
+        updatedOn:
+          type: string
+        status:
+          type: string
+        resourceId:
+           type: integer
+           format: int64
+        projectId:
+           type: integer
+           format: int64
+    StageDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        description: 
+          type: string
+        createdBy:
+          type: string
+        updatedBy:
+          type: string
+        createdOn:
+          type: string
+        updatedOn:
+          type: string
+        status:
+          type: string  
+        resourceId:
+           type: integer
+           format: int64  
+        usecaseId:
+          type: integer
+          format: int64
+    SubStageDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        comments: 
+          type: string
+        startDate:
+          type: string
+        endDate:
+          type: string
+        createdBy:
+          type: string
+        updatedBy:
+          type: string
+        createdOn:
+          type: string
+        updatedOn:
+          type: string
+        status:
+          type: string  
+        stageId:
+          type: integer
+          format: int64
+        resourceId:
+           type: integer
+           format: int64    
+    ResourcesDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        resourceName:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+        createdBy:
+          type: string
+        updatedBy:
+          type: string
+        createdOn:
+          type: string
+        updatedOn:
+          type: string
+        status:
+          type: string  
+    TaskDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        dueDate:
+          type: string
+          format: date  
+        createdBy:
+          type: string
+        updatedBy:
+          type: string
+        createdOn:
+          type: string
+        updatedOn:
+          type: string
+        status:
+          type: string
+        resourceId:
+          type: integer
+          format: int64
+        projectId:
+          type: integer
+          format: int64
+
+          
+    
+      
+          
+
+        
+        
+        
