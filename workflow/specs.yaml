@@ -29,6 +29,8 @@ servers:
 tags: 
   - name: Project
     description: perform operations on Project Table
+  - name: resources
+    description: APIs for resources
 paths:
   
   /getAllProjects:
@@ -152,6 +154,62 @@ paths:
         500:
           description: "Internal Server Error"
 
+  /resource:
+    get:
+      tags:
+        - resource
+      summary: get all resources of all project
+      operationId: get all resources
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Resource'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              example:
+                message: "Invalid value for 'progress'"
+        '500':
+          description: Internal server error
+  /resourcewithfilter:
+    get:
+      tags:
+        - resourcewithfilter
+      summary: get all resources by project status
+      parameters:
+        - name: status
+          in: query
+          description: Progress status (string)
+          required: true
+          schema:
+            type: string
+            enum:
+              - completed
+              - inProgress
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Resource'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              example:
+                message: "Invalid value for 'progress'"
+        '500':
+          description: Internal server error
+
 components:
   schemas:
   
@@ -184,7 +242,21 @@ components:
         budget:
           type: string
 
-           
+    Resource:
+      type: object
+      properties:
+        name:
+          type: string
+        manager_name:
+          type: string
+        created:
+          type: string
+        due:
+          type: string
+        total_substages:
+          type: string
+        project_status:
+          type: string       
            
     
 

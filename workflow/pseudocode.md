@@ -8,6 +8,9 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 -   [Get all projects with status filter](#get-all-projects-with-status-filter)
 -   [Get All Projects](#Get-All-Projects-count-usecase-between-dates)
 -   [Get All Projectsid](#Get-A-Projects-count-usecase-between-dates)
+-   [Get all resources for all projects](#get-all-resources-for-all-projects)
+-   [Get the resources with filters](#get-the-resources-of-all-projects-with-filters)
+
 
     ### Common Logic For For All APIs
 
@@ -201,3 +204,56 @@ SELECT
   LIMIT 10
   OFFSET page_key; (provided in the request)
 ```
+
+# Get all resources for all projects
+
+Retrieves the list of all resources for all projects.
+
+- Method: GET
+
+-   Using the pg client create a SQL query for SELECT to get all the resources.
+
+-   If required return DTO object instead of entire proejct object in a list.
+
+> This Api may or may not need pagation support
+
+```SQL
+--- without pagination ---
+
+select resource->>'name' as name,resource->>'currenttask' as currenttask,resource->>'usecase' as resource,jsonb_array_length(resource->'usecase') AS usecase_count  from resource;
+
+--- with pagination ---
+
+select resource->>'name' as name,resource->>'currenttask' as currenttask,resource->>'usecase' as resource,jsonb_array_length(resource->'usecase') AS usecase_count  from resource;
+  ORDER BY id
+  LIMIT 10
+  OFFSET page_key; (provided in the request)
+
+```
+
+
+# Get the resources of all projects with filters
+
+Retrieves the the list of all resources with filters like whether the status of project complete or incomplete
+
+- Method: GET
+
+-   Using the pg client create a SQL query using a WHERE clause thats filters resources based on filter string.
+
+-   If required return DTO object instead of entire proejct object in a list.
+
+> This Api may or may not need pagation support
+
+```SQL
+--- without pagination ---
+
+SELECT project->>'name' as name,project->>'startdate'as startdate,project->>'enddate' as duedate, project ->> 'resources'AS noofresources FROM project
+  WHERE status = 'filter_string';
+
+--- with pagination ---
+
+SELECT project->>'name' as name,project->>'startdate'as startdate,project->>'enddate' as duedate, project ->> 'resources'AS noofresources FROM project
+  WHERE status = 'filter_string'
+  ORDER BY id
+  LIMIT 10
+  OFFSET page_key; (provided in the request)

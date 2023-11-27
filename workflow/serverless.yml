@@ -49,3 +49,16 @@ functions:
         method: get
         cors: true
 
+  allresources:
+    handler: getallresources.getallresource
+    events:
+    - http:
+        path: /allresource
+        method: get
+
+  allresourcesbyfilter:
+    handler: getallresourcebyfilter.getallresourcebyfilter
+    events:
+    - http:
+        path: /allresourcebyfilter
+        method: get
