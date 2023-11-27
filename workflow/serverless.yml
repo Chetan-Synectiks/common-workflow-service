@@ -1,0 +1,37 @@
+service: workflow-lambda
+
+frameworkVersion: '3'
+
+useDotenv: true
+
+plugins:
+  - serverless-offline
+
+provider:
+  name: aws
+  stage: dev
+  timeout: 15
+  runtime: nodejs18.x
+  region: us-east-1
+
+functions:
+  GetProjectList:
+    handler: project/getProject.getProject
+    role: ${env:LAMBDA_ROLE}
+    events:
+      - http:
+          path: /project
+          method: get
+          cors: true
+
+  GetProjectWithFilter:
+    handler: project/getProjectWithFilter.getProjectWithFilter
+    role: ${env:LAMBDA_ROLE}
+    events:
+      - http:
+          path: /project-with-filter
+          method: get
+          cors: true
+
+
+
