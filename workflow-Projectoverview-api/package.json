@@ -1,0 +1,17 @@
+{
+  "dependencies": {
+    "pg": "^8.11.3",
+    "serverless": "^3.36.0",
+    "serverless-offline": "^13.2.1"
+  },
+  "name": "workflow",
+  "version": "1.0.0",
+  "main": "get_Projects.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}

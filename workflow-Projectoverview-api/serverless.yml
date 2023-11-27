@@ -1,0 +1,29 @@
+
+service: workflow
+
+frameworkVersion: "3"
+
+
+plugins: 
+  - serverless-offline
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+
+functions:
+  get_Projectsid:
+    handler: projects/get_Projectsid.get_Projectsid
+    events: 
+    - http:
+        path: /get_Projectsid
+        method: get
+        cors: true
+
+  get_projects:
+    handler: Projects/get_projects.get_projects
+    events: 
+    - http:
+        path: /get_projects
+        method: get
+        cors: true
