@@ -77,6 +77,80 @@ paths:
         '500':
           description: "Internal Server Error"
 
+  /projects/{projectId}/usecases:
+    parameters:
+        - in: path
+          name: projectId
+          required: true
+          schema:
+            type: integer
+          description: The ID of the project
+        - in: query
+          name: startDate
+          required: true
+          schema:
+            type: string
+            format: date
+          description: The start date for filtering use cases
+        - in: query
+          name: endDate
+          required: true
+          schema:
+            type: string
+            format: date
+          description: The end date for filtering use cases
+    get:
+      tags: 
+        - Projects
+      summary: get usecases details of a specific Projects
+      operationId: get_oneProjects_countusecase
+      responses:
+        200:
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectDTO'
+        400:
+          description: "Service Not found"
+        500:
+          description: "Internal Server Error"
+  /projects/usecases:
+    parameters:
+        - in: query
+          name: startDate
+          required: true
+          schema:
+            type: string
+            format: date
+          description: The start date for filtering use cases
+        - in: query
+          name: endDate
+          required: true
+          schema:
+            type: string
+            format: date
+          description: The end date for filtering use cases
+    get:
+      tags: 
+        - Projects
+      summary: get all Projects
+      operationId: get_projects
+      responses:
+        200:
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectDTO'
+        400:
+          description: "Service Not found"
+        500:
+          description: "Internal Server Error"
 
 components:
   schemas:
