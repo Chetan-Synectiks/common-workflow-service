@@ -10,6 +10,8 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 -   [Get All Projectsid](#Get-A-Projects-count-usecase-between-dates)
 -   [Get all resources for all projects](#get-all-resources-for-all-projects)
 -   [Get the resources with filters](#get-the-resources-of-all-projects-with-filters)
+-   [Get Total Projects and Total Tasks](#get-total-projects-and-total-tasks)
+-   [Get all projects with status filter](#get-all-projects-with-status-filter)
 
 
     ### Common Logic For For All APIs
@@ -257,3 +259,58 @@ SELECT project->>'name' as name,project->>'startdate'as startdate,project->>'end
   ORDER BY id
   LIMIT 10
   OFFSET page_key; (provided in the request)
+
+#  Get Total Projects and Total Tasks
+  Retrieves the list of all the projects and tasks. 
+  
+  - Method: GET
+
+  -   Using the pg client create a SQL query for SELECT to get total projects and total tasks.
+
+  -   If required return DTO object instead of entire project object in a list.
+
+> This Api may or may not need pagation support
+
+```SQL
+--- without pagination ---
+
+const queryTotalProjects = await client.query("SELECT COUNT(*) FROM projects");
+        const resultTotalProjects = (queryTotalProjects);
+const queryTotalTasks = await client.query("SELECT COUNT(*) FROM tasks");
+        const resultTotalTasks = (queryTotalTasks);
+
+--- with pagination ---
+
+const queryTotalProjects = await client.query("SELECT COUNT(*) FROM projects");
+        const resultTotalProjects = (queryTotalProjects);
+const queryTotalTasks = await client.query("SELECT COUNT(*) FROM tasks");
+        const resultTotalTasks = (queryTotalTasks);
+  ORDER BY id
+  LIMIT 10
+  OFFSET page_key; (provided in the request)
+
+```
+# Get all projects with status filter
+Retrive the no.of projects by filter completed/inprogress/unassigned
+
+ - Method: GET
+
+ -   Using the pg client create a SQL query for SELECT to get status projects.
+
+ -   If required return DTO object instead of entire project object in a list.
+
+> This Api may or may not need pagation support
+
+```SQL
+--- without pagination ---
+
+const queryFilteredProjects = `SELECT COUNT(*) FROM projects WHERE project ->> 'status' = '${filterString}';`;
+--- with pagination ---
+
+const queryFilteredProjects = `SELECT COUNT(*) FROM projects WHERE project ->> 'status' = '${filterString}';`;
+  ORDER BY id
+  LIMIT 10
+  OFFSET page_key; (provided in the request)
+
+```
+

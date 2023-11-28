@@ -62,3 +62,25 @@ functions:
     - http:
         path: /allresourcebyfilter
         method: get
+
+  filters:
+    handler: filters.filters
+    events:
+      - httpApi:
+          path: /filter
+          method: get
+
+
+  getprojectstasks:
+    handler: getprojectstasks.getprojectstasks
+    events:
+      - httpApi:
+          path: /getprojectstasks
+          method: get
+
+  projectfilters:
+    handler: projectfilters.projectfilters
+    events:
+      - httpApi:
+          path: /projectfilters
+          method: get      
