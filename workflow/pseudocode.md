@@ -17,6 +17,7 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [Get all projects details](#Get-all-projects-with-details)
 - [Get all projects details](#Get-Resources-List)
 - [Get the all projects with filters](#get-the_all-projects-with-filters)
+- [Get Resource List By Projects](#get-resource-list-by-projects)
 
 
 
@@ -529,4 +530,32 @@ Retrieves the the list of all projects with filters like whether the status of p
   LIMIT 10
   OFFSET page_key; (provided in the request)
 
+```
+# Get Resource List By Projects
+
+Retrieves the list of the resources with given projectName without filtering.
+
+Method: GET
+
+Request: 
+
+Response: List of resources with given projectName
+
+-   Using the pg client create a SQL query for a SELECT statment to get all rows in the resource table
+
+-   If required return DTO object instead of entire resource object in a list.
+
+> This Api may or may not need pagation support
+
+```SQL
+--- without pagination ---
+const result = await client.query(`SELECT * FROM resource WHERE resource->>'project' = $1`, [project_name]);
+
+
+--- with pagination ---
+const result = await client.query(`SELECT * FROM resource WHERE resource->>'project' = $1`, [project_name]);
+
+ORDER BY id
+LIMIT 10
+OFFSET page_key; (provided in the request)
 ```

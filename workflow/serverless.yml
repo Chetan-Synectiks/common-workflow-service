@@ -101,3 +101,10 @@ functions:
           path: /resource_list
           method: get
           cors: true
+
+  getresourcelistbyproject:
+    handler: getresourcelistbyproject.getresourcelistbyproject
+    events:
+      - httpApi:
+          path: /getresourcelistbyproject
+          method: get         
