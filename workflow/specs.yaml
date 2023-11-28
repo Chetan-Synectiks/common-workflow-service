@@ -279,6 +279,95 @@ paths:
         '500':
           description: Internal server error
 
+    /tasks/resource/count:
+    get:
+      summary: Get task status between two dates
+      parameters:
+        - name: resource_id
+          in: query
+          description: The ID of the resource
+          required: true
+          schema:
+            type: integer
+        - name: start_date
+          in: query
+          description: The start date for filtering tasks 
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          description: The end date for filtering tasks 
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              example:
+                pending: value
+                in_progress: value
+                completed: value
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              example:
+                error: Invalid input parameters
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              example:
+                error: Resource not found
+                
+
+  /tasks/count:
+    get:
+      summary: Get task status for all resources between two dates
+      parameters:
+        - name: start_date
+          in: query
+          description: The start date for filtering tasks 
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          description: The end date for filtering tasks
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              example:
+                resources:
+                  - id: uuid
+                    pending: value
+                    in_progress: value
+                    completed: value
+                  - id: uuid
+                    pending: value
+                    in_progress: value
+                    completed: value
+                
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              example:
+                error: Invalid input parameters
+
+
 components:
   schemas:
   

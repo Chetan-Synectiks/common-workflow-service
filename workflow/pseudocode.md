@@ -4,33 +4,16 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 
 ## Table of Contents
 
--   [Get All Projects](#get-all-projects)
--   [Get all projects with status filter](#get-all-projects-with-status-filter)
--   [Get All Projects](#Get-All-Projects-count-usecase-between-dates)
--   [Get All Projectsid](#Get-A-Projects-count-usecase-between-dates)
--   [Get all resources for all projects](#get-all-resources-for-all-projects)
--   [Get the resources with filters](#get-the-resources-of-all-projects-with-filters)
--   [Get Total Projects, Total Tasks, and Percentages ](#get-total-projects-tasks-percentage)
--   [Get all projects with status filter](#get-all-projects-with-status-filter)
-
-
-    ### Common Logic For For All APIs
-
-    1. Define a Lambda function handler that takes an event as a parameter.
-
-    2. Import the PostgreSQL Client module.
-
-    3. Create a new PostgreSQL Client instance database credentails.
-
-    4. Attempt connection to database. Log success or error for the connection
-
-    5. Parse request body data from the event object ( if there is a request body)
-
-    6. Using the pg client create the SQL query required by the API in a try-catch block.
-
-    7. On successfull quey, return the data (if any) with a status code 200 and a success message.
-
-    8. If there's an error during the database query, log the error and return a response with a status code 500 and a JSON body including an error message.
+- [Workflow Management](#workflow-management)
+  - [Table of Contents](#table-of-contents)
+- [Get All Projects](#get-all-projects)
+- [Get all projects with status filter](#get-all-projects-with-status-filter)
+- [get no of completed and incomplete usecases for all projects between dates](#get-no-of-completed-and-incomplete-usecases-for-all-projects-between-dates)
+- [get no of completed and incomplete usecases for a project between dates](#get-no-of-completed-and-incomplete-usecases-for-a-project-between-dates)
+- [Get all resources for all projects](#get-all-resources-for-all-projects)
+- [Get the resources of all projects with filters](#get-the-resources-of-all-projects-with-filters)
+- [Get task status of a resource between two dates](#get-task-status-of-a-resource-between-two-dates)
+- [Get task status for all resources between two dates](#get-task-status-for-all-resources-between-two-dates)
 
 # Get All Projects
 
@@ -351,4 +334,110 @@ const queryFilteredProjects = `SELECT COUNT(*) FROM projects WHERE project ->> '
   OFFSET page_key; (provided in the request)
 
 ```
+# Get task status of a resource between two dates
+
+get no of pending,inprogress,completed tasks/substages of a particular resource.
+
+Method : GET
+
+Request : 
+``` json
+{
+    "resource_id": "uuid",
+    "start_date": "YYYY-MM-DD",
+    "end_date": "YYYY-MM-DD"
+}
+```
+Response :
+
+``` json 
+{
+  "pending": "value",
+  "in_progress": "value",
+  "completed": "value"
+}
+```
+
+-   Using the pg client create a SQL query for a SELECT statment to get count of completed , inprogress, and pending tasks of a resource.
+
+```SQL
+
+-- Query to get the number of pending, in-progress, and completed tasks for a resource between two dates
+SELECT
+    COUNT(CASE WHEN task->>'status' = 'pending' THEN 1 END) AS pending_tasks,
+    COUNT(CASE WHEN task->>'status' = 'completed' THEN 1 END) AS completed_tasks,
+    COUNT(CASE WHEN task->>'status' = 'in_progress' THEN 1 END) AS in_progress_tasks
+FROM
+    usecase_table,
+    LATERAL jsonb_array_elements(details->'usecase'->'stages'->'requirement'->'tasks') AS task
+WHERE
+    task->>'assignee_id' =$1
+    AND (task->>'start_date')::date BETWEEN $2::date AND $3::date
+    AND (task->>'end_date')::date BETWEEN $2::date AND $3::date;
+ 
+`, [data.resourceName, data.startDate, data.endDate]);
+
+```
+
+# Get task status for all resources between two dates
+
+get no of pending,inprogress,completed tasks/substages of all resources.
+
+Method : GET
+
+Request : 
+
+``` json
+{
+    "start_date": "YYYY-MM-DD",
+    "end_date": "YYYY-MM-DD"
+}
+```
+Response :
+
+``` json 
+{
+  "resources": [
+    {
+      "id": "uuid",
+      "pending": "value",
+      "in_progress": "value",
+      "completed": "value"
+    },
+    {
+      "id": "uuid",
+      "pending": "value",
+      "in_progress": "value",
+      "completed": "value"
+    }
+  ]
+}
+```
+
+-   Using the pg client create a SQL query for a SELECT statment to get count of completed , inprogress, and pending tasks of all resources.
+
+```SQL
+
+-- Query to get the number of pending, in-progress, and completed tasks for all resources between two dates
+SELECT
+    resource_table.resource_id,
+    resource_table.details AS resource_details,
+    COUNT(*) FILTER (WHERE usecase_table.details->'usecase'->'stages'->'requirement'->'tasks'->>'status' = 'completed') AS completedStages,
+    COUNT(*) FILTER (WHERE usecase_table.details->'usecase'->'stages'->'requirement'->'tasks'->>'status' = 'pending') AS pendingStages,
+    COUNT(*) FILTER (WHERE usecase_table.details->'usecase'->'stages'->'requirement'->'tasks'->>'status' = 'inprogress') AS inprogressStages
+FROM
+    resource_table
+LEFT JOIN
+    usecase_table ON resource_table.resource_id = usecase_table.resource_id
+WHERE
+    resource_table.resource_id = $1
+    AND usecase_table.details->'usecase'->'stages'->'requirement'->'tasks'->>'start_date' >= $2
+    AND usecase_table.details->'usecase'->'stages'->'requirement'->'tasks'->>'end_date' <= $3
+GROUP BY
+    resource_table.resource_id, resource_table.details;
+`,[data.start_date, data.end_date]);
+
+```
+
+
 
