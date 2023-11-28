@@ -10,7 +10,7 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 -   [Get All Projectsid](#Get-A-Projects-count-usecase-between-dates)
 -   [Get all resources for all projects](#get-all-resources-for-all-projects)
 -   [Get the resources with filters](#get-the-resources-of-all-projects-with-filters)
--   [Get Total Projects and Total Tasks](#get-total-projects-and-total-tasks)
+-   [Get Total Projects, Total Tasks, and Percentages ](#get-total-projects-tasks-percentage)
 -   [Get all projects with status filter](#get-all-projects-with-status-filter)
 
 
@@ -260,37 +260,75 @@ SELECT project->>'name' as name,project->>'startdate'as startdate,project->>'end
   LIMIT 10
   OFFSET page_key; (provided in the request)
 
-#  Get Total Projects and Total Tasks
-  Retrieves the list of all the projects and tasks. 
-  
-  - Method: GET
+# Get Total Projects, Total Tasks, and Percentages
 
-  -   Using the pg client create a SQL query for SELECT to get total projects and total tasks.
+Retrieves the list of all the projects, tasks, and percentages.
 
-  -   If required return DTO object instead of entire project object in a list.
+- Method: GET
 
-> This Api may or may not need pagation support
+- Using the pg client, create SQL queries for SELECT to get total projects, total tasks, and percentages of completed, in-progress, and unassigned projects.
+
+- If required, return DTO object instead of the entire project object in a list.
+
+> This API may or may not need pagination support
 
 ```SQL
 --- without pagination ---
 
 const queryTotalProjects = await client.query("SELECT COUNT(*) FROM projects");
-        const resultTotalProjects = (queryTotalProjects);
+const resultTotalProjects = queryTotalProjects.rows[0].count;
+
+const queryCompletedProjects = await client.query("SELECT COUNT(*) FROM projects WHERE project ->>'status' = 'completed'");
+const resultCompletedProjects = queryCompletedProjects.rows[0].count;
+
+const queryUnassignedProjects = await client.query("SELECT COUNT(*) FROM projects WHERE project ->>'status' = 'unassigned'");
+const resultUnassignedProjects = queryUnassignedProjects.rows[0].count;
+
+const queryInProgressProjects = await client.query("SELECT COUNT(*) FROM projects WHERE project ->>'status' = 'inprogress'");
+const resultInProgressProjects = queryInProgressProjects.rows[0].count;
+
+const percentageCompleted = (resultCompletedProjects / resultTotalProjects) * 100;
+const percentageUnassigned = (resultUnassignedProjects / resultTotalProjects) * 100;
+const percentageInProgress = (resultInProgressProjects / resultTotalProjects) * 100;
+
 const queryTotalTasks = await client.query("SELECT COUNT(*) FROM tasks");
-        const resultTotalTasks = (queryTotalTasks);
+const de = await client.query(`SELECT usecase, project_id FROM tasks`);
+
+let resultTotalTasks = [];
+
+for (let i = 0; i < de.rows.length; i++) {
+    let mock1 = 0;
+    let requirement1 = 0;
+    let test1 = 0;
+    let publish1 = 0;
+
+    if (de?.rows[i]?.usecase?.stages?.mock?.tasks?.length) {
+        mock1 = de.rows[i].usecase.stages.mock.tasks.length;
+    }
+
+    if (de?.rows[i]?.usecase?.stages?.requirement?.tasks?.length) {
+        requirement1 = de.rows[i].usecase.stages.requirement.tasks.length;
+    }
+
+    if (de?.rows[i]?.usecase?.stages?.test?.tasks?.length) {
+        test1 = de.rows[i].usecase.stages.test.tasks.length;
+    }
+
+    if (de?.rows[i]?.usecase?.stages?.publish?.tasks?.length) {
+        publish1 = de.rows[i].usecase.stages.publish.tasks.length;
+    }
+
+    let totaltasks = mock1 + requirement1 + test1 + publish1;
+    resultTotalTasks.push({ project_id: de.rows[i].project_id, totaltasks });
+}
+
 
 --- with pagination ---
 
-const queryTotalProjects = await client.query("SELECT COUNT(*) FROM projects");
-        const resultTotalProjects = (queryTotalProjects);
-const queryTotalTasks = await client.query("SELECT COUNT(*) FROM tasks");
-        const resultTotalTasks = (queryTotalTasks);
-  ORDER BY id
-  LIMIT 10
-  OFFSET page_key; (provided in the request)
-
-```
-# Get all projects with status filter
+// Include pagination logic if needed
+ORDER BY id
+LIMIT 10
+OFFSET page_key; (provided in the request)# Get all projects with status filter
 Retrive the no.of projects by filter completed/inprogress/unassigned
 
  - Method: GET

@@ -156,27 +156,37 @@ paths:
         500:
           description: "Internal Server Error"
   /totalprojectsandtasks:
-    get:
-      summary: Get total projects and tasks
-      operationId: getTotalProjectsAndTasks
-      responses:
-        '200':
-          description: Ok
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  totalProjects:
-                    type: integer
-                    description: Total number of projects
-                  totalTasks:
-                    type: integer
-                    description: Total number of tasks
-        '404':
-          description: "Service Not found"
-        '500':
-          description: "Internal Server Error"
+  get:
+    summary: Get total projects, tasks, and percentages of completed, in-progress, and unassigned projects
+    operationId: getTotalProjectsAndTasks
+    responses:
+      '200':
+        description: Ok
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                totalProjects:
+                  type: integer
+                  description: Total number of projects
+                totalTasks:
+                  type: integer
+                  description: Total number of tasks
+                percentageCompleted:
+                  type: number
+                  description: Percentage of completed projects
+                percentageInProgress:
+                  type: number
+                  description: Percentage of in-progress projects
+                percentageUnassigned:
+                  type: number
+                  description: Percentage of unassigned projects
+      '404':
+        description: "Service Not found"
+      '500':
+        description: "Internal Server Error"
+
 
   /project_with_filter:  
     get:
