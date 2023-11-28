@@ -33,17 +33,17 @@ functions:
           method: get
           cors: true
 
-  get_Projectsid:
-    handler: projects/get_Projectsid.get_Projectsid
-    events: 
+  get_oneProjects_countusecase:
+    handler: get_oneProjects_countusecase.get_oneProjects_countusecase 
+    events:
     - http:
-        path: /get_Projectsid
+        path: /get_oneProjects_countusecase
         method: get
         cors: true
 
   get_projects:
-    handler: Projects/get_projects.get_projects
-    events: 
+    handler: get_projects.get_projects 
+    events:
     - http:
         path: /get_projects
         method: get
@@ -84,3 +84,11 @@ functions:
       - httpApi:
           path: /projectfilters
           method: get      
+  
+  get_allprojects:
+    handler: get_allprojects.get_allprojects 
+    events:
+    - http:
+        path: /get_allprojects
+        method: get
+        cors: true

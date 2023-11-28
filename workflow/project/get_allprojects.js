@@ -1,5 +1,5 @@
-// projectoverview Dashboard
-exports.get_oneProjects_countusecase = async (event, context, callback) => {
+// Get all projects details
+exports.get_allprojects= async (event, context, callback) => {
     const { Client } = require('pg');
 
     const client = new Client({
@@ -12,15 +12,9 @@ exports.get_oneProjects_countusecase = async (event, context, callback) => {
 
     client.connect();
 
-    let data = {};
-
-    if (event.queryStringParameters) {
-        data = event.queryStringParameters;
-    }
-
     let objReturn = {
         code: 200,
-        message: "project search successfully",
+        message: "All projects details retrieved successfully",
         type: "object",
         object: []
     };
@@ -28,34 +22,29 @@ exports.get_oneProjects_countusecase = async (event, context, callback) => {
     try {
         const result = await client.query(`
             SELECT
-                project_table.project_id,
-                usecase_table.details->>'status' as status
+                project_table.project_id AS id,
+                project_table.details,
+                project_table.details->>'status' as project_status,
+                project_table.details->>'name' as name,
+                jsonb_array_length(project_table.details->'resources') AS total_resources,
+                COUNT(usecase_table.usecase_id) AS total_usecases
             FROM
                 project_table
-            JOIN
+            LEFT JOIN
                 usecase_table ON project_table.project_id = usecase_table.project_id
-            WHERE project_table.project_id = $1 
-            AND usecase_table.details->>'start_date' >= $2
-            AND usecase_table.details->>'end_date' <= $3`, [data.id, data.start_date, data.end_date]
+            GROUP BY
+                project_table.project_id, project_table.details`
         );
+        let projectsDetails = result.rows.map(row => ({
+            id: row.id,
+            name: row.name,
+            total_usecases: row.total_usecases,
+            project_status: row.project_status,
+            total_resources: row.total_resources,
+            
+        }));
 
-        let incompleteCount = [];
-        let completedCount = [];
-
-        result.rows.forEach(row => {
-            if (row.status === 'incomplete') {
-                incompleteCount++;
-            } else if (row.status === 'completed') {
-                completedCount++;
-            }
-        });
-
-        let returnObj = {
-            incomplete: incompleteCount,
-            completed: completedCount,
-        };
-
-        objReturn.object = returnObj;
+        objReturn.object = projectsDetails;
         await client.end();
 
         return {

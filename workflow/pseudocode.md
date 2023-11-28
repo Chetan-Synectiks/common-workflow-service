@@ -14,6 +14,7 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [Get the resources of all projects with filters](#get-the-resources-of-all-projects-with-filters)
 - [Get task status of a resource between two dates](#get-task-status-of-a-resource-between-two-dates)
 - [Get task status for all resources between two dates](#get-task-status-for-all-resources-between-two-dates)
+- [Get all projects details](#Get-all-projects-details)
 
 # Get All Projects
 
@@ -103,37 +104,28 @@ Method : GET
 --- without pagination ---
 
 SELECT
-    project_table.project_id,
-    project_table.details AS project_details,
-    COUNT(*) FILTER (WHERE usecase_table.details->>'status' = 'completed') AS completedUsecases,
-    COUNT(*) FILTER (WHERE usecase_table.details->>'status' = 'incomplete') AS incompletedUsecases
+   project_table.project_id,
+   usecase_table.details->>'status' as status
 FROM
-    project_table
-LEFT JOIN
-    usecase_table ON project_table.project_id = usecase_table.project_id
+   project_table
+JOIN
+   usecase_table ON project_table.project_id = usecase_table.project_id
 WHERE
-    usecase_table.details->>'start_date' >= $1
-    AND usecase_table.details->>'end_date' <= $2
-GROUP BY
-    project_table.project_id, project_table.details;
-
+   usecase_table.details->>'start_date' >= $1
+AND usecase_table.details->>'end_date' <= $2
 
 --- with pagination ---
 
 SELECT
-    project_table.project_id,
-    project_table.details AS project_details,
-    COUNT(*) FILTER (WHERE usecase_table.details->>'status' = 'completed') AS completedUsecases,
-    COUNT(*) FILTER (WHERE usecase_table.details->>'status' = 'incomplete') AS incompletedUsecases
+   project_table.project_id,
+   usecase_table.details->>'status' as status
 FROM
-    project_table
-LEFT JOIN
-    usecase_table ON project_table.project_id = usecase_table.project_id
+   project_table
+JOIN
+   usecase_table ON project_table.project_id = usecase_table.project_id
 WHERE
-    usecase_table.details->>'start_date' >= $1
-    AND usecase_table.details->>'end_date' <= $2
-GROUP BY
-    project_table.project_id, project_table.details;
+   usecase_table.details->>'start_date' >= $1
+AND usecase_table.details->>'end_date' <= $2
   ORDER BY id
   LIMIT 10
   OFFSET page_key; (provided in the request)
@@ -157,35 +149,27 @@ Method : GET
 ```SQL
 --- without pagination ---
 SELECT
-            project_table.project_id,
-            project_table.details AS project_details,
-            COUNT(*) FILTER (WHERE usecase_table.details->>'status' = 'completed') AS completedUsecases,
-            COUNT(*) FILTER (WHERE usecase_table.details->>'status' = 'incomplete') AS incompletedUsecases
-        FROM
-            project_table
-        LEFT JOIN
-            usecase_table ON project_table.project_id = usecase_table.project_id
-        WHERE
-            project_table.project_id = $1
-            AND usecase_table.details->>'start_date' >= $2
-            AND usecase_table.details->>'end_date' <= $3
-        GROUP BY
-            project_table.project_id, project_table.details
+    project_table.project_id,
+    usecase_table.details->>'status' as status
+FROM
+    project_table
+ JOIN
+    usecase_table ON project_table.project_id = usecase_table.project_id
+WHERE project_table.project_id = $1 
+AND usecase_table.details->>'start_date' >= $2
+AND usecase_table.details->>'end_date' <= $3
 --- with pagination ---
 
 SELECT
-            project_table.project_id,
-            project_table.details AS project_details,
-            COUNT(*) FILTER (WHERE usecase_table.details->>'status' = 'completed') AS completedUsecases,
-            COUNT(*) FILTER (WHERE usecase_table.details->>'status' = 'incomplete') AS incompletedUsecases
-        FROM
-            project_table
-        LEFT JOIN
-            usecase_table ON project_table.project_id = usecase_table.project_id
-        WHERE
-            project_table.project_id = $1
-            AND usecase_table.details->>'start_date' >= $2
-            AND usecase_table.details->>'end_date' <= $3
+    project_table.project_id,
+    usecase_table.details->>'status' as status
+FROM
+    project_table
+ JOIN
+    usecase_table ON project_table.project_id = usecase_table.project_id
+WHERE project_table.project_id = $1 
+AND usecase_table.details->>'start_date' >= $2
+AND usecase_table.details->>'end_date' <= $3
   LIMIT 10
   OFFSET page_key; (provided in the request)
 ```
@@ -255,7 +239,8 @@ Retrieves the list of all the projects, tasks, and percentages.
 
 > This API may or may not need pagination support
 
-```SQL
+``` 
+SQL
 --- without pagination ---
 
 const queryTotalProjects = await client.query("SELECT COUNT(*) FROM projects");
@@ -439,5 +424,53 @@ GROUP BY
 
 ```
 
+# Get all projects
 
+Retrieves the list for all projects.
+
+- Method: GET
+
+-   Using the pg client create a SQL query for SELECT to get all the projects.
+
+-   If required return DTO object instead of entire proejct object in a list.
+
+> This Api may or may not need pagation support
+
+```SQL
+--- without pagination ---
+
+SELECT
+   project_table.project_id AS id,
+   project_table.details,
+   project_table.details->>'status' as project_status,
+   project_table.details->>'name' as name,
+   jsonb_array_length(project_table.details->'resources') AS total_resources,
+COUNT(usecase_table.usecase_id) AS total_usecases
+FROM
+    project_table
+LEFT JOIN
+    usecase_table ON project_table.project_id = usecase_table.project_id
+GROUP BY
+    project_table.project_id, project_table.details;
+
+--- with pagination ---
+
+SELECT
+   project_table.project_id AS id,
+   project_table.details,
+   project_table.details->>'status' as project_status,
+   project_table.details->>'name' as name,
+   jsonb_array_length(project_table.details->'resources') AS total_resources,
+COUNT(usecase_table.usecase_id) AS total_usecases
+FROM
+    project_table
+LEFT JOIN
+    usecase_table ON project_table.project_id = usecase_table.project_id
+GROUP BY
+    project_table.project_id, project_table.details;
+  ORDER BY id
+  LIMIT 10
+  OFFSET page_key; (provided in the request)
+
+```
 

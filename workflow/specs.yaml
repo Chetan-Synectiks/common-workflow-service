@@ -81,7 +81,7 @@ paths:
         '500':
           description: "Internal Server Error"
 
-  /projects/{projectId}/usecases:
+  /projects/{projectId}/usecases/Dashboard:
     parameters:
         - in: path
           name: projectId
@@ -94,14 +94,14 @@ paths:
           required: true
           schema:
             type: string
-            format: date
+            format: jsonb
           description: The start date for filtering use cases
         - in: query
           name: endDate
           required: true
           schema:
             type: string
-            format: date
+            format: jsonb
           description: The end date for filtering use cases
     get:
       tags: 
@@ -121,22 +121,29 @@ paths:
           description: "Service Not found"
         500:
           description: "Internal Server Error"
-  /projects/usecases:
+  /projects/usecases/Dashboard:
     parameters:
         - in: query
           name: startDate
           required: true
           schema:
             type: string
-            format: date
+            format: jsonb
           description: The start date for filtering use cases
         - in: query
           name: endDate
           required: true
           schema:
             type: string
-            format: date
+            format: jsonb
           description: The end date for filtering use cases
+        - in: query
+          name: status
+          required: true
+          schema:
+            type: string
+            format: jsonb
+          description: The status for filtering use cases
     get:
       tags: 
         - Projects
@@ -156,7 +163,7 @@ paths:
         500:
           description: "Internal Server Error"
   /totalprojectsandtasks:
-  get:
+   get:
     summary: Get total projects, tasks, and percentages of completed, in-progress, and unassigned projects
     operationId: getTotalProjectsAndTasks
     responses:
@@ -279,7 +286,7 @@ paths:
         '500':
           description: Internal server error
 
-    /tasks/resource/count:
+  /tasks/resource/count:
     get:
       summary: Get task status between two dates
       parameters:
@@ -366,6 +373,26 @@ paths:
             application/json:
               example:
                 error: Invalid input parameters
+                
+  /get_allprojects/usecases/resources:
+    get:
+      tags: 
+        - Projects
+      summary: get all Project-id, Project-name, total-usecases, total-resources, Project-status
+      operationId: get_allprojects
+      responses:
+        200:
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectDTO'
+        400:
+          description: "Service Not found"
+        500:
+          description: "Internal Server Error"
 
 
 components:
