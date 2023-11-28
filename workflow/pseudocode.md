@@ -14,7 +14,11 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [Get the resources of all projects with filters](#get-the-resources-of-all-projects-with-filters)
 - [Get task status of a resource between two dates](#get-task-status-of-a-resource-between-two-dates)
 - [Get task status for all resources between two dates](#get-task-status-for-all-resources-between-two-dates)
-- [Get all projects details](#Get-all-projects-details)
+- [Get all projects details](#Get-all-projects-with-details)
+- [Get all projects details](#Get-Resources-List)
+- [Get the all projects with filters](#get-the_all-projects-with-filters)
+
+
 
 # Get All Projects
 
@@ -424,7 +428,7 @@ GROUP BY
 
 ```
 
-# Get all projects
+# Get all projects with details
 
 Retrieves the list for all projects.
 
@@ -474,3 +478,55 @@ GROUP BY
 
 ```
 
+# Get Resources List
+
+Retrieves the list of all the resources without filtering.
+
+Method: GET
+
+Request: 
+
+Response: List of resources
+
+-   Using the pg client create a SQL query for a SELECT statment to get all rows in the resource table
+
+-   If required return DTO object instead of entire resource object in a list.
+
+> This Api may or may not need pagation support
+
+```SQL
+--- without pagination ---
+select * from resource_table;
+
+--- with pagination ---
+select * from resource_table
+ORDER BY id
+LIMIT 10
+OFFSET page_key; (provided in the request)
+```
+
+# Get the all projects with filters
+
+Retrieves the the list of all projects with filters like whether the status of project complete or incomplete
+
+- Method: GET
+
+-   Using the pg client create a SQL query using a WHERE clause thats filters resources based on filter string.
+
+-   If required return DTO object instead of entire proejct object in a list.
+
+> This Api may or may not need pagation support
+
+```SQL
+--- without pagination ---
+
+   SELECT project.id AS id, project.project->>'status' as project_status project.project->>'name' as name, jsonb_array_length(project.project->'resources') AS total_resources, COUNT(usecase_table.id) AS total_usecases FROM project LEFT JOIN usecase_table ON project.id = usecase_table.project_id WHERE project.project->>'status' = $1 GROUP BY project.id, project.project,[status]
+
+--- with pagination ---
+
+   SELECT project.id AS id, project.project->>'status' as project_status project.project->>'name' as name, jsonb_array_length(project.project->'resources') AS total_resources, COUNT(usecase_table.id) AS total_usecases FROM project LEFT JOIN usecase_table ON project.id = usecase_table.project_id WHERE project.project->>'status' = $1 GROUP BY project.id, project.project,[status]
+  ORDER BY id
+  LIMIT 10
+  OFFSET page_key; (provided in the request)
+
+```

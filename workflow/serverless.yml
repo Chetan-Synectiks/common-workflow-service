@@ -92,3 +92,12 @@ functions:
         path: /get_allprojects
         method: get
         cors: true
+
+  GetResourceList:
+    handler: resource/getResourceList.getResourceList
+    role: ${env:LAMBDA_ROLE}
+    events:
+      - http:
+          path: /resource_list
+          method: get
+          cors: true

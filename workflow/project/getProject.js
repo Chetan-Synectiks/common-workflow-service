@@ -27,21 +27,24 @@ exports.getProject = async (event, context, callback) => {
         usecase_table ON project_table.project_id = usecase_table.project_id
         GROUP BY project_table.project_id;`);
 
-        const insertPromices = abc.rows.map(record => {
+        const ReturnedData = abc.rows.map(record => {
+
             let percentage;
             percentage = (record.completedusecases / record.totalusecases) * 100
             let returnObj = {
                 name: record.details.name,
                 status: record.details.status,
-                currentStage: record.details.current_stage,
+                totalUsecases: record.totalusecases,
+                completedUsecases: record.completedusecases,
                 endDate: record.details.end_date,
                 complete_percentage: percentage
             }
+            console.log(returnObj);
 
             return returnObj;
         })
 
-        objReturn.object = insertPromices;
+        objReturn.object = ReturnedData;
 
         client.end();
 
