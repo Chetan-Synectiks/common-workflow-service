@@ -110,6 +110,7 @@ Method : GET
 
 SELECT
    project_table.project_id,
+   project_table.details->>'name' as name,
    usecase_table.details->>'status' as status
 FROM
    project_table
@@ -123,6 +124,7 @@ AND usecase_table.details->>'end_date' <= $2
 
 SELECT
    project_table.project_id,
+   project_table.details->>'name' as name,
    usecase_table.details->>'status' as status
 FROM
    project_table

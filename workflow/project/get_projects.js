@@ -1,4 +1,5 @@
-// projectOverview Dashboard
+// projects_usecase_overview Dashboard API
+
 exports.get_projects = async (event, context, callback) => {
     const { Client } = require('pg');
 
@@ -29,7 +30,8 @@ exports.get_projects = async (event, context, callback) => {
         const result = await client.query(`
             SELECT
                 project_table.project_id,
-                usecase_table.details->>'status' as status
+                usecase_table.details->>'status' as status,
+                project_table.details->>'name' as name
             FROM
                 project_table
             JOIN
@@ -41,20 +43,25 @@ exports.get_projects = async (event, context, callback) => {
 
         let incompleteCount = [];
         let completedCount = [];
-
+        let names = []
         result.rows.forEach(row => {
             if (row.status === 'incomplete') {
                 incompleteCount++;
             } else if (row.status === 'completed') {
                 completedCount++;
             }
+            
+            if (!names.includes(row.name)) {
+                names.push(row.name);
+            }
         });
 
         let returnObj = {
             incomplete: incompleteCount,
             completed: completedCount,
+            names: names
         };
-
+        
         objReturn.object = returnObj;
         await client.end();
 
