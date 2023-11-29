@@ -110,4 +110,12 @@ functions:
     events:
       - httpApi:
           path: /getresourcelistbyproject
+          method: get
+
+  getresourcelistbyproject:
+    handler: project/getProjectsOverview.getProjectsOverview
+    role: ${env:LAMBDA_ROLE}
+    events:
+      - httpApi:
+          path: /projects_overview
           method: get         
