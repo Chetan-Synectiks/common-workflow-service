@@ -1,5 +1,6 @@
-// projectoverview Dashboard
-exports.get_oneProjects_countusecase = async (event, context, callback) => {
+// projectoverview Dashboard API
+
+exports.getProjectOverview = async (event, context, callback) => {
     const { Client } = require('pg');
 
     const client = new Client({

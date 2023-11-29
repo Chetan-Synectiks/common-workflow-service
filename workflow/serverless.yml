@@ -33,17 +33,17 @@ functions:
           method: get
           cors: true
 
-  get_oneProjects_countusecase:
-    handler: get_oneProjects_countusecase.get_oneProjects_countusecase 
+  getProjectOverview:
+    handler: project/getProjectOverview.getProjectOverview 
     role: ${env:LAMBDA_ROLE}
     events:
     - http:
-        path: /projects_usecase_overview
+        path: /project_usecase_overview
         method: get
         cors: true
 
-  get_projects:
-    handler: get_projects.get_projects 
+  getAllProjectsOverview:
+    handler: project/getAllProjectsOverview.getAllProjectsOverview 
     role: ${env:LAMBDA_ROLE}
     events:
     - http:
@@ -87,8 +87,9 @@ functions:
           path: /projectfilters
           method: get      
   
-  get_allprojects:
-    handler: get_allprojects.get_allprojects 
+  # allProject
+  getProjects:
+    handler: allProject/getProjects.getProjects 
     role: ${env:LAMBDA_ROLE}
     events:
     - http:

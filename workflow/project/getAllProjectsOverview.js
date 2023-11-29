@@ -1,6 +1,6 @@
 // projects_usecase_overview Dashboard API
 
-exports.get_projects = async (event, context, callback) => {
+exports.getAllProjectsOverview = async (event, context, callback) => {
     const { Client } = require('pg');
 
     const client = new Client({
