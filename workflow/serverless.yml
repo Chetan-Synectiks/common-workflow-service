@@ -120,8 +120,8 @@ functions:
           path: /projects_overview
           method: get    
 
-  getResource:
-    handler: get_resourcetask.get_resourcetask
+    getResource:
+    handler: project/get_resourcetask.get_resourcetask
     events:
     - http:
         path: /resource
@@ -129,7 +129,7 @@ functions:
         cors: true
  
   getAllResource:
-    handler: get_allresourcetask.get_allresourcetask
+    handler: project/get_allresourcetask.get_allresourcetask
     events:
     - http:
         path: /allresource
@@ -137,9 +137,17 @@ functions:
         cors: true    
 
   usecasedetails:
-    handler: usecasedetails.get_usecasedetails
+    handler: usecase/usecase_details.get_usecasedetails
     events:
     - http:
         path: /usecasedetails
+        method: get
+        cors: true 
+
+  usecase_search:
+    handler: usecase/usecase_search.usecase_search
+    events:
+    - http:
+        path: /searchusecase
         method: get
         cors: true 

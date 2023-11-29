@@ -19,6 +19,7 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [Get the all projects with filters](#get-the-all-projects-with-filters)
 - [Get Resource List By Projects](#get-resource-list-by-projects)
 - [Get all usecases with details](#get-all-usecases-with-details)
+- [search usecase from the search bar](#search-usecase-from-the-search-bar)
 
 
 
@@ -578,5 +579,23 @@ Response :
 
 -- Query to get the number of pending, in-progress, and completed tasks for a resource between two dates
 select id,details->'usecase'->'name'as name,details->'usecase'->'current_stage' as currentstage,details->'usecase'->'assignee_id' as assignedid,details->'usecase'->'stages' as stages ,details->'usecase'->'start_date' as usecase_startdate,details->'usecase'->'end_date' as usecase_enddate from usecase
+
+```
+# search usecase from the search bar
+
+search usecase name from search bar
+
+Method : GET
+
+Request : 
+
+Response :
+
+-   Using the pg client create a SQL query for a SELECT statment to search usecase name from search bar
+
+```SQL
+
+-- Query to get the number of pending, in-progress, and completed tasks for a resource between two dates
+select * FROM usecase WHERE LOWER(details -> 'usecase' ->> 'name') LIKE LOWER ( $1||'%')
 
 ```
