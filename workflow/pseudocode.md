@@ -14,10 +14,11 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [Get the resources of all projects with filters](#get-the-resources-of-all-projects-with-filters)
 - [Get task status of a resource between two dates](#get-task-status-of-a-resource-between-two-dates)
 - [Get task status for all resources between two dates](#get-task-status-for-all-resources-between-two-dates)
-- [Get all projects details](#Get-all-projects-with-details)
-- [Get all projects details](#Get-Resources-List)
-- [Get the all projects with filters](#get-the_all-projects-with-filters)
+- [Get all projects with details](#get-all-projects-with-details)
+- [Get Resources List](#get-resources-list)
+- [Get the all projects with filters](#get-the-all-projects-with-filters)
 - [Get Resource List By Projects](#get-resource-list-by-projects)
+- [Get all usecases with details](#get-all-usecases-with-details)
 
 
 
@@ -560,4 +561,22 @@ const result = await client.query(`SELECT * FROM resource WHERE resource->>'proj
 ORDER BY id
 LIMIT 10
 OFFSET page_key; (provided in the request)
+```
+# Get all usecases with details
+
+get all uscases with details -> id, name,current_stage,usecase_assigned_to, no of resources,usecase_start_date,usecase_end_date.
+
+Method : GET
+
+Request : 
+
+Response :
+
+-   Using the pg client create a SQL query for a SELECT statment to get id, name,current_stage,usecase_assigned_to, no of resources,usecase_start_date,usecase_end_date.
+
+```SQL
+
+-- Query to get the number of pending, in-progress, and completed tasks for a resource between two dates
+select id,details->'usecase'->'name'as name,details->'usecase'->'current_stage' as currentstage,details->'usecase'->'assignee_id' as assignedid,details->'usecase'->'stages' as stages ,details->'usecase'->'start_date' as usecase_startdate,details->'usecase'->'end_date' as usecase_enddate from usecase
+
 ```

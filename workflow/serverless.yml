@@ -118,4 +118,28 @@ functions:
     events:
       - httpApi:
           path: /projects_overview
-          method: get         
+          method: get    
+
+  getResource:
+    handler: get_resourcetask.get_resourcetask
+    events:
+    - http:
+        path: /resource
+        method: get
+        cors: true
+ 
+  getAllResource:
+    handler: get_allresourcetask.get_allresourcetask
+    events:
+    - http:
+        path: /allresource
+        method: get
+        cors: true    
+
+  usecasedetails:
+    handler: usecasedetails.get_usecasedetails
+    events:
+    - http:
+        path: /usecasedetails
+        method: get
+        cors: true 
