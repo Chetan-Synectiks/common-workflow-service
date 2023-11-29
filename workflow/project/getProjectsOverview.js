@@ -30,17 +30,17 @@ exports.getProjectsOverview = async (event, context, callback) => {
 
     try {
         if (JSON.stringify(data) === '{}') {
-            abc = await client.query(`SELECT project_table.*, COUNT(usecase_table) as totalUsecases, COUNT(*) FILTER (WHERE usecase_table.details->>'status' = 'completed') as completedUsecases FROM project_table
+            abc = await client.query(`SELECT project_table.*, COUNT(usecase_table) as totalUsecases, COUNT(*) FILTER (WHERE usecase_table.usecase->>'status' = 'completed') as completedUsecases FROM project_table
         LEFT JOIN
         usecase_table ON project_table.project_id = usecase_table.project_id
         GROUP BY project_table.project_id;`);
         }
         else if (data.status) {
             for (let item of keysArr) {
-                abc = await client.query(`SELECT project_table.*, COUNT(usecase_table) as totalUsecases, COUNT(*) FILTER (WHERE usecase_table.details->>'status' = 'completed') as completedUsecases FROM project_table
+                abc = await client.query(`SELECT project_table.*, COUNT(usecase_table) as totalUsecases, COUNT(*) FILTER (WHERE usecase_table.usecase->>'status' = 'completed') as completedUsecases FROM project_table
                     LEFT JOIN
                     usecase_table ON project_table.project_id = usecase_table.project_id
-                    WHERE project_table.details-> $1 @> $2
+                    WHERE project_table.project-> $1 @> $2
                     GROUP BY project_table.project_id;`, [item, JSON.stringify(valueArr[keysArr.indexOf(item)])]);
             }
         }
@@ -52,11 +52,11 @@ exports.getProjectsOverview = async (event, context, callback) => {
             percentage = (record.completedusecases / record.totalusecases) * 100
             let returnObj = {
                 project_id: record.project_id,
-                project_name: record.details.name,
-                status: record.details.status,
+                project_name: record.project.name,
+                status: record.project.status,
                 total_usecases: record.totalusecases,
                 completed_usecases: record.completedusecases,
-                due_date: record.details.end_date,
+                due_date: record.project.end_date,
                 completed_tasks_percentage: percentage
             }
             console.log(returnObj);
