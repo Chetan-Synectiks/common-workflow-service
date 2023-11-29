@@ -30,15 +30,15 @@ exports.getAllProjectsOverview = async (event, context, callback) => {
         const result = await client.query(`
             SELECT
                 project_table.project_id,
-                usecase_table.details->>'status' as status,
-                project_table.details->>'name' as name
+                usecase_table.usecase->>'status' as status,
+                project_table.project->>'name' as name
             FROM
                 project_table
             JOIN
                 usecase_table ON project_table.project_id = usecase_table.project_id
             WHERE
-             usecase_table.details->>'start_date' >= $1
-            AND usecase_table.details->>'end_date' <= $2`, [data.start_date, data.end_date]
+             usecase_table.usecase->>'start_date' >= $1
+            AND usecase_table.usecase->>'end_date' <= $2`, [data.start_date, data.end_date]
         );
 
         let incompleteCount = [];

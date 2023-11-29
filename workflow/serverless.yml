@@ -113,7 +113,7 @@ functions:
           path: /getresourcelistbyproject
           method: get
 
-  getresourcelistbyproject:
+  getProjectsOverview:
     handler: project/getProjectsOverview.getProjectsOverview
     role: ${env:LAMBDA_ROLE}
     events:
@@ -121,7 +121,7 @@ functions:
           path: /projects_overview
           method: get    
 
-    getResource:
+  getResource:
     handler: project/get_resourcetask.get_resourcetask
     events:
     - http:
