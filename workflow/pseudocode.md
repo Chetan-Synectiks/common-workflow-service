@@ -6,8 +6,7 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 
 - [Workflow Management](#workflow-management)
   - [Table of Contents](#table-of-contents)
-- [Get All Projects](#get-all-projects)
-- [Get all projects with status filter](#get-all-projects-with-status-filter)
+- [Get the overview of projects](#Get-the-overview-of-projects)
 - [get no of completed and incomplete usecases for all projects between dates](#get-no-of-completed-and-incomplete-usecases-for-all-projects-between-dates)
 - [get no of completed and incomplete usecases for a project between dates](#get-no-of-completed-and-incomplete-usecases-for-a-project-between-dates)
 - [Get all resources for all projects](#get-all-resources-for-all-projects)
@@ -15,15 +14,16 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [Get task status of a resource between two dates](#get-task-status-of-a-resource-between-two-dates)
 - [Get task status for all resources between two dates](#get-task-status-for-all-resources-between-two-dates)
 - [Get all projects with filter and without filter](#get-all-projects-with-filter-and-without-filter)
-- [Get Resources List](#get-resources-list)
+- [Get a list of resources](#Get-a-list-of-resources)
 - [Get the all projects with filters](#get-the-all-projects-with-filters)
 - [Get Resource List By Projects](#get-resource-list-by-projects)
 - [Get all usecases with details](#get-all-usecases-with-details)
 - [search usecase from the search bar](#search-usecase-from-the-search-bar)
+- [Search All resource details based on starting letter](#Search-All-resource-details-based-on-starting-letter)
 
 
 
-# Get All Projects
+# Get the overview of projects
 
 Retrieves the list of all the projects without filtering.
 
@@ -41,54 +41,19 @@ Response: List of projects
 
 ```SQL
 --- without pagination ---
-SELECT project_table.*, COUNT(usecase_table) as totalUsecases, COUNT(*) FILTER (WHERE usecase_table.details->>'status' = 'completed') as completedUsecases FROM project_table
-LEFT JOIN usecase_table ON project_table.project_id = usecase_table.project_id
+SELECT project_table.*, COUNT(usecase_table) as totalUsecases, COUNT(*) FILTER (WHERE usecase_table.usecase->>'status' = 'completed') as completedUsecases FROM project_table
+LEFT JOIN
+usecase_table ON project_table.project_id = usecase_table.project_id
 GROUP BY project_table.project_id;
 
 --- with pagination ---
-SELECT project_table.*, COUNT(usecase_table) as totalUsecases, COUNT(*) FILTER (WHERE usecase_table.details->>'status' = 'completed') as completedUsecases FROM project_table
-LEFT JOIN usecase_table ON project_table.project_id = usecase_table.project_id
+SELECT project_table.*, COUNT(usecase_table) as totalUsecases, COUNT(*) FILTER (WHERE usecase_table.usecase->>'status' = 'completed') as completedUsecases FROM project_table
+LEFT JOIN
+usecase_table ON project_table.project_id = usecase_table.project_id
 GROUP BY project_table.project_id;
 ORDER BY id
 LIMIT 10
 OFFSET page_key; (provided in the request)
-```
-
-# Get all projects with status filter
-
-Retrieves the list of all the projects with status filter.The filter string is passed in the request body.
-
-Method: GET
-
-Request: status : string
-
-Response: List of projects
-
-
--   Using the pg client create a SQL query using a WHERE clause thats filters projects based on filter string.
-
--   If required return DTO object instead of entire proejct object in a list.
-
-> This Api may or may not need pagation support
-
-``` SQL
---- without pagination ---
-
-SELECT project_table.*, COUNT(usecase_table) as totalUsecases, COUNT(*) FILTER (WHERE usecase_table.details->>'status' = 'completed') as completedUsecases FROM project_table
-LEFT JOIN usecase_table ON project_table.project_id = usecase_table.project_id
-WHERE project_table.details-> 'status' @> 'filter_string'
-GROUP BY project_table.project_id;
-
---- with pagination ---
-
-SELECT project_table.*, COUNT(usecase_table) as totalUsecases, COUNT(*) FILTER (WHERE usecase_table.details->>'status' = 'completed') as completedUsecases FROM project_table
-LEFT JOIN usecase_table ON project_table.project_id = usecase_table.project_id
-WHERE project_table.details-> 'status' @> 'filter_string'
-GROUP BY project_table.project_id
-ORDER BY id
-LIMIT 10
-OFFSET page_key; (provided in the request)
-
 ```
 
 # get no of completed and incomplete usecases for all projects between dates
@@ -485,7 +450,7 @@ project.id, project.project
 
 ```
 
-# Get Resources List
+# Get a list of resources
 
 Retrieves the list of all the resources without filtering.
 
@@ -503,10 +468,9 @@ Response: List of resources
 
 ```SQL
 --- without pagination ---
-select * from resource_table;
-
+select project_id, project_table.project->>'name' as project_name, project_table.project->>'project_img_url' as project_img_url from project_table where project_id = $1
 --- with pagination ---
-select * from resource_table
+select project_id, project_table.project->>'name' as project_name, project_table.project->>'project_img_url' as project_img_url from project_table where project_id = $1
 ORDER BY id
 LIMIT 10
 OFFSET page_key; (provided in the request)
@@ -573,5 +537,25 @@ Response :
 
 -- Query to get the number of pending, in-progress, and completed tasks for a resource between two dates
 select * FROM usecase WHERE LOWER(details -> 'usecase' ->> 'name') LIKE LOWER ( $1||'%')
+
+```
+# Search All resource details based on starting letter
+ 
+Retrieves  without filtering.
+ 
+Method: GET
+ 
+Request:
+ 
+Response: resource details(Id,name,project_id)
+ 
+-   Using the pg client create a SQL query for a SELECT statment to get all rows in the resource table
+ 
+ 
+> This Api may or may not need pagation support
+ 
+```SQL
+
+select * FROM RESOURCE_TABLE WHERE LOWER(resource  ->> 'name') LIKE LOWER ( $1||'%')
 
 ```

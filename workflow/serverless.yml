@@ -152,3 +152,11 @@ functions:
         path: /searchusecase
         method: get
         cors: true 
+##searchbargetresourcebyname
+  getResourcesByName:
+    handler: resource/getResourcesByName.getResourcesByName
+    events:
+    - http:
+        path: /get_resource_by_name
+        method: get
+        cors: true
