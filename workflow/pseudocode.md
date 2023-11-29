@@ -6,20 +6,19 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 
 - [Workflow Management](#workflow-management)
   - [Table of Contents](#table-of-contents)
-- [Get the overview of projects](#Get-the-overview-of-projects)
+- [Get the overview of projects](#get-the-overview-of-projects)
 - [get no of completed and incomplete usecases for all projects between dates](#get-no-of-completed-and-incomplete-usecases-for-all-projects-between-dates)
 - [get no of completed and incomplete usecases for a project between dates](#get-no-of-completed-and-incomplete-usecases-for-a-project-between-dates)
 - [Get all resources for all projects](#get-all-resources-for-all-projects)
 - [Get the resources of all projects with filters](#get-the-resources-of-all-projects-with-filters)
 - [Get task status of a resource between two dates](#get-task-status-of-a-resource-between-two-dates)
 - [Get task status for all resources between two dates](#get-task-status-for-all-resources-between-two-dates)
-- [Get all projects with filter and without filter](#get-all-projects-with-filter-and-without-filter)
-- [Get a list of resources](#Get-a-list-of-resources)
-- [Get the all projects with filters](#get-the-all-projects-with-filters)
+- [get-all-projects-with-filter-and-without-filter](#get-all-projects-with-filter-and-without-filter)
+- [Get a list of resources](#get-a-list-of-resources)
 - [Get Resource List By Projects](#get-resource-list-by-projects)
 - [Get all usecases with details](#get-all-usecases-with-details)
 - [search usecase from the search bar](#search-usecase-from-the-search-bar)
-- [Search All resource details based on starting letter](#Search-All-resource-details-based-on-starting-letter)
+- [Search All resource details based on starting letter](#search-all-resource-details-based-on-starting-letter)
 
 
 
@@ -311,10 +310,11 @@ Response :
 
 ``` json 
 {
-  "pending": "value",
-  "in_progress": "value",
-  "completed": "value"
-}
+      "id": "uuid",
+      "pending": "value",
+      "in_progress": "value",
+      "completed": "value"
+},
 ```
 
 -   Using the pg client create a SQL query for a SELECT statment to get count of completed , inprogress, and pending tasks of a resource.
@@ -322,19 +322,22 @@ Response :
 ```SQL
 
 -- Query to get the number of pending, in-progress, and completed tasks for a resource between two dates
-SELECT
-    COUNT(CASE WHEN task->>'status' = 'pending' THEN 1 END) AS pending_tasks,
-    COUNT(CASE WHEN task->>'status' = 'completed' THEN 1 END) AS completed_tasks,
-    COUNT(CASE WHEN task->>'status' = 'in_progress' THEN 1 END) AS in_progress_tasks
-FROM
-    usecase_table,
-    LATERAL jsonb_array_elements(details->'usecase'->'stages'->'requirement'->'tasks') AS task
-WHERE
-    task->>'assignee_id' =$1
-    AND (task->>'start_date')::date BETWEEN $2::date AND $3::date
-    AND (task->>'end_date')::date BETWEEN $2::date AND $3::date;
- 
-`, [data.resourceName, data.startDate, data.endDate]);
+            SELECT
+                tasks->>'status' AS status,
+                tasks->>'end_date' AS end_date,
+                tasks->>'start_date' AS start_date,
+                tasks->>'assignee_id' AS assignee_id
+            FROM
+                usecase_table,
+                LATERAL (
+                    SELECT jsonb_array_elements(usecase->'stages'->'mock'->'tasks') AS tasks
+                    UNION ALL
+                    SELECT jsonb_array_elements(usecase->'stages'->'requirement'->'tasks') AS tasks
+                ) AS all_tasks
+            WHERE
+                usecase_table.usecase->>'start_date' >= $1
+                AND usecase_table.usecase->>'end_date' <= $2
+                AND all_tasks.tasks->>'assignee_id' = $3`, [data.start_date, data.end_date, data.assignee_id]
 
 ```
 
@@ -355,22 +358,13 @@ Request :
 Response :
 
 ``` json 
-{
-  "resources": [
     {
       "id": "uuid",
       "pending": "value",
       "in_progress": "value",
       "completed": "value"
     },
-    {
-      "id": "uuid",
-      "pending": "value",
-      "in_progress": "value",
-      "completed": "value"
-    }
-  ]
-}
+    
 ```
 
 -   Using the pg client create a SQL query for a SELECT statment to get count of completed , inprogress, and pending tasks of all resources.
@@ -378,23 +372,21 @@ Response :
 ```SQL
 
 -- Query to get the number of pending, in-progress, and completed tasks for all resources between two dates
-SELECT
-    resource_table.resource_id,
-    resource_table.details AS resource_details,
-    COUNT(*) FILTER (WHERE usecase_table.details->'usecase'->'stages'->'requirement'->'tasks'->>'status' = 'completed') AS completedStages,
-    COUNT(*) FILTER (WHERE usecase_table.details->'usecase'->'stages'->'requirement'->'tasks'->>'status' = 'pending') AS pendingStages,
-    COUNT(*) FILTER (WHERE usecase_table.details->'usecase'->'stages'->'requirement'->'tasks'->>'status' = 'inprogress') AS inprogressStages
-FROM
-    resource_table
-LEFT JOIN
-    usecase_table ON resource_table.resource_id = usecase_table.resource_id
-WHERE
-    resource_table.resource_id = $1
-    AND usecase_table.details->'usecase'->'stages'->'requirement'->'tasks'->>'start_date' >= $2
-    AND usecase_table.details->'usecase'->'stages'->'requirement'->'tasks'->>'end_date' <= $3
-GROUP BY
-    resource_table.resource_id, resource_table.details;
-`,[data.start_date, data.end_date]);
+            SELECT
+                tasks->>'status' AS status,
+                tasks->>'end_date' AS end_date,
+                tasks->>'start_date' AS start_date,
+                tasks->>'assignee_id' AS assignee_id
+            FROM
+                usecase_table,
+                LATERAL (
+                    SELECT jsonb_array_elements(usecase->'stages'->'mock'->'tasks') AS tasks
+                    UNION ALL
+                    SELECT jsonb_array_elements(usecase->'stages'->'requirement'->'tasks') AS tasks
+                ) AS all_tasks
+            WHERE
+                usecase_table.usecase->>'start_date' >= $1
+                AND usecase_table.usecase->>'end_date' <= $2`, [data.start_date, data.end_date]
 
 ```
 

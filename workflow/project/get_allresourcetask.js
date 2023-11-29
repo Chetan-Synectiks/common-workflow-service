@@ -1,11 +1,11 @@
+
 exports.get_allresourcetask = async (event, context, callback) => {
- 
     const { Client } = require('pg');
  
     const client = new Client({
         host: "localhost",
         port: "5432",
-        database: "postgres",
+        database: "workflow",
         user: "postgres",
         password: ""
     });
@@ -13,61 +13,82 @@ exports.get_allresourcetask = async (event, context, callback) => {
     client.connect();
  
     let data = {};
-  
-    if ( event.queryStringParameters) {
-        data =  event.queryStringParameters;
+ 
+    if (event.queryStringParameters) {
+        data = event.queryStringParameters;
     }
-     let searchData;
-    
+    console.log(data);
+ 
     let objReturn = {
         code: 200,
-        message: "project search successfully",
+        message: "Project search successful",
         type: "object",
         object: []
     };
  
     try {
-        searchData = await client.query(`
-        SELECT
-    resource_table.resource_id,
-    resource_table.details AS resource_details,
-    COUNT(*) FILTER (WHERE usecase_table.details->'usecase'->'stages'->'requirement'->'tasks'->>'status' = 'completed') AS completedStages,
-    COUNT(*) FILTER (WHERE usecase_table.details->'usecase'->'stages'->'requirement'->'tasks'->>'status' = 'pending') AS pendingStages,
-    COUNT(*) FILTER (WHERE usecase_table.details->'usecase'->'stages'->'requirement'->'tasks'->>'status' = 'inprogress') AS inprogressStages
-FROM
-    resource_table
-LEFT JOIN
-    usecase_table ON resource_table.resource_id = usecase_table.resource_id
-WHERE
-    resource_table.resource_id = $1
-    AND usecase_table.details->'usecase'->'stages'->'requirement'->'tasks'->>'start_date' >= $2
-    AND usecase_table.details->'usecase'->'stages'->'requirement'->'tasks'->>'end_date' <= $3
-GROUP BY
-    resource_table.resource_id, resource_table.details;
-`,[data.start_date, data.end_date]);
-    
-        objReturn.object = searchData.rows;
-        client.end();
+        const result = await client.query(`
+            SELECT
+                tasks->>'status' AS status,
+                tasks->>'end_date' AS end_date,
+                tasks->>'start_date' AS start_date,
+                tasks->>'assignee_id' AS assignee_id
+            FROM
+                usecase_table,
+                LATERAL (
+                    SELECT jsonb_array_elements(usecase->'stages'->'mock'->'tasks') AS tasks
+                    UNION ALL
+                    SELECT jsonb_array_elements(usecase->'stages'->'requirement'->'tasks') AS tasks
+                ) AS all_tasks
+            WHERE
+                usecase_table.usecase->>'start_date' >= $1
+                AND usecase_table.usecase->>'end_date' <= $2`, [data.start_date, data.end_date]
+        );
+       console.log(result)
+        let assigneeTasks = {};
+ 
+        result.rows.forEach(row => {
+            const assigneeId = row.assignee_id;
+ 
+            if (!assigneeTasks[assigneeId]) {
+                assigneeTasks[assigneeId] = {
+                    assignee_id: assigneeId,
+                    completed_tasks: [],
+                    inprogress_tasks: [],
+                    pending_tasks: []
+                };
+            }
+ 
+            if (row.status === 'inprogres') {
+                assigneeTasks[assigneeId].inprogress_tasks++;
+            } else if (row.status === 'completed') {
+                assigneeTasks[assigneeId].completed_tasks++;
+            } else if (row.status === 'pending') {
+                assigneeTasks[assigneeId].pending_tasks++;
+            }
+        });
+        console.log("iiiii",assigneeTasks)
+        objReturn.object = Object.values(assigneeTasks);
+        await client.end();
  
         return {
-            "statusCode": 200,
-            "headers": {
+            statusCode: 200,
+            headers: {
                 "Access-Control-Allow-Origin": "*"
             },
-            "body": JSON.stringify(objReturn)
+            body: JSON.stringify(objReturn)
         };
- 
     } catch (e) {
- 
         objReturn.code = 400;
-        objReturn.message = e;
-        client.end();
+        objReturn.message = e.message || "An error occurred";
+        await client.end();
+ 
         return {
-            "statusCode": 400,
-            "headers": {
+            statusCode: 400,
+            headers: {
                 "Access-Control-Allow-Origin": "*"
             },
-            "body": JSON.stringify(objReturn)
+            body: JSON.stringify(objReturn)
         };
     }
 };

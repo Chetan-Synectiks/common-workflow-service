@@ -1,68 +1,89 @@
+
 exports.get_resourcetask = async (event, context, callback) => {
- 
     const { Client } = require('pg');
- 
+  
     const client = new Client({
         host: "localhost",
         port: "5432",
-        database: "postgres",
+        database: "workflow",
         user: "postgres",
-        password: "1234"
+        password: ""
     });
- 
+  
     client.connect();
- 
+  
     let data = {};
   
-    if ( event.queryStringParameters) {
-        data =  event.queryStringParameters;
+    if (event.queryStringParameters) {
+        data = event.queryStringParameters;
     }
-    //  let searchData;
-    
+    console.log(data);
+  
     let objReturn = {
         code: 200,
-        message: "project search successfully",
+        message: "Project search successful",
         type: "object",
         object: []
     };
- 
+  
     try {
-const result = await client.query(`
-SELECT
-    COUNT(CASE WHEN task->>'status' = 'pending' THEN 1 END) AS pending_tasks,
-    COUNT(CASE WHEN task->>'status' = 'completed' THEN 1 END) AS completed_tasks,
-    COUNT(CASE WHEN task->>'status' = 'in_progress' THEN 1 END) AS in_progress_tasks
-FROM
-    usecase_table,
-    LATERAL jsonb_array_elements(details->'usecase'->'stages'->'requirement'->'tasks') AS task
-WHERE
-    task->>'assignee_id' =$1 
-    AND (task->>'start_date')::date BETWEEN $2::date AND $3::date
-    AND (task->>'end_date')::date BETWEEN $2::date AND $3::date;
-
-`, [data.resourceName, data.startDate, data.endDate]);
-        objReturn.object = result.rows;
-        client.end();
- 
-        return {
-            "statusCode": 200,
-            "headers": {
-                "Access-Control-Allow-Origin": "*"
-            },
-            "body": JSON.stringify(objReturn)
+        const result = await client.query(`
+            SELECT
+                tasks->>'status' AS status,
+                tasks->>'end_date' AS end_date,
+                tasks->>'start_date' AS start_date,
+                tasks->>'assignee_id' AS assignee_id
+            FROM
+                usecase_table,
+                LATERAL (
+                    SELECT jsonb_array_elements(usecase->'stages'->'mock'->'tasks') AS tasks
+                    UNION ALL
+                    SELECT jsonb_array_elements(usecase->'stages'->'requirement'->'tasks') AS tasks
+                ) AS all_tasks
+            WHERE
+                usecase_table.usecase->>'start_date' >= $1
+                AND usecase_table.usecase->>'end_date' <= $2
+                AND all_tasks.tasks->>'assignee_id' = $3`, [data.start_date, data.end_date, data.assignee_id]
+        );
+  
+        let assigneeTasks = {
+            assignee_id: data.assignee_id,
+            completed_tasks: [],
+            inprogress_tasks: [],
+            pending_tasks: []
         };
- 
-    } catch (e) {
- 
-        objReturn.code = 400;
-        objReturn.message = e;
-        client.end();
+  
+        result.rows.forEach(row => {
+            if (row.status === 'inprogres') {
+                assigneeTasks.inprogress_tasks++;
+            } else if (row.status === 'completed') {
+                assigneeTasks.completed_tasks++;
+            } else if (row.status === 'pending') {
+                assigneeTasks.pending_tasks++;
+            }
+        });
+  
+        objReturn.object = [assigneeTasks];
+        await client.end();
+  
         return {
-            "statusCode": 400,
-            "headers": {
+            statusCode: 200,
+            headers: {
                 "Access-Control-Allow-Origin": "*"
             },
-            "body": JSON.stringify(objReturn)
+            body: JSON.stringify(objReturn)
+        };
+    } catch (e) {
+        objReturn.code = 400;
+        objReturn.message = e.message || "An error occurred";
+        await client.end();
+  
+        return {
+            statusCode: 400,
+            headers: {
+                "Access-Control-Allow-Origin": "*"
+            },
+            body: JSON.stringify(objReturn)
         };
     }
-};
+  };
