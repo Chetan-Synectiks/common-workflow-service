@@ -28,27 +28,27 @@ exports.getProjectsOverview = async (event, context) => {
         if (data.project_status) {
             result = await client.query(`
             SELECT
-                project.project_id AS project_id,
+                project.id AS project_id,
                 project.project AS project_data,
-                usecase.usecase_id AS usecase_id,
+                usecase.id AS usecase_id,
                 usecase.usecase AS usecase_data
             FROM
                 project_table project
             JOIN
-                usecase_table usecase ON project.project_id = usecase.project_id
+                usecase_table usecase ON project.id = usecase.project_id
             WHERE project.project->>'status' = $1
         `, [data.project_status]);
         } else {
             result = await client.query(`
             SELECT
-                project.project_id AS project_id,
+                project.id AS project_id,
                 project.project AS project_data,
-                usecase.usecase_id AS usecase_id,
+                usecase.id AS usecase_id,
                 usecase.usecase AS usecase_data
             FROM
                 project_table project
             JOIN
-                usecase_table usecase ON project.project_id = usecase.project_id
+                usecase_table usecase ON project.id = usecase.project_id
         `);
         }
 

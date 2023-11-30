@@ -1,4 +1,4 @@
-exports.getResourceList = async (event, context, callback) => {
+exports.getResources = async (event, context, callback) => {
 
     const { Client } = require('pg');
 
@@ -18,18 +18,21 @@ exports.getResourceList = async (event, context, callback) => {
         type: "object",
         object: []
     };
-    const data = event.queryStringParameters
-    let projectname;
-    if (data) {
-        projectname = data.name
-    }
+    const data = event.queryStringParameters;
+    console.log(data)
+    let project_id;
+
+    project_id = data.project_id
 
     try {
-        if (projectname) {
-            const resourceQueryResult = await client.query(`select * from resource_table where resource_table.resource->>'project' = $1`, [projectname]);
+        if (project_id) {
+            console.log("-------")
+            const resourceQueryResult = await client.query(`SELECT *
+            FROM resource_table
+            WHERE resource_table.resource->'projects' @> $1::jsonb;`, [project_id]);
 
             // console.log(resourceQueryResult.rows);
-
+            console.log(resourceQueryResult);
             for (const record of resourceQueryResult.rows) {
 
                 const projects = record.resource.projects;
@@ -37,7 +40,7 @@ exports.getResourceList = async (event, context, callback) => {
                 const DataArray = [];
 
                 for (const projectId of projects) {
-                    const Result = await client.query(`select project_id, project_table.project->>'name' as project_name, project_table.project->>'project_img_url' as project_img_url from project_table where project_id = $1`, [projectId]);
+                    const Result = await client.query(`select id, project_table.project->>'name' as project_name, project_table.project->>'project_img_url' as project_img_url from project_table where id = $1`, [projectId]);
 
                     //console.log('!!!!', Result.rows[0].project_name);
 
@@ -72,7 +75,7 @@ exports.getResourceList = async (event, context, callback) => {
                 const DataArray = [];
 
                 for (const projectId of projects) {
-                    const Result = await client.query(`select project_id, project_table.project->>'name' as project_name, project_table.project->>'project_img_url' as project_img_url from project_table where project_id = $1`, [projectId]);
+                    const Result = await client.query(`select id, project_table.project->>'name' as project_name, project_table.project->>'project_img_url' as project_img_url from project_table where id = $1`, [projectId]);
 
                     //console.log('!!!!', Result.rows[0].project_name);
 
