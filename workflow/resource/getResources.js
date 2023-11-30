@@ -14,15 +14,17 @@ exports.getResources = async (event, context, callback) => {
 
     let objReturn = {
         code: 200,
-        message: "project search successfully",
+        message: "resource searched successfully",
         type: "object",
         object: []
     };
     const data = event.queryStringParameters;
     // console.log(data)
     let project_id;
+    if (data) {
+        project_id = data.project_id
+    }
 
-    project_id = data.project_id
 
     try {
         if (project_id) {
