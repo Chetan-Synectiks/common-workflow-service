@@ -5,7 +5,8 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 ## Table of Contents
 
 - [Workflow Management](#workflow-management)
-- [Table of Contents](#table-of-contents)
+  - [Table of Contents](#table-of-contents)
+    - [Common Logic For For All APIs](#common-logic-for-for-all-apis)
 - [Get the overview of projects](#get-the-overview-of-projects)
 - [get no of completed and incomplete usecases for all projects between dates](#get-no-of-completed-and-incomplete-usecases-for-all-projects-between-dates)
 - [get no of completed and incomplete usecases for a project between dates](#get-no-of-completed-and-incomplete-usecases-for-a-project-between-dates)
@@ -18,8 +19,8 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [Get all usecases with details](#get-all-usecases-with-details)
 - [search usecase from the search bar](#search-usecase-from-the-search-bar)
 - [Search All resource details based on starting letter](#search-all-resource-details-based-on-starting-letter)
--   [Get Total Projects,Total Tasks And Percentage Of Completed Projects](#get-total-projects-total-tasks-and-percentage-of-completed-projects)
--   [Get Total Projects With Status Completed,Inprogress,Unassigned Projects](#get-total-projects-with-status-completed-inprogress-unassigned-projects)
+- [Get Total Projects, Total Tasks, and Percentage of completed projects](#get-total-projects-total-tasks-and-percentage-of-completed-projects)
+- [Get Total Projects With Status Completed,Inprogress,Unassigned Projects](#get-total-projects-with-status-completedinprogressunassigned-projects)
  
 
 ### Common Logic For For All APIs
@@ -240,51 +241,26 @@ SELECT project->>'name' as name,project->>'startdate'as startdate,project->>'end
   LIMIT 10
   OFFSET page_key; (provided in the request)
 
+ ```
+
 # Get task status of a resource between two dates
 
 Get the number of completed, inprogress and pending tasks of a resource in between dates
 
 Method : GET
 
-Request : 
-``` json
-{
-    "resource_id": "uuid",
-    "from_date": "YYYY-MM-DD",
-    "to_date": "YYYY-MM-DD"
-}
-```
-Response :
-
-``` json 
-{
-  "completed_tasks": "value",
-  "inprogress_tasks": "value",
-  "pending_tasks": "value"
-}
-```
-
 -   Using the pg client create a SQL query for a SELECT statment to get count of completed , inprogress, and pending tasks of a resource.
 
 ```SQL
 
--- Query to get the number of pending, in-progress, and completed tasks for a resource between two dates
-       SELECT
-                tasks->>'status' AS status,
-                tasks->>'end_date' AS end_date,
-                tasks->>'start_date' AS start_date,
-                tasks->>'assignee_id' AS assignee_id
-            FROM
-                usecase_table,
-                LATERAL (
-                    SELECT jsonb_array_elements(usecase->'stages'->'mock'->'tasks') AS tasks
-                    UNION ALL
-                    SELECT jsonb_array_elements(usecase->'stages'->'requirement'->'tasks') AS tasks
-                ) AS all_tasks
-                WHERE
-                (tasks->>'start_date') >= $1
-                AND (tasks->>'end_date') <= $2
-                AND all_tasks.tasks->>'assignee_id' = $3`, [data.from_date, data.to_date, data.assignee_id]     
+-- Query to get the resourcename with resource_id and usecasedetails from usecase_table
+       SELECT resource->>'name' AS name
+            FROM resource_table
+            WHERE id = $1`,
+            [data.resource_id]
+
+-- Query to get the resourcename with resource_id and usecasedetails from usecase_table
+        `SELECT usecase FROM usecase_table`
 
 ```
 
@@ -294,47 +270,18 @@ Get the number of completed, inprogress and pending tasks of all resources in be
 
 Method : GET
 
-Request : 
-
-``` json
-{
-    "from_date": "YYYY-MM-DD",
-    "to_date": "YYYY-MM-DD"
-}
-```
-Response :
-
-``` json 
-    {
-    "resource_id": "uuid",
-    "resource_name": "string",
-    "completed_tasks": "value",
-    "inprogress_tasks": "value",
-    "pending_tasks": "value"
-  }
-    
-```
-
 -   Using the pg client create a SQL query for a SELECT statment to get count of completed , inprogress, and pending tasks of all resources.
 
 ```SQL
 
--- Query to get the number of pending, in-progress, and completed tasks for all resources between two dates
-            SELECT
-                tasks->>'status' AS status,
-                tasks->>'end_date' AS end_date,
-                tasks->>'start_date' AS start_date,
-                tasks->>'assignee_id' AS assignee_id
-            FROM
-                usecase_table,
-                LATERAL (
-                    SELECT jsonb_array_elements(usecase->'stages'->'mock'->'tasks') AS tasks
-                    UNION ALL
-                    SELECT jsonb_array_elements(usecase->'stages'->'requirement'->'tasks') AS tasks
-                ) AS all_tasks
-            WHERE
-            (tasks->>'start_date') >= $1
-            AND (tasks->>'end_date') <= $2`, [data.start_date, data.end_date]
+-- Query to get the resourcename with resource_id and usecasedetails from usecase_table
+        `SELECT usecase FROM usecase_table`
+
+-- Query to get the resourcename with resource_id and usecasedetails from usecase_table
+       SELECT resource->>'name' AS name
+            FROM resource_table
+            WHERE id = $1`,
+            [assigneeId]
 
 ```
 # get-all-projects-with-filter-and-without-filter
@@ -437,20 +384,16 @@ Extract query parameters from the event.
 
 # Get all usecases with details
 
-get all uscases with details -> id, name,current_stage,usecase_assigned_to, no of resources,usecase_start_date,usecase_end_date.
+get all uscases with details id, name,current_stage,usecase_assigned_to, no of resources,usecase_start_date,current_stage_enddate.
 
 Method : GET
 
-Request : 
-
-Response :
-
--   Using the pg client create a SQL query for a SELECT statment to get id, name,current_stage,usecase_assigned_to, no of resources,usecase_start_date,usecase_end_date.
+-   Using the pg client create a SQL query for a SELECT statment to get id, name,current_stage,usecase_assigned_to,usecase_start_date.
 
 ```SQL
 
--- Query to get the number of pending, in-progress, and completed tasks for a resource between two dates
-select id,details->'usecase'->'name'as name,details->'usecase'->'current_stage' as currentstage,details->'usecase'->'assignee_id' as assignedid,details->'usecase'->'stages' as stages ,details->'usecase'->'start_date' as usecase_startdate,details->'usecase'->'end_date' as usecase_enddate from usecase
+-- Query to get the usecaseid,usecasename,currentstage,assignee_id,stages,usecasestart_date
+select id,usecase->'name' as name,usecase->'current_stage' as currentstage,usecase->'assignee_id' as assignedid,usecase->'stages' as stages ,usecase->'start_date' as usecase_startdate from usecase_table
 
 ```
 # search usecase from the search bar
@@ -459,15 +402,11 @@ search usecase name from search bar
 
 Method : GET
 
-Request : 
-
-Response :
-
 -   Using the pg client create a SQL query for a SELECT statment to search usecase name from search bar
 
 ```SQL
 
--- Query to get the number of pending, in-progress, and completed tasks for a resource between two dates
+-- Query to get the usecase list 
 select * FROM usecase WHERE LOWER(details -> 'usecase' ->> 'name') LIKE LOWER ( $1||'%')
 
 ```

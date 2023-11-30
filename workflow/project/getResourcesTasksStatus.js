@@ -1,7 +1,6 @@
-
 exports.getResourcesTasksStatus = async (event, context, callback) => {
     const { Client } = require('pg');
-  
+
     const client = new Client({
         host: "localhost",
         port: "5432",
@@ -9,75 +8,99 @@ exports.getResourcesTasksStatus = async (event, context, callback) => {
         user: "postgres",
         password: ""
     });
-  
+
     client.connect();
-  
+
     let data = {};
-  
+
     if (event.queryStringParameters) {
         data = event.queryStringParameters;
     }
-    console.log(data);
-  
+
     let objReturn = {
         code: 200,
-        message: "Project search successful",
+        message: "Resource search successful",
         type: "object",
         object: []
     };
-  
+
     try {
-        const result = await client.query(`
-            SELECT
-                tasks->>'status' AS status,
-                tasks->>'end_date' AS end_date,
-                tasks->>'start_date' AS start_date,
-                tasks->>'assignee_id' AS assignee_id
-            FROM
-                usecase_table,
-                LATERAL (
-                    SELECT jsonb_array_elements(usecase->'stages'->'mock'->'tasks') AS tasks
-                    UNION ALL
-                    SELECT jsonb_array_elements(usecase->'stages'->'requirement'->'tasks') AS tasks
-                ) AS all_tasks
-                WHERE
-                (tasks->>'start_date') >= $1
-                AND (tasks->>'end_date') <= $2
-                AND all_tasks.tasks->>'assignee_id' = $3`, [data.from_date, data.to_date, data.assignee_id]
+        // Fetch resource information for the specified resource_id
+        const resourceResult = await client.query(`
+            SELECT resource->>'name' AS name
+            FROM resource_table
+            WHERE id = $1`,
+            [data.resource_id]
         );
-  
-        let assigneeTasks = {
-            assignee_id: data.assignee_id,
-            completed_tasks: [],
-            inprogress_tasks: [],
-            pending_tasks: []
+
+        const resourceName = resourceResult.rows[0].name;
+
+        let resourceTasks = {
+            resource_id: data.resource_id,
+            resource_name: resourceName,
+            completed_tasks: 0,
+            inprogress_tasks: 0,
+            pending_tasks: 0
         };
-  
-        result.rows.forEach(row => {
-            if (row.status === 'inprogress') {
-                assigneeTasks.inprogress_tasks++;
-            } else if (row.status === 'completed') {
-                assigneeTasks.completed_tasks++;
-            } else if (row.status === 'pending') {
-                assigneeTasks.pending_tasks++;
+
+        // Fetch use cases from the database
+        const usecaseResult = await client.query(`
+            SELECT usecase
+            FROM usecase_table`
+        );
+
+        // Process each use case
+        for (const usecaseRow of usecaseResult.rows) {
+            const usecase = usecaseRow.usecase;
+
+            // Process each stage in the use case
+            for (const stageKey in usecase.stages) {
+                const stage = usecase.stages[stageKey];
+
+                // Process each task in the stage
+                if (stage.tasks) {
+                    for (const task of stage.tasks) {
+                        const assigneeId = task.assignee_id;
+
+                        // Compare start_date and end_date of tasks
+                        if (
+                            task.start_date >= data.from_date &&
+                            task.end_date <= data.to_date &&
+                            assigneeId === data.resource_id
+                        ) {
+                            if (task.status === 'inprogress') {
+                                resourceTasks.inprogress_tasks++;
+                            } else if (task.status === 'completed') {
+                                resourceTasks.completed_tasks++;
+                            } else if (task.status === 'pending') {
+                                resourceTasks.pending_tasks++;
+                            }
+                        }
+                    }
+                }
             }
-        });
-  
-        objReturn.object = [assigneeTasks];
+        }
+
         await client.end();
-  
+
+        // Return the response
         return {
             statusCode: 200,
             headers: {
                 "Access-Control-Allow-Origin": "*"
             },
-            body: JSON.stringify(objReturn)
+            body: JSON.stringify({
+                code: 200,
+                message: "Resource search successful",
+                type: "object",
+                object: [resourceTasks]
+            })
         };
     } catch (e) {
         objReturn.code = 400;
         objReturn.message = e.message || "An error occurred";
         await client.end();
-  
+
         return {
             statusCode: 400,
             headers: {
@@ -86,4 +109,4 @@ exports.getResourcesTasksStatus = async (event, context, callback) => {
             body: JSON.stringify(objReturn)
         };
     }
-  };
+};

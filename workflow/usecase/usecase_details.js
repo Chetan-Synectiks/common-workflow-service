@@ -5,73 +5,58 @@ exports.get_usecasedetails = async (event, context, callback) => {
     const client = new Client({
         host: "localhost",
         port: "5432",
-        database: "postgres",
+        database: "workflow",
         user: "postgres",
-        password: "1234"
+        password: ""
     });
     client.connect();
     let objReturn = {
         code: 200,
-        message: "project search successfully",
+        message: "usecase search successfull",
         type: "object",
         object: []
     };
     try {
 
-        const de=await client.query(`select id,details->'usecase'->'name'as name,details->'usecase'->'current_stage' as currentstage,details->'usecase'->'assignee_id' as assignedid,details->'usecase'->'stages' as stages ,details->'usecase'->'start_date' as usecase_startdate,details->'usecase'->'end_date' as usecase_enddate from usecase`)
+        const de = await client.query(`select id,usecase->'name' as name,usecase->'current_stage' as currentstage,usecase->'assignee_id' as assignedid,usecase->'stages' as stages ,usecase->'start_date' as usecase_startdate from usecase_table`);
 
-        console.log(de.rows)
-        let mock=0;
-        let requirement=0;
-        let test=0;
-        let publish=0;
-        let totalresources=0;
-        console.log(de.rows.length)
-        console.log(de.rows[0].stages.requirement.tasks.length)
-        for(let i=0;i<de.rows.length;i++)
-        {
-            if (de?.rows[i]?.stages?.requirement?.tasks?.length) {
-             requirement=de.rows[i].stages.requirement.tasks.length
-              
+        console.log(de.rows);
+
+        let usecasedetails = de.rows.map(row => {
+            let totalresources = 0;
+            let currentStageEndDate = "";
+
+            if (row.stages) {
+                // Loop through each stage dynamically
+                Object.keys(row.stages).forEach(stageKey => {
+                    if (row.stages[stageKey]?.tasks?.length) {
+                        totalresources += row.stages[stageKey].tasks.length;
+                    }
+
+                    // Check if the current stage matches the looped stage
+                    if (row.currentstage === stageKey && row.stages[stageKey]?.tasks?.length) {
+                        const lastTaskIndex = row.stages[stageKey].tasks.length - 1;
+                        currentStageEndDate = row.stages[stageKey].tasks[lastTaskIndex].end_date;
+                    }
+                });
             }
-            
-            if (de?.rows[i]?.stages?.mock?.tasks?.length) {
-                 mock=de.rows[i].stages.mock.tasks.length
-              
-          }
-            if (de?.rows[i]?.stages?.test?.tasks?.length) {
-                 test=de.rows[i].stages.test.tasks.length
-                
-            } 
-            if (de?.rows[i]?.stages?.publish?.tasks?.length) {
-                 publish=de.rows[i].stages.publish.tasks.length
-             
-        } 
-         totalresources=mock+requirement+test+publish
-         de.rows.push({totaltask:totalresources})
-        }
-        
 
-console.log("ddd",totalresources)
-let usecasedetails = de.rows.map(row => ({
-    id: row.id,
-    name: row.name,
-    assigned_id: row.assignedid,
-    usecase_startdate: row.usecase_startdate,
-    enddate: row.usecase_enddate,
-    totalresources:row.totaltask
-    
-}));
+            return {
+                id: row.id,
+                name: row.name,
+                assigned_id: row.assignedid,
+                usecase_startdate: row.usecase_startdate,
+                totalresources: totalresources,
+                currentStageEndDate: currentStageEndDate
+            };
+        });
 
-return{"body":JSON.stringify(usecasedetails)} ;
+        console.log("usecasedetails", usecasedetails);
 
-client.end();
-    }
-    catch (e) {
- 
+        return {"body": JSON.stringify(usecasedetails)};
+    } catch (e) {
         objReturn.code = 400;
         objReturn.message = e;
-        client.end();
         return {
             "statusCode": 400,
             "headers": {
@@ -79,5 +64,7 @@ client.end();
             },
             "body": JSON.stringify(objReturn)
         };
+    } finally {
+        client.end();
     }
 };
