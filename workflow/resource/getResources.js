@@ -19,20 +19,18 @@ exports.getResources = async (event, context, callback) => {
         object: []
     };
     const data = event.queryStringParameters;
-    console.log(data)
+    // console.log(data)
     let project_id;
 
     project_id = data.project_id
 
     try {
         if (project_id) {
-            console.log("-------")
             const resourceQueryResult = await client.query(`SELECT *
             FROM resource_table
             WHERE resource_table.resource->'projects' @> $1::jsonb;`, [project_id]);
 
             // console.log(resourceQueryResult.rows);
-            console.log(resourceQueryResult);
             for (const record of resourceQueryResult.rows) {
 
                 const projects = record.resource.projects;
