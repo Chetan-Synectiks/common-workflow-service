@@ -25,7 +25,7 @@ exports.getProjectsOverview = async (event, context) => {
 
         await client.connect();
         let result;
-        if (data.status) {
+        if (data.project_status) {
             result = await client.query(`
             SELECT
                 project.project_id AS project_id,
@@ -37,7 +37,7 @@ exports.getProjectsOverview = async (event, context) => {
             JOIN
                 usecase_table usecase ON project.project_id = usecase.project_id
             WHERE project.project->>'status' = $1
-        `, [data.status]);
+        `, [data.project_status]);
         } else {
             result = await client.query(`
             SELECT
