@@ -37,7 +37,7 @@ exports.getProjectOverview = async (event, context, callback) => {
         usecase_table ON project_table.id = usecase_table.project_id
             WHERE project_table.id = $1 
             AND usecase_table.usecase->>'start_date' >= $2
-            AND usecase_table.usecase->>'end_date' <= $3`, [data.id, data.start_date, data.end_date]
+            AND usecase_table.usecase->>'end_date' <= $3`, [data.id, data.from_date, data.to_date]
         );
 
         let incompleteCount = [];
