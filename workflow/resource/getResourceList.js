@@ -21,7 +21,7 @@ exports.getResourceList = async (event, context, callback) => {
     const data = event.queryStringParameters
     let projectname;
     if (data) {
-        projectname = data.projectname
+        projectname = data.name
     }
 
     try {

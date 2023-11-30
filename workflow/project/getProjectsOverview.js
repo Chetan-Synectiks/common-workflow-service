@@ -1,7 +1,6 @@
-exports.getProjectsOverview = async (event, context, callback) => {
+const { Client } = require('pg');
 
-    const { Client } = require('pg');
-
+exports.getProjectsOverview = async (event, context) => {
     const client = new Client({
         host: "localhost",
         port: "5432",
@@ -10,17 +9,6 @@ exports.getProjectsOverview = async (event, context, callback) => {
         password: "postgres"
     });
 
-    client.connect();
-    let data = {};
-
-    if (event.queryStringParameters) {
-        data = event.queryStringParameters;
-    }
-    console.log(data.status)
-    const filters = data;
-    let keysArr = Object.keys(filters);
-    let valueArr = Object.values(filters);
-
     let objReturn = {
         code: 200,
         message: "project search successfully",
@@ -28,46 +16,94 @@ exports.getProjectsOverview = async (event, context, callback) => {
         object: []
     };
 
+    let data = {};
+
+    if (event.queryStringParameters) {
+        data = event.queryStringParameters;
+    }
     try {
-        if (JSON.stringify(data) === '{}') {
-            abc = await client.query(`SELECT project_table.*, COUNT(usecase_table) as totalUsecases, COUNT(*) FILTER (WHERE usecase_table.usecase->>'status' = 'completed') as completedUsecases FROM project_table
-        LEFT JOIN
-        usecase_table ON project_table.project_id = usecase_table.project_id
-        GROUP BY project_table.project_id;`);
+
+        await client.connect();
+        let result;
+        if (data.status) {
+            result = await client.query(`
+            SELECT
+                project.project_id AS project_id,
+                project.project AS project_data,
+                usecase.usecase_id AS usecase_id,
+                usecase.usecase AS usecase_data
+            FROM
+                project_table project
+            JOIN
+                usecase_table usecase ON project.project_id = usecase.project_id
+            WHERE project.project->>'status' = $1
+        `, [data.status]);
+        } else {
+            result = await client.query(`
+            SELECT
+                project.project_id AS project_id,
+                project.project AS project_data,
+                usecase.usecase_id AS usecase_id,
+                usecase.usecase AS usecase_data
+            FROM
+                project_table project
+            JOIN
+                usecase_table usecase ON project.project_id = usecase.project_id
+        `);
         }
-        else if (data.status) {
-            for (let item of keysArr) {
-                abc = await client.query(`SELECT project_table.*, COUNT(usecase_table) as totalUsecases, COUNT(*) FILTER (WHERE usecase_table.usecase->>'status' = 'completed') as completedUsecases FROM project_table
-                    LEFT JOIN
-                    usecase_table ON project_table.project_id = usecase_table.project_id
-                    WHERE project_table.project-> $1 @> $2
-                    GROUP BY project_table.project_id;`, [item, JSON.stringify(valueArr[keysArr.indexOf(item)])]);
+
+        // The result.rows array contains the query results
+        const projectData = {};
+
+        result.rows.forEach(row => {
+            const projectId = row.project_id;
+
+            if (!projectData[projectId]) {
+                projectData[projectId] = {
+                    project_data: row.project_data,
+                    totalTasks: 0,
+                    completedTasks: 0,
+                    totalUsecases: 0,
+                    completedUsecases: 0,
+                };
             }
-        }
 
-        console.log(abc.rows);
-        const ReturnedData = abc.rows.map(record => {
+            const usecase = row.usecase_data;
 
-            let percentage;
-            percentage = (record.completedusecases / record.totalusecases) * 100
-            let returnObj = {
-                project_id: record.project_id,
-                project_name: record.project.name,
-                status: record.project.status,
-                total_usecases: record.totalusecases,
-                completed_usecases: record.completedusecases,
-                due_date: record.project.end_date,
-                completed_tasks_percentage: percentage
+            // Increment total usecases for the project
+            projectData[projectId].totalUsecases++;
+
+            // Increment completed usecases for the project based on the status field
+            if (usecase.status === 'completed') {
+                projectData[projectId].completedUsecases++;
             }
-            console.log(returnObj);
 
-            return returnObj;
-        })
+            const stages = usecase.stages;
 
-        objReturn.object = ReturnedData;
+            // Calculate total and completed tasks for each stage and accumulate for the project
+            Object.keys(stages).forEach(stage => {
+                projectData[projectId].totalTasks += stages[stage].tasks.length;
+                projectData[projectId].completedTasks += stages[stage].tasks.filter(task => task.status === 'completed').length;
+            });
+        });
 
-        client.end();
+        const projectResults = Object.keys(projectData).map(projectId => {
+            const { project_data, totalTasks, completedTasks, totalUsecases, completedUsecases } = projectData[projectId];
+            const percentageCompleted = (completedTasks * 100.0) / totalTasks;
 
+            return {
+                project_id: projectId,
+                project_name: project_data.name,
+                status: project_data.status,
+                due_date: project_data.end_date,
+                completed_tasks_percentage: percentageCompleted,
+                total_usecases: totalUsecases,
+                completed_usecases: completedUsecases,
+            };
+        });
+
+        // console.log('Results for all projects:', projectResults);
+        objReturn.object = projectResults
         return {
             "statusCode": 200,
             "headers": {
@@ -75,18 +111,13 @@ exports.getProjectsOverview = async (event, context, callback) => {
             },
             "body": JSON.stringify(objReturn)
         };
-
-    } catch (e) {
-
-        objReturn.code = 400;
-        objReturn.message = e;
-        client.end();
+    } catch (error) {
+        console.error('Error executing query', error);
         return {
-            "statusCode": 400,
-            "headers": {
-                "Access-Control-Allow-Origin": "*"
-            },
-            "body": JSON.stringify(objReturn)
+            statusCode: 500,
+            body: JSON.stringify({ error: 'Internal Server Error' }),
         };
+    } finally {
+        await client.end();
     }
 };
