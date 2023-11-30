@@ -119,21 +119,21 @@ functions:
           path: /projects_overview
           method: get    
 
-  getResource:
-    handler: project/get_resourcetask.get_resourcetask
+  getResourcesTasksStatus:
+    handler: project/getResourcesTasksStatus.getResourcesTasksStatus
     role: ${env:LAMBDA_ROLE}
     events:
     - http:
-        path: /resource
+        path: /resource_task_status
         method: get
         cors: true
  
-  getAllResource:
-    handler: project/get_allresourcetask.get_allresourcetask
+  getAllResourcesTasksStatus:
+    handler: project/getAllResourcesTasksStatus.getAllResourcesTasksStatus
     role: ${env:LAMBDA_ROLE}
     events:
     - http:
-        path: /allresource
+        path: /resources_task_status
         method: get
         cors: true    
 

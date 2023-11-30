@@ -1,5 +1,5 @@
 
-exports.get_resourcetask = async (event, context, callback) => {
+exports.getResourcesTasksStatus = async (event, context, callback) => {
     const { Client } = require('pg');
   
     const client = new Client({
@@ -43,7 +43,7 @@ exports.get_resourcetask = async (event, context, callback) => {
                 WHERE
                 (tasks->>'start_date') >= $1
                 AND (tasks->>'end_date') <= $2
-                AND all_tasks.tasks->>'assignee_id' = $3`, [data.start_date, data.end_date, data.assignee_id]
+                AND all_tasks.tasks->>'assignee_id' = $3`, [data.from_date, data.to_date, data.assignee_id]
         );
   
         let assigneeTasks = {
@@ -54,7 +54,7 @@ exports.get_resourcetask = async (event, context, callback) => {
         };
   
         result.rows.forEach(row => {
-            if (row.status === 'inprogres') {
+            if (row.status === 'inprogress') {
                 assigneeTasks.inprogress_tasks++;
             } else if (row.status === 'completed') {
                 assigneeTasks.completed_tasks++;

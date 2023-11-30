@@ -294,7 +294,7 @@ const queryFilteredProjects = `SELECT COUNT(*) FROM projects WHERE project ->> '
 ```
 # Get task status of a resource between two dates
 
-get no of pending,inprogress,completed tasks/substages of a particular resource.
+Get the number of completed, inprogress and pending tasks of a resource in between dates
 
 Method : GET
 
@@ -302,19 +302,18 @@ Request :
 ``` json
 {
     "resource_id": "uuid",
-    "start_date": "YYYY-MM-DD",
-    "end_date": "YYYY-MM-DD"
+    "from_date": "YYYY-MM-DD",
+    "to_date": "YYYY-MM-DD"
 }
 ```
 Response :
 
 ``` json 
 {
-      "id": "uuid",
-      "pending": "value",
-      "in_progress": "value",
-      "completed": "value"
-},
+  "completed_tasks": "value",
+  "inprogress_tasks": "value",
+  "pending_tasks": "value"
+}
 ```
 
 -   Using the pg client create a SQL query for a SELECT statment to get count of completed , inprogress, and pending tasks of a resource.
@@ -322,7 +321,7 @@ Response :
 ```SQL
 
 -- Query to get the number of pending, in-progress, and completed tasks for a resource between two dates
-            SELECT
+       SELECT
                 tasks->>'status' AS status,
                 tasks->>'end_date' AS end_date,
                 tasks->>'start_date' AS start_date,
@@ -334,16 +333,16 @@ Response :
                     UNION ALL
                     SELECT jsonb_array_elements(usecase->'stages'->'requirement'->'tasks') AS tasks
                 ) AS all_tasks
-            WHERE
-                usecase_table.usecase->>'start_date' >= $1
-                AND usecase_table.usecase->>'end_date' <= $2
-                AND all_tasks.tasks->>'assignee_id' = $3`, [data.start_date, data.end_date, data.assignee_id]
+                WHERE
+                (tasks->>'start_date') >= $1
+                AND (tasks->>'end_date') <= $2
+                AND all_tasks.tasks->>'assignee_id' = $3`, [data.from_date, data.to_date, data.assignee_id]     
 
 ```
 
 # Get task status for all resources between two dates
 
-get no of pending,inprogress,completed tasks/substages of all resources.
+Get the number of completed, inprogress and pending tasks of all resources in between dates
 
 Method : GET
 
@@ -351,19 +350,20 @@ Request :
 
 ``` json
 {
-    "start_date": "YYYY-MM-DD",
-    "end_date": "YYYY-MM-DD"
+    "from_date": "YYYY-MM-DD",
+    "to_date": "YYYY-MM-DD"
 }
 ```
 Response :
 
 ``` json 
     {
-      "id": "uuid",
-      "pending": "value",
-      "in_progress": "value",
-      "completed": "value"
-    },
+    "resource_id": "uuid",
+    "resource_name": "string",
+    "completed_tasks": "value",
+    "inprogress_tasks": "value",
+    "pending_tasks": "value"
+  }
     
 ```
 
@@ -385,11 +385,10 @@ Response :
                     SELECT jsonb_array_elements(usecase->'stages'->'requirement'->'tasks') AS tasks
                 ) AS all_tasks
             WHERE
-                usecase_table.usecase->>'start_date' >= $1
-                AND usecase_table.usecase->>'end_date' <= $2`, [data.start_date, data.end_date]
+            (tasks->>'start_date') >= $1
+            AND (tasks->>'end_date') <= $2`, [data.start_date, data.end_date]
 
 ```
-
 # get-all-projects-with-filter-and-without-filter
 
 Retrieves the list for all projects.
