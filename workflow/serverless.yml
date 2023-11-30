@@ -36,6 +36,7 @@ functions:
 
   allresources:
     handler: getallresources.getallresource
+    role: ${env:LAMBDA_ROLE}
     events:
     - http:
         path: /allresource
@@ -43,6 +44,7 @@ functions:
 
   allresourcesbyfilter:
     handler: getallresourcebyfilter.getallresourcebyfilter
+    role: ${env:LAMBDA_ROLE}
     events:
     - http:
         path: /allresourcebyfilter
@@ -50,6 +52,7 @@ functions:
 
   filters:
     handler: filters.filters
+    role: ${env:LAMBDA_ROLE}
     events:
       - httpApi:
           path: /filter
@@ -58,6 +61,7 @@ functions:
 
   getprojectstasks:
     handler: getprojectstasks.getprojectstasks
+    role: ${env:LAMBDA_ROLE}
     events:
       - httpApi:
           path: /getprojectstasks
@@ -65,6 +69,7 @@ functions:
 
   projectfilters:
     handler: projectfilters.projectfilters
+    role: ${env:LAMBDA_ROLE}
     events:
       - httpApi:
           path: /projectfilters
@@ -97,24 +102,27 @@ functions:
           path: /projects_overview
           method: get    
 
-  getResource:
-    handler: project/get_resourcetask.get_resourcetask
+  getResourcesTasksStatus:
+    handler: project/getResourcesTasksStatus.getResourcesTasksStatus
+    role: ${env:LAMBDA_ROLE}
     events:
     - http:
-        path: /resource
+        path: /resource_task_status
         method: get
         cors: true
  
-  getAllResource:
-    handler: project/get_allresourcetask.get_allresourcetask
+  getAllResourcesTasksStatus:
+    handler: project/getAllResourcesTasksStatus.getAllResourcesTasksStatus
+    role: ${env:LAMBDA_ROLE}
     events:
     - http:
-        path: /allresource
+        path: /resources_task_status
         method: get
         cors: true    
 
   usecasedetails:
     handler: usecase/usecase_details.get_usecasedetails
+    role: ${env:LAMBDA_ROLE}
     events:
     - http:
         path: /usecasedetails
@@ -123,6 +131,7 @@ functions:
 
   usecase_search:
     handler: usecase/usecase_search.usecase_search
+    role: ${env:LAMBDA_ROLE}
     events:
     - http:
         path: /searchusecase
@@ -131,6 +140,7 @@ functions:
 ##searchbargetresourcebyname
   getResourcesByName:
     handler: resource/getResourcesByName.getResourcesByName
+    role: ${env:LAMBDA_ROLE}
     events:
     - http:
         path: /get_resource_by_name

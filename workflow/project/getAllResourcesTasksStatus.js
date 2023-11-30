@@ -1,5 +1,5 @@
 
-exports.get_allresourcetask = async (event, context, callback) => {
+exports.getAllResourcesTasksStatus = async (event, context, callback) => {
     const { Client } = require('pg');
  
     const client = new Client({
@@ -41,9 +41,8 @@ exports.get_allresourcetask = async (event, context, callback) => {
                     SELECT jsonb_array_elements(usecase->'stages'->'requirement'->'tasks') AS tasks
                 ) AS all_tasks
             WHERE
-            WHERE
             (tasks->>'start_date') >= $1
-            AND (tasks->>'end_date') <= $2`, [data.start_date, data.end_date]
+            AND (tasks->>'end_date') <= $2`, [data.from_date, data.to_date]
         );
        console.log(result)
         let assigneeTasks = {};
