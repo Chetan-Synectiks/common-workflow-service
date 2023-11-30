@@ -40,9 +40,9 @@ exports.get_resourcetask = async (event, context, callback) => {
                     UNION ALL
                     SELECT jsonb_array_elements(usecase->'stages'->'requirement'->'tasks') AS tasks
                 ) AS all_tasks
-            WHERE
-                usecase_table.usecase->>'start_date' >= $1
-                AND usecase_table.usecase->>'end_date' <= $2
+                WHERE
+                (tasks->>'start_date') >= $1
+                AND (tasks->>'end_date') <= $2
                 AND all_tasks.tasks->>'assignee_id' = $3`, [data.start_date, data.end_date, data.assignee_id]
         );
   

@@ -41,8 +41,9 @@ exports.get_allresourcetask = async (event, context, callback) => {
                     SELECT jsonb_array_elements(usecase->'stages'->'requirement'->'tasks') AS tasks
                 ) AS all_tasks
             WHERE
-                usecase_table.usecase->>'start_date' >= $1
-                AND usecase_table.usecase->>'end_date' <= $2`, [data.start_date, data.end_date]
+            WHERE
+            (tasks->>'start_date') >= $1
+            AND (tasks->>'end_date') <= $2`, [data.start_date, data.end_date]
         );
        console.log(result)
         let assigneeTasks = {};
