@@ -5,7 +5,7 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 ## Table of Contents
 
 - [Workflow Management](#workflow-management)
-  - [Table of Contents](#table-of-contents)
+- [Table of Contents](#table-of-contents)
 - [Get the overview of projects](#get-the-overview-of-projects)
 - [get no of completed and incomplete usecases for all projects between dates](#get-no-of-completed-and-incomplete-usecases-for-all-projects-between-dates)
 - [get no of completed and incomplete usecases for a project between dates](#get-no-of-completed-and-incomplete-usecases-for-a-project-between-dates)
@@ -15,46 +15,74 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [Get task status for all resources between two dates](#get-task-status-for-all-resources-between-two-dates)
 - [get-all-projects-with-filter-and-without-filter](#get-all-projects-with-filter-and-without-filter)
 - [Get a list of resources](#get-a-list-of-resources)
-- [Get Resource List By Projects](#get-resource-list-by-projects)
 - [Get all usecases with details](#get-all-usecases-with-details)
 - [search usecase from the search bar](#search-usecase-from-the-search-bar)
 - [Search All resource details based on starting letter](#search-all-resource-details-based-on-starting-letter)
 
 
+### Common Logic For For All APIs
+
+  1. Define a Lambda function handler that takes an event as a parameter.
+
+  2. Import the PostgreSQL Client module.
+
+  3. Create a new PostgreSQL Client instance database credentails.
+
+  4. Attempt connection to database. Log success or error for the connection
+
+  5. Parse request body data from the event object ( if there is a request body)
+
+  6. Using the pg client create the SQL query required by the API in a try-catch block.
+
+  7. On successfull query, return the data (if any) with a status code 200 and a success message.
+
+  8. If there's an error during the database query, log the error and return a response with a status code 500 and a JSON body including an error message.
 
 # Get the overview of projects
 
-Retrieves the list of all the projects without filtering.
+Retrieves the list of all the projects 
+
+> Note: Filter by Status (Optional)
 
 Method: GET
 
-Request: 
+- Execute a SELECT query on the database based on the existence of the 'status' parameter.
+      - If 'status' exists, filter projects by status.
+      - If 'status' doesn't exist, retrieve all projects.
 
-Response: List of projects
+- Process the query result:
+      - Initialize an empty object projectData to store processed project data.
 
--   Using the pg client create a SQL query for a SELECT statment to get all rows in the project table
+- Iterate through each row in the result:
+    - Extract project and usecase information.
 
--   If required return DTO object instead of entire proejct object in a list.
+    - Update projectData with the cumulative counts of total and completed tasks and usecases.
+
+- Transform the projectData into a consistent structure.
+
 
 > This Api may or may not need pagation support
 
 ```SQL
---- without pagination ---
-SELECT project_table.*, COUNT(usecase_table) as totalUsecases, COUNT(*) FILTER (WHERE usecase_table.usecase->>'status' = 'completed') as completedUsecases FROM project_table
-LEFT JOIN
-usecase_table ON project_table.project_id = usecase_table.project_id
-GROUP BY project_table.project_id;
+--- without filter ---
+    SELECT
+        project.id AS project_id,
+        project.project AS project_data,
+        usecase.id AS usecase_id,
+        usecase.usecase AS usecase_data
+    FROM project_table project
+    JOIN usecase_table usecase ON project.id = usecase.project_id;
 
---- with pagination ---
-SELECT project_table.*, COUNT(usecase_table) as totalUsecases, COUNT(*) FILTER (WHERE usecase_table.usecase->>'status' = 'completed') as completedUsecases FROM project_table
-LEFT JOIN
-usecase_table ON project_table.project_id = usecase_table.project_id
-GROUP BY project_table.project_id;
-ORDER BY id
-LIMIT 10
-OFFSET page_key; (provided in the request)
+--- with filter by project status ---
+    SELECT
+        project.id AS project_id,
+        project.project AS project_data,
+        usecase.id AS usecase_id,
+        usecase.usecase AS usecase_data
+    FROM project_table project
+    JOIN usecase_table usecase ON project.id = usecase.project_id
+    WHERE project.project->>'status' = 'inprogress';
 ```
-
 # get no of completed and incomplete usecases for all projects between dates
 
 Retrieves the list of all the Projects without filtering.
@@ -444,57 +472,50 @@ project.id, project.project
 
 # Get a list of resources
 
-Retrieves the list of all the resources without filtering.
+Retrieves a list of all resources or of a particular proejctand get resource details -> resource_id, resource_name, resource_img_url, role, list of projects and email.
+
+> Note: Filter by project_id (Optional)
 
 Method: GET
 
-Request: 
+Extract query parameters from the event.
 
-Response: List of resources
+- Initialize a variable project_id and assign it the value of the 'project_id' parameter from the data.
 
--   Using the pg client create a SQL query for a SELECT statment to get all rows in the resource table
-
--   If required return DTO object instead of entire resource object in a list.
-
+- Check if project_id exists:
+    - If true:
+        - Execute a SELECT query to retrieve resources associated with the specified project_id.
+        - Iterate through each resource record and retrieve project details for each associated project.
+        - Assemble the response object for each resource, including resource details and associated project details.
+    - If false:
+        - Execute a SELECT query to retrieve all resources.
+        - Iterate through each resource record and retrieve project details for each associated project.
+        - Assemble the response object for each resource, including resource details and associated project details.
 > This Api may or may not need pagation support
 
 ```SQL
---- without pagination ---
-select project_id, project_table.project->>'name' as project_name, project_table.project->>'project_img_url' as project_img_url from project_table where project_id = $1
---- with pagination ---
-select project_id, project_table.project->>'name' as project_name, project_table.project->>'project_img_url' as project_img_url from project_table where project_id = $1
-ORDER BY id
-LIMIT 10
-OFFSET page_key; (provided in the request)
+--- without filter ---
+    --- to retrive data from resource_table ---
+        select * from resource_table;
+
+    --- to retrive data from project table ---
+        select id, project_table.project->>'name' as project_name, 
+        project_table.project->>'project_img_url' as project_img_url 
+        from project_table 
+        where id = 1;
+
+
+--- with filter by project_id ---
+    --- to retrive data from resource_table ---
+        select * from resource_table
+        where resource_table.resource->'projects' @> $1::jsonb;
+    --- to retrive data from project table ---
+        select id, project_table.project->>'name' as project_name, 
+        project_table.project->>'project_img_url' as project_img_url 
+        from project_table 
+        where id = 1;
 ```
-# Get Resource List By Projects
 
-Retrieves the list of the resources with given projectName without filtering.
-
-Method: GET
-
-Request: 
-
-Response: List of resources with given projectName
-
--   Using the pg client create a SQL query for a SELECT statment to get all rows in the resource table
-
--   If required return DTO object instead of entire resource object in a list.
-
-> This Api may or may not need pagation support
-
-```SQL
---- without pagination ---
-const result = await client.query(`SELECT * FROM resource WHERE resource->>'project' = $1`, [project_name]);
-
-
---- with pagination ---
-const result = await client.query(`SELECT * FROM resource WHERE resource->>'project' = $1`, [project_name]);
-
-ORDER BY id
-LIMIT 10
-OFFSET page_key; (provided in the request)
-```
 # Get all usecases with details
 
 get all uscases with details -> id, name,current_stage,usecase_assigned_to, no of resources,usecase_start_date,usecase_end_date.
@@ -539,7 +560,7 @@ Method: GET
  
 Request:
  
-Response: resource details(Id,name,project_id)
+Response: resource details(Id,name,image_url)
  
 -   Using the pg client create a SQL query for a SELECT statment to get all rows in the resource table
  

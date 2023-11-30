@@ -15,23 +15,6 @@ provider:
   region: us-east-1
 
 functions:
-  GetProjectList:
-    handler: project/getProject.getProject
-    role: ${env:LAMBDA_ROLE}
-    events:
-      - http:
-          path: /project
-          method: get
-          cors: true
-
-  GetProjectWithFilter:
-    handler: project/getProjectWithFilter.getProjectWithFilter
-    role: ${env:LAMBDA_ROLE}
-    events:
-      - http:
-          path: /project-with-filter
-          method: get
-          cors: true
 
   getProjectOverview:
     handler: project/getProjectOverview.getProjectOverview 
@@ -97,21 +80,14 @@ functions:
         method: get
         cors: true
 
-  GetResourceList:
-    handler: resource/getResourceList.getResourceList
+  getResources:
+    handler: resource/getResources.getResources
     role: ${env:LAMBDA_ROLE}
     events:
       - http:
-          path: /resource_list
+          path: /resources
           method: get
           cors: true
-
-  getresourcelistbyproject:
-    handler: getresourcelistbyproject.getresourcelistbyproject
-    events:
-      - httpApi:
-          path: /getresourcelistbyproject
-          method: get
 
   getProjectsOverview:
     handler: project/getProjectsOverview.getProjectsOverview
