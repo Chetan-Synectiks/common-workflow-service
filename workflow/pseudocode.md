@@ -18,7 +18,9 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [Get all usecases with details](#get-all-usecases-with-details)
 - [search usecase from the search bar](#search-usecase-from-the-search-bar)
 - [Search All resource details based on starting letter](#search-all-resource-details-based-on-starting-letter)
-
+-   [Get Total Projects,Total Tasks And Percentage Of Completed Projects](#get-total-projects-total-tasks-and-percentage-of-completed-projects)
+-   [Get Total Projects With Status Completed,Inprogress,Unassigned Projects](#get-total-projects-with-status-completed-inprogress-unassigned-projects)
+ 
 
 ### Common Logic For For All APIs
 
@@ -238,98 +240,6 @@ SELECT project->>'name' as name,project->>'startdate'as startdate,project->>'end
   LIMIT 10
   OFFSET page_key; (provided in the request)
 
-# Get Total Projects, Total Tasks, and Percentages
-
-Retrieves the list of all the projects, tasks, and percentages.
-
-- Method: GET
-
-- Using the pg client, create SQL queries for SELECT to get total projects, total tasks, and percentages of completed, in-progress, and unassigned projects.
-
-- If required, return DTO object instead of the entire project object in a list.
-
-> This API may or may not need pagination support
-
-``` 
-SQL
---- without pagination ---
-
-const queryTotalProjects = await client.query("SELECT COUNT(*) FROM projects");
-const resultTotalProjects = queryTotalProjects.rows[0].count;
-
-const queryCompletedProjects = await client.query("SELECT COUNT(*) FROM projects WHERE project ->>'status' = 'completed'");
-const resultCompletedProjects = queryCompletedProjects.rows[0].count;
-
-const queryUnassignedProjects = await client.query("SELECT COUNT(*) FROM projects WHERE project ->>'status' = 'unassigned'");
-const resultUnassignedProjects = queryUnassignedProjects.rows[0].count;
-
-const queryInProgressProjects = await client.query("SELECT COUNT(*) FROM projects WHERE project ->>'status' = 'inprogress'");
-const resultInProgressProjects = queryInProgressProjects.rows[0].count;
-
-const percentageCompleted = (resultCompletedProjects / resultTotalProjects) * 100;
-const percentageUnassigned = (resultUnassignedProjects / resultTotalProjects) * 100;
-const percentageInProgress = (resultInProgressProjects / resultTotalProjects) * 100;
-
-const queryTotalTasks = await client.query("SELECT COUNT(*) FROM tasks");
-const de = await client.query(`SELECT usecase, project_id FROM tasks`);
-
-let resultTotalTasks = [];
-
-for (let i = 0; i < de.rows.length; i++) {
-    let mock1 = 0;
-    let requirement1 = 0;
-    let test1 = 0;
-    let publish1 = 0;
-
-    if (de?.rows[i]?.usecase?.stages?.mock?.tasks?.length) {
-        mock1 = de.rows[i].usecase.stages.mock.tasks.length;
-    }
-
-    if (de?.rows[i]?.usecase?.stages?.requirement?.tasks?.length) {
-        requirement1 = de.rows[i].usecase.stages.requirement.tasks.length;
-    }
-
-    if (de?.rows[i]?.usecase?.stages?.test?.tasks?.length) {
-        test1 = de.rows[i].usecase.stages.test.tasks.length;
-    }
-
-    if (de?.rows[i]?.usecase?.stages?.publish?.tasks?.length) {
-        publish1 = de.rows[i].usecase.stages.publish.tasks.length;
-    }
-
-    let totaltasks = mock1 + requirement1 + test1 + publish1;
-    resultTotalTasks.push({ project_id: de.rows[i].project_id, totaltasks });
-}
-
-
---- with pagination ---
-
-// Include pagination logic if needed
-ORDER BY id
-LIMIT 10
-OFFSET page_key; (provided in the request)# Get all projects with status filter
-Retrive the no.of projects by filter completed/inprogress/unassigned
-
- - Method: GET
-
- -   Using the pg client create a SQL query for SELECT to get status projects.
-
- -   If required return DTO object instead of entire project object in a list.
-
-> This Api may or may not need pagation support
-
-```SQL
---- without pagination ---
-
-const queryFilteredProjects = `SELECT COUNT(*) FROM projects WHERE project ->> 'status' = '${filterString}';`;
---- with pagination ---
-
-const queryFilteredProjects = `SELECT COUNT(*) FROM projects WHERE project ->> 'status' = '${filterString}';`;
-  ORDER BY id
-  LIMIT 10
-  OFFSET page_key; (provided in the request)
-
-```
 # Get task status of a resource between two dates
 
 Get the number of completed, inprogress and pending tasks of a resource in between dates
@@ -580,4 +490,86 @@ Response: resource details(Id,name,image_url)
 
 select * FROM RESOURCE_TABLE WHERE LOWER(resource  ->> 'name') LIKE LOWER ( $1||'%')
 
+```
+
+# Get Total Projects, Total Tasks, and Percentage of completed projects
+
+Retrieves the list of all the projects, tasks, and percentage of completed projects.
+
+- Method: GET
+
+- Using the pg client, create SQL queries for SELECT to get total projects, total tasks, and percentages of completed, in-progress, and unassigned projects.
+
+- If required, return DTO object instead of the entire project and usecase object  in a list.
+
+> This API may or may not need pagination support
+
+``` 
+SQL
+--- without pagination ---
+
+const queryTotalProjects = await client.query("SELECT COUNT(*) FROM project_table");
+const resultTotalProjects = queryTotalProjects.rows[0].count;
+
+const queryCompletedProjects = await client.query("SELECT COUNT(*) FROM project_table WHERE project ->>'status' = 'completed'");
+const resultCompletedProjects = queryCompletedProjects.rows[0].count;
+
+const queryUnassignedProjects = await client.query("SELECT COUNT(*) FROM project_table WHERE project ->>'status' = 'unassigned'");
+const resultUnassignedProjects = queryUnassignedProjects.rows[0].count;
+
+const queryInProgressProjects = await client.query("SELECT COUNT(*) FROM project_table WHERE project ->>'status' = 'inprogress'");
+const resultInProgressProjects = queryInProgressProjects.rows[0].count;
+
+const percentageCompleted = (resultCompletedProjects / resultTotalProjects) * 100;
+const percentageUnassigned = (resultUnassignedProjects / resultTotalProjects) * 100;
+const percentageInProgress = (resultInProgressProjects / resultTotalProjects) * 100;
+
+const queryTotalTasks = await client.query("SELECT COUNT(*) FROM usecase_table");
+const de = await client.query(`SELECT usecase, project_id FROM usecase_table`);
+
+let resultTotalTasks = [];
+
+
+
+--- with pagination ---
+
+// Include pagination logic if needed
+ORDER BY id
+LIMIT 10
+OFFSET page_key; (provided in the request)
+```
+
+# Get Total Projects With Status Completed,Inprogress,Unassigned Projects
+Retrieves the list of completed,inprogress,unassigned projects.
+
+- Method: GET
+
+- Using the pg client, create SQL queries for SELECT to get completed, in-progress, and unassigned projects.
+
+- If required, return DTO object instead of the entire project and usecase object  in a list.
+
+> This API may or may not need pagination support
+
+``` 
+SQL
+--- without pagination ---
+
+
+const queryTotalProjects = "SELECT COUNT(*) FROM project_table;";
+const resultTotalProjects = await client.query(queryTotalProjects);
+
+const queryCompletedProjects = "SELECT COUNT(*) FROM project_table WHERE project ->>'status' = 'completed';";
+const resultCompletedProjects = await client.query(queryCompletedProjects);
+ const queryInProgressProjects = "SELECT COUNT(*) FROM project_table WHERE project ->>'status' = 'inprogress';";
+ const resultInProgressProjects = await client.query(queryInProgressProjects);
+const queryUnassignProjects = "SELECT COUNT(*) FROM project_table WHERE project ->>'status' = 'unassign';";
+const resultUnassignProjects = await client.query(queryUnassignProjects);
+
+
+--- with pagination ---
+
+// Include pagination logic if needed
+ORDER BY id
+LIMIT 10
+OFFSET page_key; (provided in the request)
 ```

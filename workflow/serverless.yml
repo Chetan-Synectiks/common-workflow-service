@@ -50,30 +50,24 @@ functions:
         path: /allresourcebyfilter
         method: get
 
-  filters:
-    handler: filters.filters
+  getOrgProjectDetails:
+    handler: getOrgProjectDetails.getOrgProjectDetails
     role: ${env:LAMBDA_ROLE}
     events:
       - httpApi:
-          path: /filter
+          path: /org_projects_overview
           method: get
 
-
-  getprojectstasks:
-    handler: getprojectstasks.getprojectstasks
+  getOrgAllProjectStatusDetails:
+    handler: getOrgAllProjectStatusDetails.getOrgAllProjectStatusDetails
     role: ${env:LAMBDA_ROLE}
     events:
       - httpApi:
-          path: /getprojectstasks
+          path: /org_projects_status_overview
           method: get
+  
 
-  projectfilters:
-    handler: projectfilters.projectfilters
-    role: ${env:LAMBDA_ROLE}
-    events:
-      - httpApi:
-          path: /projectfilters
-          method: get      
+        
   
   # allProject
   getProjects:

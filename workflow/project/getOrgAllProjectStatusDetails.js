@@ -1,4 +1,4 @@
-exports.projectfilters = async (event) => {
+exports.getOrgAllProjectStatusDetails = async (event) => {
     const { Client } = require('pg');
     const client = new Client({
         host: "localhost",
@@ -11,31 +11,26 @@ exports.projectfilters = async (event) => {
     client.connect();
 
     try {
-        // Create SQL query for getting total projects
-        const queryTotalProjects = "SELECT COUNT(*) FROM projects;";
+        const queryTotalProjects = "SELECT COUNT(*) FROM project_table;";
         const resultTotalProjects = await client.query(queryTotalProjects);
 
-        // Create SQL query for getting completed projects
-        const queryCompletedProjects = "SELECT COUNT(*) FROM projects WHERE project ->>'status' = 'completed';";
+        const queryCompletedProjects = "SELECT COUNT(*) FROM project_table WHERE project ->>'status' = 'completed';";
         const resultCompletedProjects = await client.query(queryCompletedProjects);
 
-        // Create SQL query for getting in-progress projects
-        const queryInProgressProjects = "SELECT COUNT(*) FROM projects WHERE project ->>'status' = 'inprogress';";
+        const queryInProgressProjects = "SELECT COUNT(*) FROM project_table WHERE project ->>'status' = 'inprogress';";
         const resultInProgressProjects = await client.query(queryInProgressProjects);
 
-        // Create SQL query for getting unassigned projects
-        const queryUnassignedProjects = "SELECT COUNT(*) FROM projects WHERE project ->>'status' = 'unassigned';";
-        const resultUnassignedProjects = await client.query(queryUnassignedProjects);
+        const queryUnassignProjects = "SELECT COUNT(*) FROM project_table WHERE project ->>'status' = 'unassign';";
+        const resultUnassignProjects = await client.query(queryUnassignProjects);
 
-        // Return response
         return {
             statusCode: 200,
             body: JSON.stringify({
-                totalProjects: resultTotalProjects.rows[0].count,
+                //totalProjects: resultTotalProjects.rows[0].count,
                 completedProjects: resultCompletedProjects.rows[0].count,
                 inProgressProjects: resultInProgressProjects.rows[0].count,
-                unassignedProjects: resultUnassignedProjects.rows[0].count,
-                message: "Success"
+                unassignedProjects: resultUnassignProjects.rows[0].count,
+                //message: "Success"
             })
         };
     } catch (error) {
