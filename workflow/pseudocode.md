@@ -407,7 +407,7 @@ Method : GET
 ```SQL
 
 -- Query to get the usecase list 
-select * FROM usecase WHERE LOWER(details -> 'usecase' ->> 'name') LIKE LOWER ( $1||'%')
+`select * FROM usecase_table WHERE LOWER(usecase ->> 'name') LIKE LOWER ( $1||'%')`, [params]
 
 ```
 # Search All resource details based on starting letter
