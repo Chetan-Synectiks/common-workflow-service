@@ -140,7 +140,7 @@ functions:
   
   # addProject
   addProject:
-    handler: addProject/addProject.addProject
+    handler: allProject/addProject.addProject
     role: ${env:LAMBDA_ROLE}
     events:
     - http:

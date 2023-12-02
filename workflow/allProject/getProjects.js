@@ -24,13 +24,13 @@ exports.getProjects = async (event) => {
         projects_table.project->>'status' as project_status,
         projects_table.project->>'project_icon' as project_icon,
         projects_table.project->>'name' as name,
-        jsonb_array_length(project_table.project->'resources') AS total_resources,
+        jsonb_array_length(projects_table.project->'resources') AS total_resources,
         COUNT(usecases_table.project_id) AS total_usecases
     FROM
-    projects_table
+        projects_table
     LEFT JOIN
         usecases_table ON projects_table.id = usecases_table.project_id
-        WHERE
+    WHERE
         projects_table.project->>'status' = $1 
     GROUP BY
         projects_table.id, projects_table.project`,
