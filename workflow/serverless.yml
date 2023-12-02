@@ -66,9 +66,6 @@ functions:
           path: /org_projects_status_overview
           method: get
   
-
-        
-  
   # allProject
   getProjects:
     handler: allProject/getProjects.getProjects 
@@ -139,4 +136,14 @@ functions:
     - http:
         path: /get_resource_by_name
         method: get
+        cors: true
+  
+  # addProject
+  addProject:
+    handler: addProject/addProject.addProject
+    role: ${env:LAMBDA_ROLE}
+    events:
+    - http:
+        path: /addProject
+        method: post
         cors: true

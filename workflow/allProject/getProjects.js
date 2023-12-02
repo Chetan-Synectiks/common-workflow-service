@@ -20,36 +20,36 @@ exports.getProjects = async (event) => {
     if (status) {
       usecase = await client.query(
         `SELECT
-        project_table.id AS id,
-        project_table.project->>'status' as project_status,
-        project_table.project->>'project_icon' as project_icon,
-        project_table.project->>'name' as name,
+        projects_table.id AS id,
+        projects_table.project->>'status' as project_status,
+        projects_table.project->>'project_icon' as project_icon,
+        projects_table.project->>'name' as name,
         jsonb_array_length(project_table.project->'resources') AS total_resources,
-        COUNT(usecase_table.project_id) AS total_usecases
+        COUNT(usecases_table.project_id) AS total_usecases
     FROM
-    project_table
+    projects_table
     LEFT JOIN
-        usecase_table ON project_table.id = usecase_table.project_id
+        usecases_table ON projects_table.id = usecases_table.project_id
         WHERE
-        project_table.project->>'status' = $1 
+        projects_table.project->>'status' = $1 
     GROUP BY
-        project_table.id, project_table.project`,
+        projects_table.id, projects_table.project`,
         [status]
       );
     } else {
       usecase = await client.query(`SELECT
-      project_table.id AS id,
-      project_table.project->>'status' as project_status,
-      project_table.project->>'project_icon' as project_icon,
-      project_table.project->>'name' as name,
-      jsonb_array_length(project_table.project->'resources') AS total_resources,
-      COUNT(usecase_table.project_id) AS total_usecases
+      projects_table.id AS id,
+      projects_table.project->>'status' as project_status,
+      projects_table.project->>'project_icon' as project_icon,
+      projects_table.project->>'name' as name,
+      jsonb_array_length(projects_table.project->'resources') AS total_resources,
+      COUNT(usecases_table.project_id) AS total_usecases
   FROM
-      project_table
+      projects_table
   LEFT JOIN
-      usecase_table ON project_table.id = usecase_table.project_id
+      usecases_table ON projects_table.id = usecases_table.project_id
   GROUP BY
-      project_table.id, project_table.project`);
+      projects_table.id, projects_table.project`);
     }
 
     let projectsDetails = usecase.rows.map((row) => ({

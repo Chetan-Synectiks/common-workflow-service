@@ -29,17 +29,17 @@ exports.getAllProjectsOverview = async (event, context, callback) => {
     try {
         const result = await client.query(`
         SELECT
-            project_table.id,
-            usecase_table.usecase->>'status' as status,
-            project_table.project->>'name' as project_name,
-            usecase_table.usecase->>'name' as usecase_name
+            projects_table.id,
+            usecases_table.usecase->>'status' as status,
+            projects_table.project->>'name' as project_name,
+            usecases_table.usecase->>'name' as usecase_name
         FROM
-            project_table
+            projects_table
         JOIN
-            usecase_table ON project_table.id = usecase_table.project_id
+            usecases_table ON projects_table.id = usecases_table.project_id
         WHERE
-            usecase_table.usecase->>'start_date' >= $1
-            AND usecase_table.usecase->>'end_date' <= $2`, [data.from_date, data.to_date]
+            usecases_table.usecase->>'start_date' >= $1
+            AND usecases_table.usecase->>'end_date' <= $2`, [data.from_date, data.to_date]
         );
 
         let projects = {};
