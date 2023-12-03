@@ -1,7 +1,6 @@
-exports.getResources = async (event, context, callback) => {
+const { Client } = require('pg');
 
-    const { Client } = require('pg');
-
+exports.getResources = async (event) => {
     const client = new Client({
         host: "localhost",
         port: "5432",
@@ -10,118 +9,67 @@ exports.getResources = async (event, context, callback) => {
         password: "postgres"
     });
 
-    client.connect();
-
-    let objReturn = {
-        code: 200,
-        message: "resource searched successfully",
-        type: "object",
-        object: []
-    };
-    const data = event.queryStringParameters;
-    // console.log(data)
-    let project_id;
-    if (data) {
-        project_id = data.project_id
-    }
-
-
     try {
-        if (project_id) {
-            const resourceQueryResult = await client.query(`SELECT *
-            FROM resource_table
-            WHERE resource_table.resource->'projects' @> $1::jsonb;`, [project_id]);
+        await client.connect();
 
-            // console.log(resourceQueryResult.rows);
-            for (const record of resourceQueryResult.rows) {
+        const projectFilter = event.queryStringParameters && event.queryStringParameters.project_id;
 
-                const projects = record.resource.projects;
+        const resourcesQuery = 'SELECT * FROM resources_table';
+        let projectsQuery = 'SELECT * FROM projects_table';
 
-                const DataArray = [];
-
-                for (const projectId of projects) {
-                    const Result = await client.query(`select id, project_table.project->>'name' as project_name, project_table.project->>'project_img_url' as project_img_url from project_table where id = $1`, [projectId]);
-
-                    //console.log('!!!!', Result.rows[0].project_name);
-
-                    DataArray.push({
-                        projectId: projectId,
-                        project_name: Result.rows[0].project_name,
-                        project_img_url: Result.rows[0].project_img_url
-                    });
-                }
-                //console.log(DataArray);
-                let returnObj = {
-                    resource_id: record.resource_id,
-                    resource_name: record.resource.name,
-                    resource_img_url: record.resource.image,
-                    Role: record.resource.role,
-                    resource_email: record.resource.email,
-                    projects: DataArray
-                };
-
-                objReturn.object.push(returnObj);
-            }
-        }
-        else {
-            const resourceQueryResult = await client.query(`select * from resource_table`);
-
-            // console.log(resourceQueryResult.rows);
-
-            for (const record of resourceQueryResult.rows) {
-
-                const projects = record.resource.projects;
-
-                const DataArray = [];
-
-                for (const projectId of projects) {
-                    const Result = await client.query(`select id, project_table.project->>'name' as project_name, project_table.project->>'project_img_url' as project_img_url from project_table where id = $1`, [projectId]);
-
-                    //console.log('!!!!', Result.rows[0].project_name);
-
-                    DataArray.push({
-                        projectId: projectId,
-                        project_name: Result.rows[0].project_name,
-                        project_img_url: Result.rows[0].project_img_url
-                    });
-                }
-                //console.log(DataArray);
-                let returnObj = {
-                    resource_id: record.resource_id,
-                    resource_name: record.resource.name,
-                    resource_img_url: record.resource.image,
-                    Role: record.resource.role,
-                    resource_email: record.resource.email,
-                    projects: DataArray
-                };
-
-                objReturn.object.push(returnObj);
-            }
-
+        if (projectFilter) {
+            projectsQuery += ` WHERE id = '${projectFilter}'`;
         }
 
+        const resourcesResult = await client.query(resourcesQuery);
+        const projectsResult = await client.query(projectsQuery);
 
-        client.end();
+        const outputData = processResourcesData(resourcesResult.rows, projectsResult.rows);
 
-        return {
-            "statusCode": 200,
-            "headers": {
-                "Access-Control-Allow-Origin": "*"
-            },
-            "body": JSON.stringify(objReturn)
-        };
-
-    } catch (e) {
-        objReturn.code = 400;
-        objReturn.message = e;
-        client.end();
+        //console.log(outputData);
 
         return {
-            "statusCode": 400,
-            "headers": {
-                "Access-Control-Allow-Origin": "*"
-            },
-            "body": JSON.stringify(objReturn)
+            statusCode: 200,
+            body: JSON.stringify(outputData),
         };
+    } catch (error) {
+        console.error('Error executing query:', error);
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ message: 'Internal Server Error' }),
+        };
+    } finally {
+        await client.end();
     }
 };
+
+function processResourcesData(resources, projects) {
+    const outputData = [];
+
+    // Iterate over each resource
+    for (const resource of resources) {
+        const resourceId = resource.id;
+        const resourceName = resource.resource.name;
+        const resourceImgUrl = resource.resource.image;
+        const resourceEmail = resource.resource.email;
+
+        // Retrieve all projects
+        const resourceProjects = projects
+            .map(project => ({
+                project_id: project.id,
+                project_name: project.project.name,
+                project_img_url: '', // Add logic to retrieve project image URL if available
+            }));
+
+        // Add the resource to the outputData array with all projects
+        outputData.push({
+            resource_id: resourceId,
+            resource_name: resourceName,
+            resource_img_url: resourceImgUrl,
+            resource_email: resourceEmail,
+            projects: resourceProjects,
+        });
+    }
+
+    return outputData;
+}
