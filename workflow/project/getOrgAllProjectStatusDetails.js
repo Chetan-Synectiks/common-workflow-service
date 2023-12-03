@@ -1,9 +1,10 @@
 exports.getOrgAllProjectStatusDetails = async (event) => {
     const { Client } = require('pg');
     const client = new Client({
+    
         host: "localhost",
         port: "5432",
-        database: "dashboard-db",
+        database: "workflow",
         user: "postgres",
         password: "Amar123$"
     });
@@ -11,16 +12,16 @@ exports.getOrgAllProjectStatusDetails = async (event) => {
     client.connect();
 
     try {
-        const queryTotalProjects = "SELECT COUNT(*) FROM project_table;";
+        const queryTotalProjects = "SELECT COUNT(*) FROM projects_table;";
         const resultTotalProjects = await client.query(queryTotalProjects);
 
-        const queryCompletedProjects = "SELECT COUNT(*) FROM project_table WHERE project ->>'status' = 'completed';";
+        const queryCompletedProjects = "SELECT COUNT(*) FROM projects_table WHERE project ->>'status' = 'completed';";
         const resultCompletedProjects = await client.query(queryCompletedProjects);
 
-        const queryInProgressProjects = "SELECT COUNT(*) FROM project_table WHERE project ->>'status' = 'inprogress';";
+        const queryInProgressProjects = "SELECT COUNT(*) FROM projects_table WHERE project ->>'status' = 'inprogress';";
         const resultInProgressProjects = await client.query(queryInProgressProjects);
 
-        const queryUnassignProjects = "SELECT COUNT(*) FROM project_table WHERE project ->>'status' = 'unassign';";
+        const queryUnassignProjects = "SELECT COUNT(*) FROM projects_table WHERE project ->>'status' = 'unassigned';";
         const resultUnassignProjects = await client.query(queryUnassignProjects);
 
         return {

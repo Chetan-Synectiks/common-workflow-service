@@ -447,27 +447,29 @@ Retrieves the list of all the projects, tasks, and percentage of completed proje
 SQL
 --- without pagination ---
 
-const queryTotalProjects = await client.query("SELECT COUNT(*) FROM project_table");
+const queryTotalProjects = await client.query("SELECT COUNT(*) FROM projects_table");
 const resultTotalProjects = queryTotalProjects.rows[0].count;
 
-const queryCompletedProjects = await client.query("SELECT COUNT(*) FROM project_table WHERE project ->>'status' = 'completed'");
+const queryCompletedProjects = await client.query("SELECT COUNT(*) FROM projects_table WHERE project ->>'status' = 'completed'");
 const resultCompletedProjects = queryCompletedProjects.rows[0].count;
 
-const queryUnassignedProjects = await client.query("SELECT COUNT(*) FROM project_table WHERE project ->>'status' = 'unassigned'");
+const queryUnassignedProjects = await client.query("SELECT COUNT(*) FROM projects_table WHERE project ->>'status' = 'unassigned'");
 const resultUnassignedProjects = queryUnassignedProjects.rows[0].count;
 
-const queryInProgressProjects = await client.query("SELECT COUNT(*) FROM project_table WHERE project ->>'status' = 'inprogress'");
+const queryInProgressProjects = await client.query("SELECT COUNT(*) FROM projects_table WHERE project ->>'status' = 'inprogress'");
 const resultInProgressProjects = queryInProgressProjects.rows[0].count;
 
-const percentageCompleted = (resultCompletedProjects / resultTotalProjects) * 100;
-const percentageUnassigned = (resultUnassignedProjects / resultTotalProjects) * 100;
-const percentageInProgress = (resultInProgressProjects / resultTotalProjects) * 100;
+const percentageCompletedProjects = (resultCompletedProjects / resultTotalProjects) * 100;
+const percentageUnassignedProjects = (resultUnassignedProjects / resultTotalProjects) * 100;
+const percentageInProgressProjects = (resultInProgressProjects / resultTotalProjects) * 100;
 
-const queryTotalTasks = await client.query("SELECT COUNT(*) FROM usecase_table");
-const de = await client.query(`SELECT usecase, project_id FROM usecase_table`);
+const queryTotalTasks = await client.query(`
+            SELECT COUNT(*) as total_tasks
+            FROM tasks_table t
+            JOIN usecases_table u ON t.usecase_id = u.id
+        `);
 
-let resultTotalTasks = [];
-
+        totaltasks = queryTotalTasks.rows[0].total_tasks;
 
 
 --- with pagination ---
@@ -494,14 +496,14 @@ SQL
 --- without pagination ---
 
 
-const queryTotalProjects = "SELECT COUNT(*) FROM project_table;";
+const queryTotalProjects = "SELECT COUNT(*) FROM projects_table;";
 const resultTotalProjects = await client.query(queryTotalProjects);
 
-const queryCompletedProjects = "SELECT COUNT(*) FROM project_table WHERE project ->>'status' = 'completed';";
+const queryCompletedProjects = "SELECT COUNT(*) FROM projects_table WHERE project ->>'status' = 'completed';";
 const resultCompletedProjects = await client.query(queryCompletedProjects);
- const queryInProgressProjects = "SELECT COUNT(*) FROM project_table WHERE project ->>'status' = 'inprogress';";
+ const queryInProgressProjects = "SELECT COUNT(*) FROM projects_table WHERE project ->>'status' = 'inprogress';";
  const resultInProgressProjects = await client.query(queryInProgressProjects);
-const queryUnassignProjects = "SELECT COUNT(*) FROM project_table WHERE project ->>'status' = 'unassign';";
+const queryUnassignProjects = "SELECT COUNT(*) FROM projects_table WHERE project ->>'status' = 'unassign';";
 const resultUnassignProjects = await client.query(queryUnassignProjects);
 
 
