@@ -112,20 +112,20 @@ functions:
         cors: true    
 
   usecasedetails:
-    handler: usecase/usecase_details.get_usecasedetails
+    handler: usecase/getProjectsUsecases.getProjectsUsecases
     role: ${env:LAMBDA_ROLE}
     events:
     - http:
-        path: /usecasedetails
+        path:  /projects/usecases
         method: get
         cors: true 
 
   usecase_search:
-    handler: usecase/usecase_search.usecase_search
+    handler: usecase/getProjectsUsecaseByName.getProjectsUsecaseByName
     role: ${env:LAMBDA_ROLE}
     events:
     - http:
-        path: /searchusecase
+        path: /projects/usecases/{name}
         method: get
         cors: true 
 ##searchbargetresourcebyname

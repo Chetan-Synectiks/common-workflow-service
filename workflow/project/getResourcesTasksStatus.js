@@ -4,7 +4,7 @@ exports.getResourcesTasksStatus = async (event, context, callback) => {
     const client = new Client({
         host: "localhost",
         port: "5432",
-        database: "workflow",
+        database: "workflowapi",
         user: "postgres",
         password: ""
     });
@@ -15,68 +15,39 @@ exports.getResourcesTasksStatus = async (event, context, callback) => {
 
     if (event.queryStringParameters) {
         data = event.queryStringParameters;
-    }
-
-    let objReturn = {
-        code: 200,
-        message: "Resource search successful",
-        type: "object",
-        object: []
     };
 
     try {
-        // Fetch resource information for the specified resource_id
-        const resourceResult = await client.query(`
-            SELECT resource->>'name' AS name
-            FROM resource_table
-            WHERE id = $1`,
+        // Fetch tasks and resource information using JOIN
+        const tasksResult = await client.query(`
+            SELECT t.*, r.resource->>'name' AS resource_name
+            FROM tasks_table t
+            INNER JOIN resources_table r ON t.assignee_id = r.id
+            WHERE t.assignee_id = $1`,
             [data.resource_id]
         );
 
-        const resourceName = resourceResult.rows[0].name;
-
         let resourceTasks = {
-            resource_id: data.resource_id,
-            resource_name: resourceName,
             completed_tasks: 0,
             inprogress_tasks: 0,
             pending_tasks: 0
         };
 
-        // Fetch use cases from the database
-        const usecaseResult = await client.query(`
-            SELECT usecase
-            FROM usecase_table`
-        );
+        // Process each task
+        for (const taskRow of tasksResult.rows) {
+            const task = taskRow.task;
 
-        // Process each use case
-        for (const usecaseRow of usecaseResult.rows) {
-            const usecase = usecaseRow.usecase;
-
-            // Process each stage in the use case
-            for (const stageKey in usecase.stages) {
-                const stage = usecase.stages[stageKey];
-
-                // Process each task in the stage
-                if (stage.tasks) {
-                    for (const task of stage.tasks) {
-                        const assigneeId = task.assignee_id;
-
-                        // Compare start_date and end_date of tasks
-                        if (
-                            task.start_date >= data.from_date &&
-                            task.end_date <= data.to_date &&
-                            assigneeId === data.resource_id
-                        ) {
-                            if (task.status === 'inprogress') {
-                                resourceTasks.inprogress_tasks++;
-                            } else if (task.status === 'completed') {
-                                resourceTasks.completed_tasks++;
-                            } else if (task.status === 'pending') {
-                                resourceTasks.pending_tasks++;
-                            }
-                        }
-                    }
+            // Filter tasks based on date range
+            if (
+                task.start_date >= data.from_date &&
+                task.end_date <= data.to_date
+            ) {
+                if (task.status === 'In Progress') {
+                    resourceTasks.inprogress_tasks++;
+                } else if (task.status === 'Completed') {
+                    resourceTasks.completed_tasks++;
+                } else if (task.status === 'Pending') {
+                    resourceTasks.pending_tasks++;
                 }
             }
         }
@@ -89,16 +60,9 @@ exports.getResourcesTasksStatus = async (event, context, callback) => {
             headers: {
                 "Access-Control-Allow-Origin": "*"
             },
-            body: JSON.stringify({
-                code: 200,
-                message: "Resource search successful",
-                type: "object",
-                object: [resourceTasks]
-            })
+            body: JSON.stringify(resourceTasks)
         };
     } catch (e) {
-        objReturn.code = 400;
-        objReturn.message = e.message || "An error occurred";
         await client.end();
 
         return {
@@ -106,7 +70,9 @@ exports.getResourcesTasksStatus = async (event, context, callback) => {
             headers: {
                 "Access-Control-Allow-Origin": "*"
             },
-            body: JSON.stringify(objReturn)
+            body: JSON.stringify({
+                error: e.message || "An error occurred"
+            })
         };
     }
 };
