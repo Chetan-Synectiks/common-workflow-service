@@ -157,7 +157,7 @@ functions:
         method: post
         cors: true
   #addusecase
-  addusecase:
+  addusecases:
     handler: usecase/addusecase.addusecase
     role: ${env:LAMBDA_ROLE}
     events:

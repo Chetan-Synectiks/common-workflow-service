@@ -17,7 +17,7 @@ exports.addusecase = async (event) => {
     });
 
     try {
-        // Connect to the PostgreSQL database
+
         await client.connect();
 
         // Insert data into the usecases_table
