@@ -147,3 +147,12 @@ functions:
         path: /addProject
         method: post
         cors: true
+  #addusecase
+  addusecase:
+    handler: usecase/addusecase.addusecase
+    role: ${env:LAMBDA_ROLE}
+    events:
+      - http:
+          path: /project/usecases/new
+          method: post
+          cors: true
