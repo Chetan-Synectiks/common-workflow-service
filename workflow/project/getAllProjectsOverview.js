@@ -12,34 +12,27 @@ exports.getAllProjectsOverview = async (event, context, callback) => {
     });
 
     client.connect();
-    
-    data={}
+
+    data = {};
 
     if (event.queryStringParameters) {
         data = event.queryStringParameters;
     }
 
-    let objReturn = {
-        code: 200,
-        message: "Project search successful",
-        type: "object",
-        object: []
-    };
-
     try {
         const result = await client.query(`
-        SELECT
-            projects_table.id,
-            usecases_table.usecase->>'status' as status,
-            projects_table.project->>'name' as project_name,
-            usecases_table.usecase->>'name' as usecase_name
-        FROM
-            projects_table
-        JOIN
-            usecases_table ON projects_table.id = usecases_table.project_id
-        WHERE
-            usecases_table.usecase->>'start_date' >= $1
-            AND usecases_table.usecase->>'end_date' <= $2`, [data.from_date, data.to_date]
+            SELECT
+                projects_table.id,
+                usecases_table.usecase->>'status' as status,
+                projects_table.project->>'name' as project_name,
+                usecases_table.usecase->>'name' as usecase_name
+            FROM
+                projects_table
+            JOIN
+                usecases_table ON projects_table.id = usecases_table.project_id
+            WHERE
+                usecases_table.usecase->>'start_date' >= $1
+                AND usecases_table.usecase->>'end_date' <= $2`, [data.from_date, data.to_date]
         );
 
         let projects = {};
@@ -50,8 +43,8 @@ exports.getAllProjectsOverview = async (event, context, callback) => {
             if (!projects[projectName]) {
                 projects[projectName] = {
                     project_name: projectName,
-                    completed_usecases: [],
-                    incomplete_usecases: []
+                    completed_usecases: 0,
+                    incomplete_usecases: 0
                 };
             }
 
@@ -61,8 +54,7 @@ exports.getAllProjectsOverview = async (event, context, callback) => {
                 projects[projectName].completed_usecases++;
             }
         });
-        // Object.values
-        objReturn.object = Object.values(projects);
+
         await client.end();
 
         return {
@@ -70,11 +62,9 @@ exports.getAllProjectsOverview = async (event, context, callback) => {
             headers: {
                 "Access-Control-Allow-Origin": "*"
             },
-            body: JSON.stringify(objReturn)
+            body: JSON.stringify(projects)
         };
     } catch (e) {
-        objReturn.code = 400;
-        objReturn.message = e.message || "An error occurred";
         await client.end();
 
         return {
@@ -82,7 +72,7 @@ exports.getAllProjectsOverview = async (event, context, callback) => {
             headers: {
                 "Access-Control-Allow-Origin": "*"
             },
-            body: JSON.stringify(objReturn)
+            body: JSON.stringify({ error: e.message || "An error occurred" })
         };
     }
 };

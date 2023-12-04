@@ -165,3 +165,12 @@ functions:
           path: /project/usecases/new
           method: post
           cors: true
+  # stages
+  stageDetailsForCreatingUsecase:
+    handler: stages/stageDetailsForCreatingUsecase.stageDetailsForCreatingUsecase
+    role: ${env:LAMBDA_ROLE}
+    events:
+    - http:
+        path: /project/usecases/stage_details
+        method: get
+        cors: true

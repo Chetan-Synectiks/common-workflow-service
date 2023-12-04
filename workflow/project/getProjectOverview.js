@@ -19,13 +19,6 @@ exports.getProjectOverview = async (event, context, callback) => {
         data = event.queryStringParameters;
     }
 
-    let objReturn = {
-        code: 200,
-        message: "project search successfully",
-        type: "object",
-        object: []
-    };
-
     try {
         const result = await client.query(`
         SELECT
@@ -56,7 +49,6 @@ exports.getProjectOverview = async (event, context, callback) => {
             completed_usecases: completedCount,
         };
         
-        objReturn.object = returnObj;
         await client.end();
 
         return {
@@ -64,19 +56,15 @@ exports.getProjectOverview = async (event, context, callback) => {
             "headers": {
                 "Access-Control-Allow-Origin": "*"
             },
-            "body": JSON.stringify(objReturn)
+            "body": JSON.stringify(returnObj)
         };
     } catch (e) {
-        objReturn.code = 400;
-        objReturn.message = e.message || "An error occurred";
-        client.end();
-
         return {
-            "statusCode": 400,
-            "headers": {
+            statusCode: 400,
+            headers: {
                 "Access-Control-Allow-Origin": "*"
             },
-            "body": JSON.stringify(objReturn)
+            body: JSON.stringify({ error: e.message || "An error occurred" })
         };
     }
 };
