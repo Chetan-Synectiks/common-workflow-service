@@ -17,6 +17,7 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [get-all-projects-with-filter-and-without-filter](#get-all-projects-with-filter-and-without-filter)
 - [Get a list of resources](#get-a-list-of-resources)
 - [Get all usecases with details](#get-all-usecases-with-details)
+- [Get a usecase by name](#get-a-usecase-by-name)
 - [search usecase from the search bar](#search-usecase-from-the-search-bar)
 - [Search All resource details based on starting letter](#search-all-resource-details-based-on-starting-letter)
 - [Get Total Projects, Total Tasks, and Percentage of completed projects](#get-total-projects-total-tasks-and-percentage-of-completed-projects)
@@ -253,15 +254,12 @@ Method : GET
 
 ```SQL
 
--- Query to get the resourcename with resource_id and usecasedetails from usecase_table
-       SELECT resource->>'name' AS name
-            FROM resource_table
-            WHERE id = $1`,
-            [data.resource_id]
-
--- Query to get the resourcename with resource_id and usecasedetails from usecase_table
-        `SELECT usecase FROM usecase_table`
-
+-- Query to get the required data from the both the tables
+    SELECT t.*, r.resource->>'name' AS resource_name
+            FROM tasks_table t
+            INNER JOIN resources_table r ON t.assignee_id = r.id
+            WHERE t.assignee_id = $1,
+            [data.resource_id]  
 ```
 
 # Get task status for all resources between two dates
@@ -274,14 +272,10 @@ Method : GET
 
 ```SQL
 
--- Query to get the resourcename with resource_id and usecasedetails from usecase_table
-        `SELECT usecase FROM usecase_table`
-
--- Query to get the resourcename with resource_id and usecasedetails from usecase_table
-       SELECT resource->>'name' AS name
-            FROM resource_table
-            WHERE id = $1`,
-            [assigneeId]
+-- Query to get the required data from the both the tables
+       SELECT t.*, r.resource->>'name' AS resource_name
+            FROM tasks_table t
+            INNER JOIN resources_table r ON t.assignee_id = r.id
 
 ```
 # get-all-projects-with-filter-and-without-filter
@@ -384,6 +378,29 @@ Extract query parameters from the event.
 
 # Get all usecases with details
 
+get all uscases with details id, name,current_stage,usecase_assigned_to, no of resources,usecase_start_date,usecase_enddate.
+
+Method : GET
+
+-   Using the pg client create a SQL query for a SELECT statment to get id, name,current_stage,usecase_assigned_to,usecase_start_date,usecase_end_date.
+
+```SQL
+
+-- Query to get the usecaseid,usecasename,currentstage,assignee_id,stages,usecasestart_date,usecaseend_date
+            SELECT
+                u.id AS usecase_id,
+                u.usecase->>'name' AS name,
+                u.usecase->>'current_stage' AS currentstage,
+                u.usecase->>'start_date' AS usecase_startdate,
+                u.usecase->>'end_date' AS usecase_enddate,
+                u.usecase->>'usecase_assignee_id' AS assignedid,
+                COUNT(DISTINCT t.assignee_id) AS totalresources
+            FROM usecases_table u
+            LEFT JOIN tasks_table t ON u.id = t.usecase_id
+            GROUP BY u.id
+
+```
+# Get a usecase by name
 get all uscases with details id, name,current_stage,usecase_assigned_to, no of resources,usecase_start_date,current_stage_enddate.
 
 Method : GET
@@ -392,8 +409,20 @@ Method : GET
 
 ```SQL
 
--- Query to get the usecaseid,usecasename,currentstage,assignee_id,stages,usecasestart_date
-select id,usecase->'name' as name,usecase->'current_stage' as currentstage,usecase->'assignee_id' as assignedid,usecase->'stages' as stages ,usecase->'start_date' as usecase_startdate from usecase_table
+-- Query to get the usecaseid,usecasename,currentstage,assignee_id,stages,usecasestart_date,usecaseend_date
+            SELECT
+                u.id AS usecase_id,
+                u.usecase->>'name' AS name,
+                u.usecase->>'current_stage' AS currentstage,
+                u.usecase->>'start_date' AS usecase_startdate,
+                u.usecase->>'end_date' AS usecase_enddate,
+                u.usecase->>'usecase_assignee_id' AS assignedid,
+                COUNT(DISTINCT t.assignee_id) AS totalresources
+            FROM usecases_table u
+            LEFT JOIN tasks_table t ON u.id = t.usecase_id
+            WHERE u.project_id = $1 AND u.usecase->>'name' = $2
+            GROUP BY u.id
+        , [data.project_id, data.name]      
 
 ```
 # search usecase from the search bar
@@ -407,7 +436,7 @@ Method : GET
 ```SQL
 
 -- Query to get the usecase list 
-`select * FROM usecase_table WHERE LOWER(usecase ->> 'name') LIKE LOWER ( $1||'%')`, [params]
+select * FROM usecases_table WHERE LOWER(usecase ->> 'name') LIKE LOWER ( $1||'%')`, [params]
 
 ```
 # Search All resource details based on starting letter
