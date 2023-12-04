@@ -111,12 +111,21 @@ functions:
         method: get
         cors: true    
 
-  usecasedetails:
-    handler: usecase/usecase_details.get_usecasedetails
+  getProjectsUsecases:
+    handler: usecase/getProjectsUsecases.getProjectsUsecases
     role: ${env:LAMBDA_ROLE}
     events:
     - http:
-        path: /usecasedetails
+        path:  /projects/usecases
+        method: get
+        cors: true 
+
+  getProjectsUsecaseByName:
+    handler: usecase/getProjectsUsecaseByName.getProjectsUsecaseByName
+    role: ${env:LAMBDA_ROLE}
+    events:
+    - http:
+        path: /projects/usecases/{name}
         method: get
         cors: true 
 

@@ -4,14 +4,14 @@ exports.usecase_search = async (event) => {
     const client = new Client({
         host: "localhost",
         port: "5432",
-        database: "workflow",
+        database: "workflowapi",
         user: "postgres",
         password: ""
 
     });
     try {
         await client.connect();
-        let res = await client.query(`select * FROM usecase_table WHERE LOWER(usecase ->> 'name') LIKE LOWER ( $1||'%')`, [params]);
+        let res = await client.query(`select * FROM usecases_table WHERE LOWER(usecase ->> 'name') LIKE LOWER ( $1||'%')`, [params]);
         const extractedData = res.rows.map(row => ({
             name: row.usecase.name,
         }));

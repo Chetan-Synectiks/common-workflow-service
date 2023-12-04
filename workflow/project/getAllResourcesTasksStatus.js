@@ -4,7 +4,7 @@ exports.getAllResourcesTasksStatus = async (event, context, callback) => {
     const client = new Client({
         host: "localhost",
         port: "5432",
-        database: "workflow",
+        database: "workflowapi",
         user: "postgres",
         password: ""
     });
@@ -17,70 +17,42 @@ exports.getAllResourcesTasksStatus = async (event, context, callback) => {
         data = event.queryStringParameters;
     }
 
-    let objReturn = {
-        code: 200,
-        message: "Project search successful",
-        type: "object",
-        object: []
-    };
-
     try {
-        // Fetch use cases from the database
-        const usecaseResult = await client.query(`
-            SELECT usecase
-            FROM usecase_table`
-            
+        // Fetch tasks and resource information using JOIN
+        const tasksResult = await client.query(`
+            SELECT t.*, r.resource->>'name' AS resource_name
+            FROM tasks_table t
+            INNER JOIN resources_table r ON t.assignee_id = r.id`
         );
 
         let assigneeTasks = {};
 
-        // Process each use case
-        for (const usecaseRow of usecaseResult.rows) {
-            const usecase = usecaseRow.usecase;
+        // Process each task
+        for (const taskRow of tasksResult.rows) {
+            const assigneeId = taskRow.assignee_id;
+            const task = taskRow.task;
 
-            // Process each stage in the use case
-            for (const stageKey in usecase.stages) {
-                const stage = usecase.stages[stageKey];
+            // Filter tasks based on date range
+            if (
+                task.start_date >= data.from_date &&
+                task.end_date <= data.to_date
+            ) {
+                if (!assigneeTasks[assigneeId]) {
+                    assigneeTasks[assigneeId] = {
+                        resource_id: assigneeId,
+                        resource_name: taskRow.resource_name,
+                        completed_tasks: 0,
+                        inprogress_tasks: 0,
+                        pending_tasks: 0
+                    };
+                }
 
-                // Process each task in the stage
-                if (stage.tasks) {
-                    for (const task of stage.tasks) {
-                        const assigneeId = task.assignee_id;
-
-                        // Compare start_date and end_date of tasks
-                        if (
-                            task.start_date >= data.from_date &&
-                            task.end_date <= data.to_date
-                        ) {
-                            // Fetch resource information for each assignee_id
-                            const resourceResult = await client.query(`
-                                SELECT resource->>'name' AS name
-                                FROM resource_table
-                                WHERE id = $1`,
-                                [assigneeId]
-                            );
-
-                            const resourceName = resourceResult.rows[0].name;
-
-                            if (!assigneeTasks[assigneeId]) {
-                                assigneeTasks[assigneeId] = {
-                                    resource_id: assigneeId,
-                                    resource_name: resourceName,
-                                    completed_tasks: 0,
-                                    inprogress_tasks: 0,
-                                    pending_tasks: 0
-                                };
-                            }
-
-                            if (task.status === 'inprogress') {
-                                assigneeTasks[assigneeId].inprogress_tasks++;
-                            } else if (task.status === 'completed') {
-                                assigneeTasks[assigneeId].completed_tasks++;
-                            } else if (task.status === 'pending') {
-                                assigneeTasks[assigneeId].pending_tasks++;
-                            }
-                        }
-                    }
+                if (task.status === 'In Progress') {
+                    assigneeTasks[assigneeId].inprogress_tasks++;
+                } else if (task.status === 'Completed') {
+                    assigneeTasks[assigneeId].completed_tasks++;
+                } else if (task.status === 'Pending') {
+                    assigneeTasks[assigneeId].pending_tasks++;
                 }
             }
         }
@@ -90,30 +62,26 @@ exports.getAllResourcesTasksStatus = async (event, context, callback) => {
 
         await client.end();
 
-        // Return the response
+        // Return the response without code, message, and type
         return {
             statusCode: 200,
             headers: {
                 "Access-Control-Allow-Origin": "*"
             },
-            body: JSON.stringify({
-                code: 200,
-                message: "Project search successful",
-                type: "object",
-                object: assigneeTasksArray
-            })
+            body: JSON.stringify(assigneeTasksArray)
         };
     } catch (e) {
-        objReturn.code = 400;
-        objReturn.message = e.message || "An error occurred";
         await client.end();
 
+        // Return an error response without code, message, and type
         return {
             statusCode: 400,
             headers: {
                 "Access-Control-Allow-Origin": "*"
             },
-            body: JSON.stringify(objReturn)
+            body: JSON.stringify({
+                error: e.message || "An error occurred"
+            })
         };
     }
 };

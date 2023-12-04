@@ -17,6 +17,7 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [get-all-projects-with-filter-and-without-filter](#get-all-projects-with-filter-and-without-filter)
 - [Get a list of resources](#get-a-list-of-resources)
 - [Get all usecases with details](#get-all-usecases-with-details)
+- [Get a usecase by name](#get-a-usecase-by-name)
 - [search usecase from the search bar](#search-usecase-from-the-search-bar)
 - [Search All resource details based on starting letter](#search-all-resource-details-based-on-starting-letter)
 - [Get Total Projects, Total Tasks, and Percentage of completed projects](#get-total-projects-total-tasks-and-percentage-of-completed-projects)
@@ -253,15 +254,12 @@ Method : GET
 
 ```SQL
 
--- Query to get the resourcename with resource_id and usecasedetails from usecase_table
-       SELECT resource->>'name' AS name
-            FROM resource_table
-            WHERE id = $1`,
-            [data.resource_id]
-
--- Query to get the resourcename with resource_id and usecasedetails from usecase_table
-        `SELECT usecase FROM usecase_table`
-
+-- Query to get the required data from the both the tables
+    SELECT t.*, r.resource->>'name' AS resource_name
+            FROM tasks_table t
+            INNER JOIN resources_table r ON t.assignee_id = r.id
+            WHERE t.assignee_id = $1,
+            [data.resource_id]  
 ```
 
 # Get task status for all resources between two dates
@@ -274,14 +272,10 @@ Method : GET
 
 ```SQL
 
--- Query to get the resourcename with resource_id and usecasedetails from usecase_table
-        `SELECT usecase FROM usecase_table`
-
--- Query to get the resourcename with resource_id and usecasedetails from usecase_table
-       SELECT resource->>'name' AS name
-            FROM resource_table
-            WHERE id = $1`,
-            [assigneeId]
+-- Query to get the required data from the both the tables
+       SELECT t.*, r.resource->>'name' AS resource_name
+            FROM tasks_table t
+            INNER JOIN resources_table r ON t.assignee_id = r.id
 
 ```
 # get-all-projects-with-filter-and-without-filter
@@ -384,6 +378,29 @@ Extract query parameters from the event.
 
 # Get all usecases with details
 
+get all uscases with details id, name,current_stage,usecase_assigned_to, no of resources,usecase_start_date,usecase_enddate.
+
+Method : GET
+
+-   Using the pg client create a SQL query for a SELECT statment to get id, name,current_stage,usecase_assigned_to,usecase_start_date,usecase_end_date.
+
+```SQL
+
+-- Query to get the usecaseid,usecasename,currentstage,assignee_id,stages,usecasestart_date,usecaseend_date
+            SELECT
+                u.id AS usecase_id,
+                u.usecase->>'name' AS name,
+                u.usecase->>'current_stage' AS currentstage,
+                u.usecase->>'start_date' AS usecase_startdate,
+                u.usecase->>'end_date' AS usecase_enddate,
+                u.usecase->>'usecase_assignee_id' AS assignedid,
+                COUNT(DISTINCT t.assignee_id) AS totalresources
+            FROM usecases_table u
+            LEFT JOIN tasks_table t ON u.id = t.usecase_id
+            GROUP BY u.id
+
+```
+# Get a usecase by name
 get all uscases with details id, name,current_stage,usecase_assigned_to, no of resources,usecase_start_date,current_stage_enddate.
 
 Method : GET
@@ -392,8 +409,20 @@ Method : GET
 
 ```SQL
 
--- Query to get the usecaseid,usecasename,currentstage,assignee_id,stages,usecasestart_date
-select id,usecase->'name' as name,usecase->'current_stage' as currentstage,usecase->'assignee_id' as assignedid,usecase->'stages' as stages ,usecase->'start_date' as usecase_startdate from usecase_table
+-- Query to get the usecaseid,usecasename,currentstage,assignee_id,stages,usecasestart_date,usecaseend_date
+            SELECT
+                u.id AS usecase_id,
+                u.usecase->>'name' AS name,
+                u.usecase->>'current_stage' AS currentstage,
+                u.usecase->>'start_date' AS usecase_startdate,
+                u.usecase->>'end_date' AS usecase_enddate,
+                u.usecase->>'usecase_assignee_id' AS assignedid,
+                COUNT(DISTINCT t.assignee_id) AS totalresources
+            FROM usecases_table u
+            LEFT JOIN tasks_table t ON u.id = t.usecase_id
+            WHERE u.project_id = $1 AND u.usecase->>'name' = $2
+            GROUP BY u.id
+        , [data.project_id, data.name]      
 
 ```
 # search usecase from the search bar
@@ -407,7 +436,7 @@ Method : GET
 ```SQL
 
 -- Query to get the usecase list 
-`select * FROM usecase_table WHERE LOWER(usecase ->> 'name') LIKE LOWER ( $1||'%')`, [params]
+select * FROM usecases_table WHERE LOWER(usecase ->> 'name') LIKE LOWER ( $1||'%')`, [params]
 
 ```
 # Search All resource details based on starting letter
@@ -447,27 +476,29 @@ Retrieves the list of all the projects, tasks, and percentage of completed proje
 SQL
 --- without pagination ---
 
-const queryTotalProjects = await client.query("SELECT COUNT(*) FROM project_table");
+const queryTotalProjects = await client.query("SELECT COUNT(*) FROM projects_table");
 const resultTotalProjects = queryTotalProjects.rows[0].count;
 
-const queryCompletedProjects = await client.query("SELECT COUNT(*) FROM project_table WHERE project ->>'status' = 'completed'");
+const queryCompletedProjects = await client.query("SELECT COUNT(*) FROM projects_table WHERE project ->>'status' = 'completed'");
 const resultCompletedProjects = queryCompletedProjects.rows[0].count;
 
-const queryUnassignedProjects = await client.query("SELECT COUNT(*) FROM project_table WHERE project ->>'status' = 'unassigned'");
+const queryUnassignedProjects = await client.query("SELECT COUNT(*) FROM projects_table WHERE project ->>'status' = 'unassigned'");
 const resultUnassignedProjects = queryUnassignedProjects.rows[0].count;
 
-const queryInProgressProjects = await client.query("SELECT COUNT(*) FROM project_table WHERE project ->>'status' = 'inprogress'");
+const queryInProgressProjects = await client.query("SELECT COUNT(*) FROM projects_table WHERE project ->>'status' = 'inprogress'");
 const resultInProgressProjects = queryInProgressProjects.rows[0].count;
 
-const percentageCompleted = (resultCompletedProjects / resultTotalProjects) * 100;
-const percentageUnassigned = (resultUnassignedProjects / resultTotalProjects) * 100;
-const percentageInProgress = (resultInProgressProjects / resultTotalProjects) * 100;
+const percentageCompletedProjects = (resultCompletedProjects / resultTotalProjects) * 100;
+const percentageUnassignedProjects = (resultUnassignedProjects / resultTotalProjects) * 100;
+const percentageInProgressProjects = (resultInProgressProjects / resultTotalProjects) * 100;
 
-const queryTotalTasks = await client.query("SELECT COUNT(*) FROM usecase_table");
-const de = await client.query(`SELECT usecase, project_id FROM usecase_table`);
+const queryTotalTasks = await client.query(`
+            SELECT COUNT(*) as total_tasks
+            FROM tasks_table t
+            JOIN usecases_table u ON t.usecase_id = u.id
+        `);
 
-let resultTotalTasks = [];
-
+        totaltasks = queryTotalTasks.rows[0].total_tasks;
 
 
 --- with pagination ---
@@ -494,14 +525,14 @@ SQL
 --- without pagination ---
 
 
-const queryTotalProjects = "SELECT COUNT(*) FROM project_table;";
+const queryTotalProjects = "SELECT COUNT(*) FROM projects_table;";
 const resultTotalProjects = await client.query(queryTotalProjects);
 
-const queryCompletedProjects = "SELECT COUNT(*) FROM project_table WHERE project ->>'status' = 'completed';";
+const queryCompletedProjects = "SELECT COUNT(*) FROM projects_table WHERE project ->>'status' = 'completed';";
 const resultCompletedProjects = await client.query(queryCompletedProjects);
- const queryInProgressProjects = "SELECT COUNT(*) FROM project_table WHERE project ->>'status' = 'inprogress';";
+ const queryInProgressProjects = "SELECT COUNT(*) FROM projects_table WHERE project ->>'status' = 'inprogress';";
  const resultInProgressProjects = await client.query(queryInProgressProjects);
-const queryUnassignProjects = "SELECT COUNT(*) FROM project_table WHERE project ->>'status' = 'unassign';";
+const queryUnassignProjects = "SELECT COUNT(*) FROM projects_table WHERE project ->>'status' = 'unassign';";
 const resultUnassignProjects = await client.query(queryUnassignProjects);
 
 
