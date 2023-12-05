@@ -174,3 +174,12 @@ functions:
         path: /project/usecases/stage_details
         method: get
         cors: true
+
+  addusecases:
+    handler: usecase/assignUsecase.assignUsecase
+    role: ${env:LAMBDA_ROLE}
+    events:
+      - http:
+          path: /project/usecases/assign_stage
+          method: put
+          cors: true

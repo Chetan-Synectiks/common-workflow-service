@@ -22,6 +22,7 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [Search All resource details based on starting letter](#search-all-resource-details-based-on-starting-letter)
 - [Get Total Projects, Total Tasks, and Percentage of completed projects](#get-total-projects-total-tasks-and-percentage-of-completed-projects)
 - [Get Total Projects With Status Completed,Inprogress,Unassigned Projects](#get-total-projects-with-status-completedinprogressunassigned-projects)
+- [Assigning stage to a resource ](#assigning-stage-to-a-resource)
  
 
 ### Common Logic For For All APIs
@@ -542,4 +543,36 @@ const resultUnassignProjects = await client.query(queryUnassignProjects);
 ORDER BY id
 LIMIT 10
 OFFSET page_key; (provided in the request)
+```
+
+# Assigning stage to a resource
+ 
+Retrieves  without filtering.
+ 
+Method: PUT
+ 
+ 
+- If resposne is 404 (stage or usecase  name not found)
+          message: 'No matching records found'
+ 
+- If resposne is 200 (on succefully assigning the resource to stage)
+          message: 'Stage updated successfully'
+         
+- If resposne is 500 (If error occured while connecting to database)
+          message: 'Error While assigning'
+ 
+ 
+-   Using the pg client create a SQL query for a SELECT statment to get all rows in the resource table
+ 
+ 
+> This Api may or may not need pagation support
+ 
+```SQL
+ UPDATE usecase_table
+            SET usecase = jsonb_set(
+                usecase::jsonb,
+                '{stages, ${stage_name}, assigne_id}',
+                '"${assigned_to_id}"'
+            ) || '{"assigned_by_id": "${assigned_by_id}", "updated_by_id": "${updated_by_id}", "description": "${description}"}'
+            WHERE id = '${usecase_id}' AND  usecase->'stages' ? '${stage_name}'
 ```
