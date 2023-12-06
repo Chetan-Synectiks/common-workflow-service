@@ -5,8 +5,8 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 ## Table of Contents
 
 - [Workflow Management](#workflow-management)
-  - [Table of Contents](#table-of-contents)
-    - [Common Logic For For All APIs](#common-logic-for-for-all-apis)
+- [Table of Contents](#table-of-contents)
+- [Common Logic For For All APIs](#common-logic-for-for-all-apis)
 - [Get the overview of projects](#get-the-overview-of-projects)
 - [get no of completed and incomplete usecases for all projects between dates](#get-no-of-completed-and-incomplete-usecases-for-all-projects-between-dates)
 - [get no of completed and incomplete usecases for a project between dates](#get-no-of-completed-and-incomplete-usecases-for-a-project-between-dates)
@@ -23,7 +23,9 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [Get Total Projects, Total Tasks, and Percentage of completed projects](#get-total-projects-total-tasks-and-percentage-of-completed-projects)
 - [Get Total Projects With Status Completed,Inprogress,Unassigned Projects](#get-total-projects-with-status-completedinprogressunassigned-projects)
 - [Assigning stage to a resource ](#assigning-stage-to-a-resource)
- 
+- [Add new project](#Add-new-project)
+- [Get all stages and tasks for creating a usecase](#Get-all-stages-and-asks-for-creating-a-usecase)
+
 
 ### Common Logic For For All APIs
 
@@ -575,4 +577,78 @@ Method: PUT
                 '"${assigned_to_id}"'
             ) || '{"assigned_by_id": "${assigned_by_id}", "updated_by_id": "${updated_by_id}", "description": "${description}"}'
             WHERE id = '${usecase_id}' AND  usecase->'stages' ? '${stage_name}'
+```
+# Add new project
+
+Retrieves the list of a Projects with filtering.
+
+Method : post
+
+- Using the pg client create a SQL query using Parse the event body as JSON.
+
+- Check if the event body is empty and return an error response if so.
+
+- Insert the new project into the projects_table
+
+- Return a successful response with a message indicating a new project creation or handle errors and return an error response.
+
+
+> This Api may or may not need pagation support
+
+```SQL
+--- without pagination ---
+
+insert into projects_table (project) VALUES ($1::jsonb)
+
+--- with pagination ---
+
+insert into projects_table (project) VALUES ($1::jsonb)
+  LIMIT 10
+  OFFSET page_key; (provided in the request)
+```
+
+# Get all stages and tasks for creating a usecase
+
+
+Retrieves the list of a Projects with filtering.
+
+Method : GET
+
+- Using the pg client create a SQL query using a WHERE clause to get a rows in the Projects table.
+
+- Extract query parameters from the event and assign them to data.
+
+- Execute a PostgreSQL query to retrieve stage details for a given project ID using jsonb_each to unnest the stages data.
+
+
+- Initialize counters for incomplete and completed UseCases.
+
+- Check the status of each UseCases Increment the corresponding counter based on the project.
+
+- Return the results as a JSON response.
+
+> This Api may or may not need pagation support
+
+```SQL
+--- without pagination ---
+
+SELECT
+            stages_data.stage_name,
+            stages_data.stage_value
+        FROM
+            projects_table,
+        LATERAL jsonb_each(project->'stages') AS stages_data(stage_name, stage_value)
+        WHERE projects_table.id = $1;
+
+--- with pagination ---
+
+SELECT
+    stages_data.stage_name,
+    stages_data.stage_value
+FROM
+    projects_table,
+    LATERAL jsonb_each(project->'stages') AS stages_data(stage_name, stage_value)
+WHERE projects_table.id = $1;
+  LIMIT 10
+  OFFSET page_key; (provided in the request)
 ```

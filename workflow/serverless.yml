@@ -17,7 +17,7 @@ provider:
 functions:
 
   getProjectOverview:
-    handler: project/getProjectOverview.getProjectOverview 
+    handler: dashboard/getProjectOverview.getProjectOverview 
     role: ${env:LAMBDA_ROLE}
     events:
     - http:
@@ -26,7 +26,7 @@ functions:
         cors: true
 
   getAllProjectsOverview:
-    handler: project/getAllProjectsOverview.getAllProjectsOverview 
+    handler: dashboard/getAllProjectsOverview.getAllProjectsOverview 
     role: ${env:LAMBDA_ROLE}
     events:
     - http:
@@ -68,7 +68,7 @@ functions:
   
   # allProject
   getProjects:
-    handler: allProject/getProjects.getProjects 
+    handler: project/getProjects.getProjects 
     role: ${env:LAMBDA_ROLE}
     events:
     - http:
@@ -149,7 +149,7 @@ functions:
   
   # addProject
   addProject:
-    handler: addProject/addProject.addProject
+    handler: project/addProject.addProject
     role: ${env:LAMBDA_ROLE}
     events:
     - http:
@@ -167,7 +167,7 @@ functions:
           cors: true
   # stages
   stageDetailsForCreatingUsecase:
-    handler: stages/stageDetailsForCreatingUsecase.stageDetailsForCreatingUsecase
+    handler: project/stageDetailsForCreatingUsecase.stageDetailsForCreatingUsecase
     role: ${env:LAMBDA_ROLE}
     events:
     - http:
