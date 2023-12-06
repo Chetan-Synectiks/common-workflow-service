@@ -1,4 +1,4 @@
-exports.getallresourceswithfilters1=async(event)=>
+exports.project_resource_overview=async(event)=>
 {
 const {Client}=require('pg')
 const client=new Client({
@@ -21,7 +21,6 @@ let res={
 }
 
 const status=event.queryStringParameters.status
-console.log("23233",status)
 try{
     
     const data=await client.query(`SELECT
@@ -46,34 +45,32 @@ JOIN
     r.resource->>'role' = 'Manager' AND p.project->>'status'=$1`,[status]);
 
 console.log(data.rows)
-    const resource1=await client.query(`SELECT r.resource->>'name' AS resource_name,r.id as resourceid,r.resource->>'image' as resourceimage, r.resource ->>'role' as role1, t.stage, p.project->>'name' AS project_name
-FROM
-    resources_table r
-JOIN
-    tasks_table t ON r.id = t.assignee_id
-JOIN
-    projects_table p ON t.project_id = p.id
-   where 
-   r.resource ->>'role'<>'Manager'`);
-    const projectl=data.rows.length;
-    const resourcel=resource1.rows.length
-   
-   
-  
-let pr=[];
-for (let i = 0; i < projectl; i++) {
-    let resourcedet = [];
-    for (let j = 0; j < resourcel; j++) {
-        if (data.rows[i].project_name === resource1.rows[j].project_name && !pr.includes(data.rows[i].project_name)) {
-         pr.push(data.rows[i].project_name)
-         resourcedet.push({resourcename: resource1.rows[j].resource_name, resourceimg: resource1.rows[j].resourceimage, resourceid: resource1.rows[j].resourceid })
-        }
-    }
-    
-    data.rows[i].resourcedet=resourcedet;
+const len=data.rows.length
+for(let i=0;i<len;i++)
+{
+    let resource=[];
+let pname=data.rows[i].project_name
 
+    const resource1=await client.query(`SELECT r.resource->>'name' AS resource_name,r.id as resourceid,r.resource->>'image' as resourceimage, r.resource ->>'role' as role1, t.stage, p.project->>'name' AS project_name
+    FROM
+        resources_table r
+    JOIN
+        tasks_table t ON r.id = t.assignee_id
+    JOIN
+        projects_table p ON t.project_id = p.id
+       where 
+       r.resource ->>'role'<>'Manager' AND p.project->>'name'=$1`,[pname]);
+       for(let j=0;j<resource1.rows.length;j++)
+       {
+        resource.push({resourcename: resource1.rows[j].resource_name, resourceimg: resource1.rows[j].resourceimage, resourceid: resource1.rows[j].resourceid} )
+       }
+       data.rows[i].resourcedet=resource;
+   
    
 }
+   
+  
+
 client.end();
 return {
     "body":JSON.stringify(data.rows)
