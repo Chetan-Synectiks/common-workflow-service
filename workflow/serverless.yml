@@ -51,7 +51,7 @@ functions:
         method: get
 
   getOrgProjectDetails:
-    handler: getOrgProjectDetails.getOrgProjectDetails
+    handler: dashboard/getOrgProjectDetails.getOrgProjectDetails
     role: ${env:LAMBDA_ROLE}
     events:
       - httpApi:
@@ -59,7 +59,7 @@ functions:
           method: get
 
   getOrgAllProjectStatusDetails:
-    handler: getOrgAllProjectStatusDetails.getOrgAllProjectStatusDetails
+    handler: dashboard/getOrgAllProjectStatusDetails.getOrgAllProjectStatusDetails
     role: ${env:LAMBDA_ROLE}
     events:
       - httpApi:
@@ -94,7 +94,7 @@ functions:
           method: get    
 
   getResourcesTasksStatus:
-    handler: project/getResourcesTasksStatus.getResourcesTasksStatus
+    handler: dashboard/getResourcesTasksStatus.getResourcesTasksStatus
     role: ${env:LAMBDA_ROLE}
     events:
     - http:
@@ -103,7 +103,7 @@ functions:
         cors: true
  
   getAllResourcesTasksStatus:
-    handler: project/getAllResourcesTasksStatus.getAllResourcesTasksStatus
+    handler: dashboard/getAllResourcesTasksStatus.getAllResourcesTasksStatus
     role: ${env:LAMBDA_ROLE}
     events:
     - http:
@@ -112,7 +112,7 @@ functions:
         cors: true    
 
   getProjectsUsecases:
-    handler: usecase/getProjectsUsecases.getProjectsUsecases
+    handler: project/getProjectsUsecases.getProjectsUsecases
     role: ${env:LAMBDA_ROLE}
     events:
     - http:
@@ -121,7 +121,7 @@ functions:
         cors: true 
 
   getProjectsUsecaseByName:
-    handler: usecase/getProjectsUsecaseByName.getProjectsUsecaseByName
+    handler: project/getProjectsUsecaseByName.getProjectsUsecaseByName
     role: ${env:LAMBDA_ROLE}
     events:
     - http:
