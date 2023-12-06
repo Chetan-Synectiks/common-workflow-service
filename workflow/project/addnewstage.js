@@ -30,9 +30,8 @@ try{
 
 client.end();  
 return{
-     "statuscode":200,
-     "body":JSON.stringify(update.rowCount),
-     "message": "success"
+     
+     "body": "success"
 
 } 
 }
