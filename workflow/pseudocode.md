@@ -574,12 +574,25 @@ Method: PUT
  
 ```SQL
  UPDATE usecase_table
-            SET usecase = jsonb_set(
-                usecase::jsonb,
-                '{stages, ${stage_name}, assigne_id}',
-                '"${assigned_to_id}"'
-            ) || '{"assigned_by_id": "${assigned_by_id}", "updated_by_id": "${updated_by_id}", "description": "${description}"}'
-            WHERE id = '${usecase_id}' AND  usecase->'stages' ? '${stage_name}'
+                                SET usecase =
+                                    jsonb_set(
+                                        jsonb_set(
+                                            jsonb_set(
+                                                jsonb_set(
+                                                    usecase,
+                                                    '{stages, ${stage_name}, assigne_id}',
+                                                    '"${assigned_to_id}"'
+                                                ),
+                                                '{stages, ${stage_name}, assigned_by_id}',
+                                                '"${assigned_by_id}"'
+                                            ),
+                                            '{stages, ${stage_name}, updated_by_id}',
+                                            '"${updated_by_id}"'
+                                        ),
+                                        '{stages, ${stage_name}, description}',
+                                        '"${description}"'
+                                    )
+                                WHERE id = '${usecase_id}' AND usecase->'stages' ? '${stage_name}' 
 ```
 # Add new project
 

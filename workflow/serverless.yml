@@ -139,7 +139,7 @@ functions:
         cors: true 
 ##searchbargetresourcebyname
   getResourcesByName:
-    handler: resource/getResourcesByName.getResourcesByName
+    handler: misc/getResourcesByName.getResourcesByName
     role: ${env:LAMBDA_ROLE}
     events:
     - http:
@@ -174,9 +174,9 @@ functions:
         path: /project/usecases/stage_details
         method: get
         cors: true
-
-  assignUsecase:
-    handler: usecase/assignUsecase.assignUsecase
+  #assignStage
+  assignStage:
+    handler: project/assignStage.assignStage
     role: ${env:LAMBDA_ROLE}
     events:
       - http:
