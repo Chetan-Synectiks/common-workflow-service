@@ -5,8 +5,8 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 ## Table of Contents
 
 - [Workflow Management](#workflow-management)
-- [Table of Contents](#table-of-contents)
-- [Common Logic For For All APIs](#common-logic-for-for-all-apis)
+  - [Table of Contents](#table-of-contents)
+    - [Common Logic For For All APIs](#common-logic-for-for-all-apis)
 - [Get the overview of projects](#get-the-overview-of-projects)
 - [get no of completed and incomplete usecases for all projects between dates](#get-no-of-completed-and-incomplete-usecases-for-all-projects-between-dates)
 - [get no of completed and incomplete usecases for a project between dates](#get-no-of-completed-and-incomplete-usecases-for-a-project-between-dates)
@@ -22,12 +22,12 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [Search All resource details based on starting letter](#search-all-resource-details-based-on-starting-letter)
 - [Get Total Projects, Total Tasks, and Percentage of completed projects](#get-total-projects-total-tasks-and-percentage-of-completed-projects)
 - [Get Total Projects With Status Completed,Inprogress,Unassigned Projects](#get-total-projects-with-status-completedinprogressunassigned-projects)
-- [Assigning stage to a resource ](#assigning-stage-to-a-resource)
-- [Add new project](#Add-new-project)
-- [Get all stages and tasks for creating a usecase](#Get-all-stages-and-asks-for-creating-a-usecase)
-- [Get the overview of projects](#get-the-overview-of-projects)
-- [Add a new stage to the existing project](#Add-a-new-stage-to-the-existing-project)
-- [Assign a task to a resource for given task](#Assign-a-task-to-a-resource)
+- [Assigning stage to a resource](#assigning-stage-to-a-resource)
+- [Add new project](#add-new-project)
+- [Get all stages and tasks for creating a usecase](#get-all-stages-and-tasks-for-creating-a-usecase)
+- [Get the overview of projects](#get-the-overview-of-projects-1)
+- [Add a new stage to the existing project](#add-a-new-stage-to-the-existing-project)
+- [Assign task to a resource](#assign-task-to-a-resource)
 - [Add a new usecase to a project](#add-a-new-usecase-to-a-project)
 
 
@@ -479,33 +479,26 @@ Retrieves the list of all the projects, tasks, and percentage of completed proje
 
 > This API may or may not need pagination support
 
-``` 
-SQL
+```SQL 
+
 --- without pagination ---
 
-const queryTotalProjects = await client.query("SELECT COUNT(*) FROM projects_table");
-const resultTotalProjects = queryTotalProjects.rows[0].count;
+SELECT COUNT(*) FROM projects_table
 
-const queryCompletedProjects = await client.query("SELECT COUNT(*) FROM projects_table WHERE project ->>'status' = 'completed'");
-const resultCompletedProjects = queryCompletedProjects.rows[0].count;
 
-const queryUnassignedProjects = await client.query("SELECT COUNT(*) FROM projects_table WHERE project ->>'status' = 'unassigned'");
-const resultUnassignedProjects = queryUnassignedProjects.rows[0].count;
+SELECT COUNT(*) FROM projects_table WHERE project ->>'status' = 'completed'
 
-const queryInProgressProjects = await client.query("SELECT COUNT(*) FROM projects_table WHERE project ->>'status' = 'inprogress'");
-const resultInProgressProjects = queryInProgressProjects.rows[0].count;
 
-const percentageCompletedProjects = (resultCompletedProjects / resultTotalProjects) * 100;
-const percentageUnassignedProjects = (resultUnassignedProjects / resultTotalProjects) * 100;
-const percentageInProgressProjects = (resultInProgressProjects / resultTotalProjects) * 100;
+SELECT COUNT(*) FROM projects_table WHERE project ->>'status' = 'unassigned'
 
-const queryTotalTasks = await client.query(`
-            SELECT COUNT(*) as total_tasks
-            FROM tasks_table t
-            JOIN usecases_table u ON t.usecase_id = u.id
-        `);
 
-        totaltasks = queryTotalTasks.rows[0].total_tasks;
+SELECT COUNT(*) FROM projects_table WHERE project ->>'status' = 'inprogress'
+
+
+SELECT COUNT(*) as total_tasks
+FROM tasks_table t
+JOIN usecases_table u ON t.usecase_id = u.id
+      
 
 
 --- with pagination ---
@@ -527,20 +520,18 @@ Retrieves the list of completed,inprogress,unassigned projects.
 
 > This API may or may not need pagination support
 
-``` 
-SQL
+```SQL
 --- without pagination ---
 
 
-const queryTotalProjects = "SELECT COUNT(*) FROM projects_table;";
-const resultTotalProjects = await client.query(queryTotalProjects);
+ SELECT COUNT(*) FROM projects_table
 
-const queryCompletedProjects = "SELECT COUNT(*) FROM projects_table WHERE project ->>'status' = 'completed';";
-const resultCompletedProjects = await client.query(queryCompletedProjects);
- const queryInProgressProjects = "SELECT COUNT(*) FROM projects_table WHERE project ->>'status' = 'inprogress';";
- const resultInProgressProjects = await client.query(queryInProgressProjects);
-const queryUnassignProjects = "SELECT COUNT(*) FROM projects_table WHERE project ->>'status' = 'unassign';";
-const resultUnassignProjects = await client.query(queryUnassignProjects);
+
+SELECT COUNT(*) FROM projects_table WHERE project ->>'status' = 'completed'
+
+SELECT COUNT(*) FROM projects_table WHERE project ->>'status' = 'inprogress'
+ 
+SELECT COUNT(*) FROM projects_table WHERE project ->>'status' = 'unassign'
 
 
 --- with pagination ---
