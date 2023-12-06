@@ -28,6 +28,7 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [Get the overview of projects](#get-the-overview-of-projects)
 - [Add a new stage to the existing project](#Add-a-new-stage-to-the-existing-project)
 - [Assign a task to a resource for given task](#Assign-a-task-to-a-resource)
+- [Add a new usecase to a project](#add-a-new-usecase-to-a-project)
 
 
 ### Common Logic For For All APIs
@@ -748,4 +749,59 @@ UPDATE tasks_table SET  assignee_id = '${assigne_id}', task = jsonb_set(jsonb_se
   LIMIT 10
   OFFSET page_key; (provided in the request)
 
+```
+
+# Add a new usecase to a project
+
+Adds a new a usecase to a existing project
+
+Method: Post
+
+1. Start a database transaction.
+
+2. Insert a new record into the usecases_table with project-related data.
+   - Extract project_id, created_by_id, usecase_name, assigned_to_id, and description from the request.
+   - Include additional usecase data like start_date, end_date, creation_date, status, and current_stage.
+   - Retrieve the inserted data (usecase) with RETURNING *.
+
+3. Fetch stages data from the projects_table based on the provided project_id.
+   - Use a SELECT query to retrieve the 'stages' field from the 'project' JSONB column.
+
+4. Prepare the stagesData for the usecases_table.
+   - Create a stagesData object based on the fetched stages.
+   - Map each stage to its respective assigne_id and checklists.
+
+5. Update the usecases_table with the stagesData.
+   - Use jsonb_set to update the 'stages' field in the usecase column.
+   - Identify the record using its id (usecase_id).
+
+6. Iterate through stages and tasks to insert data into the tasks_table.
+   - For each stage, iterate through tasks and insert task data into tasks_table.
+   - Include usecase_id, project_id, assignee_id, stage, and task details.
+   - Use INSERT INTO queries within a loop.
+
+7. Commit the database transaction.
+
+``` SQL
+--- usecases_table ---
+'INSERT INTO usecases_table (project_id, usecase) VALUES ($1, $2) RETURNING *',
+            [project_id, {
+                name: usecase_name,
+                usecase_assignee_id: assigned_to_id,
+                description: description,
+                created_by_id: created_by_id,
+                start_date: "date",
+                end_date: "date",
+                creation_date: "date",
+                status: "",
+                current_stage: "stage_name",
+            }]
+
+--- projects_table ---
+'SELECT project->\'stages\' as stages FROM projects_table WHERE id = $1',[project_id]
+
+--- usecases_table ---
+'UPDATE usecases_table SET usecase = jsonb_set(usecase, $1, $2) WHERE id = $3', ['{stages}', stagesData, insertedData.id]
+--- tasks_table ---
+'INSERT INTO tasks_table (usecase_id, project_id, assignee_id, stage, task) VALUES ($1, $2, $3, $4, $5)', [taskData.usecase_id, taskData.project_id, taskData.assignee_id, taskData.stage, taskData.task]
 ```
