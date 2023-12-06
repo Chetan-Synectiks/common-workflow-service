@@ -175,7 +175,7 @@ functions:
         method: get
         cors: true
 
-  addusecases:
+  assignUsecase:
     handler: usecase/assignUsecase.assignUsecase
     role: ${env:LAMBDA_ROLE}
     events:
