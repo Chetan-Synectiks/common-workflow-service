@@ -137,6 +137,15 @@ functions:
         path: /searchusecase
         method: get
         cors: true 
+
+  add_ProjectTeam:
+    handler: add_ProjectTeam.add_ProjectTeam
+    # role: ${env:LAMBDA_ROLE}
+    events:
+    - http:
+        path: /addteam
+        method: put
+        cors: true
 ##searchbargetresourcebyname
   getResourcesByName:
     handler: misc/getResourcesByName.getResourcesByName

@@ -19,6 +19,7 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [Get all usecases with details](#get-all-usecases-with-details)
 - [Get a usecase by name](#get-a-usecase-by-name)
 - [search usecase from the search bar](#search-usecase-from-the-search-bar)
+- [Add ProjectTeam to project](#add-projectteam-to-project)
 - [Search All resource details based on starting letter](#search-all-resource-details-based-on-starting-letter)
 - [Get Total Projects, Total Tasks, and Percentage of completed projects](#get-total-projects-total-tasks-and-percentage-of-completed-projects)
 - [Get Total Projects With Status Completed,Inprogress,Unassigned Projects](#get-total-projects-with-status-completedinprogressunassigned-projects)
@@ -445,6 +446,21 @@ Method : GET
 -- Query to get the usecase list 
 select * FROM usecases_table WHERE LOWER(usecase ->> 'name') LIKE LOWER ( $1||'%')`, [params]
 
+```
+# Add ProjectTeam to project  
+
+createing a projectteam for a project based on projectId
+
+Method : PUT
+
+-   Using the pg client create a SQL query to update project with projectTeam
+
+```SQL
+
+-- Query to get the existing details of a project, later query to update the project column with teams object
+SELECT id, project FROM projects_table WHERE id = $1, [projectId]
+
+UPDATE projects_table SET project = $1 WHERE id = $2, [existingData.project, projectId]
 ```
 # Search All resource details based on starting letter
  
