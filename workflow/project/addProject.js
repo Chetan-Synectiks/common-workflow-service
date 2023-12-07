@@ -1,8 +1,7 @@
-exports.addProject = async (event, context, callback) => {
-    event = JSON.parse(event.body)
+exports.addProject = async (event) => {
+    const requestBody = JSON.parse(event.body);
 
     const { Client } = require('pg');
-
     const client = new Client({
         host: "localhost",
         port: "5432",
@@ -10,54 +9,39 @@ exports.addProject = async (event, context, callback) => {
         user: "postgres",
         password: "postgres"
     });
-    client.connect();
 
-    let objReturn = {
-        code: 200,
-        message: "New project created",
-        type: "object",
-        object: []
-    };
     try {
-        if (JSON.stringify(event) === '{}') {
-            objReturn.code = 400
-            objReturn.message = "body is null"
-            client.end();
-            return {
-                "statusCode": 400,
-                "headers": {
-                    "Access-Control-Allow-Origin": "*"
-                },
-                "body": JSON.stringify(objReturn)
-            };
-        } else {
+        await client.connect();
 
-            await client.query(`insert into projects_table (project) VALUES ($1::jsonb)`, [event]);
-        }
+        const result = await client.query(
+            'INSERT INTO projects_table (project) VALUES ($1::jsonb) RETURNING id as project_id, (project->>\'name\')::text as project_name',
+            [requestBody]  
+        );
 
-        client.end();
+        const insertedData = result.rows[0];
 
         return {
-            "statusCode": 200,
-            "headers": {
-                "Access-Control-Allow-Origin": "*"
+            statusCode: 200,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
             },
-            "body": JSON.stringify(objReturn)
+            body: JSON.stringify({
+                project_id: insertedData.project_id,
+                project_name: insertedData.project_name
+            }),
         };
-    } catch (e) {
-        objReturn.code = 400;
-        objReturn.message = e;
-        client.end();
+    } catch (error) {
         return {
-            "statusCode": 400,
-            "headers": {
-                "Access-Control-Allow-Origin": "*"
+            statusCode: 500,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
             },
-            "body": JSON.stringify(objReturn)
+            body: JSON.stringify({
+                error: 'Internal Server Error',
+                message: error.message,
+            }),
         };
+    } finally {
+        await client.end();
     }
-
 };
-
-
-
