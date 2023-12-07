@@ -34,6 +34,14 @@ functions:
         method: get
         cors: true
 
+  add_workflow:
+    handler: add_workflow.add_workflow
+    role: ${env:LAMBDA_ROLE}
+    events:
+      - httpApi:
+          path: /update
+          method: put       
+
   allresources:
     handler: getallresources.getallresource
     role: ${env:LAMBDA_ROLE}
@@ -192,3 +200,4 @@ functions:
           path: /project/usecases/assign_stage
           method: put
           cors: true
+          

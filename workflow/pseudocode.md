@@ -23,6 +23,7 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [Search All resource details based on starting letter](#search-all-resource-details-based-on-starting-letter)
 - [Get Total Projects, Total Tasks, and Percentage of completed projects](#get-total-projects-total-tasks-and-percentage-of-completed-projects)
 - [Get Total Projects With Status Completed,Inprogress,Unassigned Projects](#get-total-projects-with-status-completedinprogressunassigned-projects)
+- [Add Project Workflow To Project](#add-project-workflow-to-project)
 - [Assigning stage to a resource](#assigning-stage-to-a-resource)
 - [Add new project](#add-new-project)
 - [Get all stages and tasks for creating a usecase](#get-all-stages-and-tasks-for-creating-a-usecase)
@@ -556,6 +557,21 @@ SELECT COUNT(*) FROM projects_table WHERE project ->>'status' = 'unassign'
 ORDER BY id
 LIMIT 10
 OFFSET page_key; (provided in the request)
+```
+# Add Project workflow to project  
+ 
+createing a project workflow for a project based on projectId
+ 
+Method : PUT
+ 
+-   Using the pg client create a SQL query to update project with project workflow
+ 
+```SQL
+ 
+-- Query to get the existing details of a project, later query to update the project column with workflow object
+SELECT id, project FROM projects_table WHERE id = $1, [projectId]
+ 
+UPDATE projects_table SET project = $1 WHERE id = $2, [existingData.project, projectId]
 ```
 
 # Assigning stage to a resource
