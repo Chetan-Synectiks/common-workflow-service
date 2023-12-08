@@ -80,7 +80,7 @@ functions:
     role: ${env:LAMBDA_ROLE}
     events:
     - http:
-        path: /projects
+        path: /project
         method: get
         cors: true
 
@@ -170,7 +170,7 @@ functions:
     role: ${env:LAMBDA_ROLE}
     events:
     - http:
-        path: /addProject
+        path: /Project
         method: post
         cors: true
   #addusecase
@@ -188,7 +188,7 @@ functions:
     role: ${env:LAMBDA_ROLE}
     events:
     - http:
-        path: /project/usecases/stage_details
+        path: /project/workflow/all
         method: get
         cors: true
   #assignStage

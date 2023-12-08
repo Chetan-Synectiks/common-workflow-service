@@ -1,11 +1,17 @@
 exports.getProjects = async (event) => {
+    
+  const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
+  const secretsManagerClient = new SecretsManagerClient({ region: 'us-east-1' });
+  const configuration = await secretsManagerClient.send(new GetSecretValueCommand({ SecretId: 'serverless/lambda/credintials' }));
+  const dbConfig = JSON.parse(configuration.SecretString);
+  
   const { Client } = require("pg");
   const client = new Client({
-    host: "localhost",
-    user: "postgres",
-    database: "workflow",
-    port: "5432",
-    password: "postgres",
+      host: dbConfig.host,
+      port: dbConfig.port,
+      database: 'workflow',
+      user: dbConfig.engine,
+      password: dbConfig.password
   });
   client.connect();
 
@@ -20,36 +26,43 @@ exports.getProjects = async (event) => {
     if (status) {
       usecase = await client.query(
         `SELECT
-        projects_table.id AS id,
-        projects_table.project->>'status' as project_status,
-        projects_table.project->>'project_icon' as project_icon,
-        projects_table.project->>'name' as name,
-        jsonb_array_length(projects_table.project->'resources') AS total_resources,
-        COUNT(usecases_table.project_id) AS total_usecases
-    FROM
-        projects_table
-    LEFT JOIN
-        usecases_table ON projects_table.id = usecases_table.project_id
-    WHERE
-        projects_table.project->>'status' = $1 
-    GROUP BY
-        projects_table.id, projects_table.project`,
-        [status]
-      );
-    } else {
-      usecase = await client.query(`SELECT
-      projects_table.id AS id,
-      projects_table.project->>'status' as project_status,
-      projects_table.project->>'project_icon' as project_icon,
-      projects_table.project->>'name' as name,
-      jsonb_array_length(projects_table.project->'resources') AS total_resources,
-      COUNT(usecases_table.project_id) AS total_usecases
-  FROM
-      projects_table
-  LEFT JOIN
-      usecases_table ON projects_table.id = usecases_table.project_id
-  GROUP BY
-      projects_table.id, projects_table.project`);
+          projects_table.id AS id,
+          projects_table.project->>'status' AS project_status,
+          projects_table.project->>'project_icon' AS project_icon,
+          projects_table.project->>'name' AS name,
+          COUNT(DISTINCT team_name) AS total_resources,
+          COUNT(usecases_table.id) AS total_usecases
+          FROM
+              projects_table
+          LEFT JOIN
+              usecases_table ON projects_table.id = usecases_table.project_id
+          LEFT JOIN LATERAL (
+          SELECT DISTINCT teams_data.key AS team_name
+          FROM jsonb_each(projects_table.project->'teams') teams_data,
+               jsonb_array_elements_text(teams_data.value->'role') AS role_name
+          ) AS teams ON true
+          WHERE
+              projects_table.project->>'status' = $1
+          GROUP BY
+              projects_table.id, project_status, project_icon, name;`,[status]);
+    }else {
+        usecase = await client.query(`SELECT
+          projects_table.id AS id,
+          projects_table.project->>'status' AS project_status,
+          projects_table.project->>'project_icon' AS project_icon,
+          projects_table.project->>'name' AS name,
+          COUNT(DISTINCT team_name) AS total_resources,
+          COUNT(usecases_table.id) AS total_usecases
+        FROM
+          projects_table
+        LEFT JOIN
+          usecases_table ON projects_table.id = usecases_table.project_id
+        LEFT JOIN LATERAL (
+        SELECT DISTINCT teams_data.key AS team_name
+        FROM jsonb_each(projects_table.project->'teams') teams_data,
+          jsonb_array_elements_text(teams_data.value->'role') AS role_name) AS teams ON true
+        GROUP BY
+          projects_table.id, project_status, project_icon, name;`);
     }
 
     let projectsDetails = usecase.rows.map((row) => ({
@@ -60,7 +73,7 @@ exports.getProjects = async (event) => {
       total_resources: row.total_resources,
       project_icon_url: row.project_icon,
     }));
-
+  
     client.end();
     return {
       statuscode: 200,
