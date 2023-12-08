@@ -4,7 +4,7 @@ exports.stageDetailsForCreatingUsecase = async (event, context, callback) => {
     const client = new Client({
         host: "localhost",
         port: "5432",
-        database: "postgres",
+        database: "workflow",
         user: "postgres",
         password: "postgres"
     });
@@ -20,11 +20,11 @@ exports.stageDetailsForCreatingUsecase = async (event, context, callback) => {
 
     try {
         const result = await client.query(`SELECT
-            stages_data.stage_name,
-            stages_data.stage_value
+            stages_data.workflow_name,
+            stages_data.stage_details
         FROM
             projects_table,
-        LATERAL jsonb_each(project->'stages') AS stages_data(stage_name, stage_value)
+        LATERAL jsonb_each(project->'workflows') AS stages_data(workflow_name, stage_details)
         WHERE projects_table.id = $1;`,[data.id]);
 
         await client.end();
