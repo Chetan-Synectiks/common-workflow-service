@@ -31,6 +31,8 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [Add a new stage to the existing project](#add-a-new-stage-to-the-existing-project)
 - [Assign task to a resource](#assign-task-to-a-resource)
 - [Add a new usecase to a project](#add-a-new-usecase-to-a-project)
+- [To start task after clicking start button](#to-start-task-after-clicking-start-button)
+
 
 
 ### Common Logic For For All APIs
@@ -598,25 +600,25 @@ Method: PUT
  
 ```SQL
  UPDATE usecase_table
-                                SET usecase =
-                                    jsonb_set(
-                                        jsonb_set(
-                                            jsonb_set(
-                                                jsonb_set(
-                                                    usecase,
-                                                    '{stages, ${stage_name}, assigne_id}',
-                                                    '"${assigned_to_id}"'
-                                                ),
-                                                '{stages, ${stage_name}, assigned_by_id}',
-                                                '"${assigned_by_id}"'
-                                            ),
-                                            '{stages, ${stage_name}, updated_by_id}',
-                                            '"${updated_by_id}"'
-                                        ),
-                                        '{stages, ${stage_name}, description}',
-                                        '"${description}"'
-                                    )
-                                WHERE id = '${usecase_id}' AND usecase->'stages' ? '${stage_name}' 
+                              SET usecase =
+                                  jsonb_set(
+                                      jsonb_set(
+                                          jsonb_set(
+                                              jsonb_set(
+                                                  usecase,
+                                                  '{workflow, ${stage_name}, assigne_id}',
+                                                  '"${assigned_to_id}"'
+                                              ),
+                                              '{workflow, ${stage_name}, assigned_by_id}',
+                                              '"${assigned_by_id}"'
+                                          ),
+                                          '{workflow, ${stage_name}, updated_by_id}',
+                                          '"${updated_by_id}"'
+                                      ),
+                                      '{workflow, ${stage_name}, description}',
+                                      '"${description}"'
+                                  )
+                              WHERE id = '${usecase_id}' AND usecase->'workflow' ? '${stage_name}'
 ```
 # Add new project
 
@@ -827,4 +829,24 @@ Method: Post
 'UPDATE usecases_table SET usecase = jsonb_set(usecase, $1, $2) WHERE id = $3', ['{stages}', stagesData, insertedData.id]
 --- tasks_table ---
 'INSERT INTO tasks_table (usecase_id, project_id, assignee_id, stage, task) VALUES ($1, $2, $3, $4, $5)', [taskData.usecase_id, taskData.project_id, taskData.assignee_id, taskData.stage, taskData.task]
+```
+
+# To start task after clicking start button
+ 
+Method: PUT
+ 
+Request:  
+ 
+Response:
+ 
+ 
+-   Using the pg client create a SQL query for a UPDATE the status,resource_start_date in the task_table by checking the    task_id
+ 
+ 
+> This Api may or may not need pagation support
+ 
+```SQL
+ 
+  UPDATE task_table SET task = jsonb_set(jsonb_set(task, '{start_date}', '"${start_date}"'),'{status}', '"Incomplete"') WHERE id = '${task_id}' AND assigne_id = '${resource_id}'
+       
 ```

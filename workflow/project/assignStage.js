@@ -20,28 +20,28 @@ exports.assignStage = async (event) => {
                                             jsonb_set(
                                                 jsonb_set(
                                                     usecase,
-                                                    '{stages, ${stage_name}, assigne_id}',
+                                                    '{workflow, ${stage_name}, assigne_id}',
                                                     '"${assigned_to_id}"'
                                                 ),
-                                                '{stages, ${stage_name}, assigned_by_id}',
+                                                '{workflow, ${stage_name}, assigned_by_id}',
                                                 '"${assigned_by_id}"'
                                             ),
-                                            '{stages, ${stage_name}, updated_by_id}',
+                                            '{workflow, ${stage_name}, updated_by_id}',
                                             '"${updated_by_id}"'
                                         ),
-                                        '{stages, ${stage_name}, description}',
+                                        '{workflow, ${stage_name}, description}',
                                         '"${description}"'
                                     )
-                                WHERE id = '${usecase_id}' AND usecase->'stages' ? '${stage_name}' `);
+                                WHERE id = '${usecase_id}' AND usecase->'workflow' ? '${stage_name}' `);
         if (result.rowCount === 0) {
             return {
-                statusCode: 404,
+                statusCode: 400,
                 body: JSON.stringify({ message: 'No matching records found' })
             };
         }
 
         return {
-            statusCode: 200,
+            statusCode: 201,
             body: JSON.stringify({ message: 'Stage assigned successfully' })
         };
     } catch (error) {

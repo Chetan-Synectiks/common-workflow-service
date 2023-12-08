@@ -200,4 +200,13 @@ functions:
           path: /project/usecases/assign_stage
           method: put
           cors: true
+
+  startTask:
+    handler: task/startTask.startTask
+    role: ${env:LAMBDA_ROLE}
+    events:
+      - http:
+          path: /task/start
+          method: put
+          cors: true
           
