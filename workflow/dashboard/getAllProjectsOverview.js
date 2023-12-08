@@ -6,7 +6,7 @@ exports.getAllProjectsOverview = async (event, context, callback) => {
     const client = new Client({
         host: "localhost",
         port: "5432",
-        database: "postgres",
+        database: "workflow",
         user: "postgres",
         password: "postgres"
     });

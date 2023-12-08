@@ -5,7 +5,7 @@ exports.addProject = async (event) => {
     const client = new Client({
         host: "localhost",
         port: "5432",
-        database: "postgres",
+        database: "workflow",
         user: "postgres",
         password: "postgres"
     });
@@ -14,8 +14,7 @@ exports.addProject = async (event) => {
         await client.connect();
 
         const result = await client.query(
-            'INSERT INTO projects_table (project) VALUES ($1::jsonb) RETURNING id as project_id, (project->>\'name\')::text as project_name',
-            [requestBody]  
+            'INSERT INTO projects_table (project) VALUES ($1::jsonb) RETURNING id as project_id, (project->>\'name\')::text as project_name',[requestBody]  
         );
 
         const insertedData = result.rows[0];

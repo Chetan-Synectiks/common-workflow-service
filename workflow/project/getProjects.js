@@ -3,7 +3,7 @@ exports.getProjects = async (event) => {
   const client = new Client({
     host: "localhost",
     user: "postgres",
-    database: "postgres",
+    database: "workflow",
     port: "5432",
     password: "postgres",
   });
