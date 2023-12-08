@@ -175,7 +175,7 @@ functions:
         cors: true
   #addusecase
   addusecases:
-    handler: usecase/addusecase.addusecase
+    handler: project/addusecase.addusecase
     role: ${env:LAMBDA_ROLE}
     events:
       - http:
@@ -208,5 +208,14 @@ functions:
       - http:
           path: /task/start
           method: put
+          cors: true
+
+  getResourcesByRole:
+    handler: misc/getResourcesByRole.getResourcesByRole
+    role: ${env:LAMBDA_ROLE}
+    events:
+      - http:
+          path: /get_resource_by_role
+          method: get
           cors: true
           

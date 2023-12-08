@@ -5,8 +5,8 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 ## Table of Contents
 
 - [Workflow Management](#workflow-management)
-  - [Table of Contents](#table-of-contents)
-    - [Common Logic For For All APIs](#common-logic-for-for-all-apis)
+- [Table of Contents](#table-of-contents)
+- [Common Logic For For All APIs](#common-logic-for-for-all-apis)
 - [Get the overview of projects](#get-the-overview-of-projects)
 - [get no of completed and incomplete usecases for all projects between dates](#get-no-of-completed-and-incomplete-usecases-for-all-projects-between-dates)
 - [get no of completed and incomplete usecases for a project between dates](#get-no-of-completed-and-incomplete-usecases-for-a-project-between-dates)
@@ -32,6 +32,7 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [Assign task to a resource](#assign-task-to-a-resource)
 - [Add a new usecase to a project](#add-a-new-usecase-to-a-project)
 - [To start task after clicking start button](#to-start-task-after-clicking-start-button)
+- [Get resources by role](#get-resources-by-role)
 
 
 
@@ -849,4 +850,38 @@ Response:
  
   UPDATE task_table SET task = jsonb_set(jsonb_set(task, '{start_date}', '"${start_date}"'),'{status}', '"Incomplete"') WHERE id = '${task_id}' AND assigne_id = '${resource_id}'
        
+```
+
+# Get resources by role
+
+Retrieves a list of resources based on the provided role
+
+- Retrieve team data from the projects_table based on the project_id.
+
+- Check if the specified team exists; return a 404 response if not.
+
+- Check if the specified role exists in the team; return a 404 response if not.
+
+- Retrieve resource IDs based on the specified team and role.
+
+- Construct an SQL query to fetch resource data using the retrieved IDs.
+
+- Add an optional filter based on the resourceName.
+
+- Execute the SQL query to fetch resource data.
+
+- Prepare the response with the fetched resource data.
+
+``` SQL
+--- projects_table ---
+'SELECT project->\'teams\' as teams FROM projects_table WHERE id = $1', [project_id]
+
+--- resources_table ---
+let query = 'SELECT id, resource->>\'name\' as name, resource->>\'image\' as image FROM resources_table WHERE id = ANY($1)';
+                const queryParams = [resourceIds];
+
+                if (resourceName) {
+                    query += ' AND resource->>\'name\' ILIKE $2';
+                    queryParams.push(`%${resourceName}%`);
+                }
 ```
