@@ -33,6 +33,7 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [Add a new usecase to a project](#add-a-new-usecase-to-a-project)
 - [To start task after clicking start button](#to-start-task-after-clicking-start-button)
 - [Get resources by role](#get-resources-by-role)
+- [Assign task](#assign-task)
 
 
 
@@ -468,23 +469,32 @@ UPDATE projects_table SET project = $1 WHERE id = $2, [existingData.project, pro
 ```
 # Search All resource details based on starting letter
  
-Retrieves  without filtering.
- 
 Method: GET
  
-Request:
+- SELECT *: Retrieve all columns (*) from the RESOURCE_TABLE.
  
-Response: resource details(Id,name,image_url)
+- FROM RESOURCE_TABLE: The table from which data will be retrieved.
  
--   Using the pg client create a SQL query for a SELECT statment to get all rows in the resource table
+- WHERE LOWER(resource ->> 'name'): Filter condition where the value stored in the name field of the    resource column is converted to lowercase.
  
+- LIKE LOWER ($1 || '%'): Checks for partial matches where the lowercase name starts with a provided string  and is followed by any characters using the wildcard %.
  
-> This Api may or may not need pagation support
+- Filtered the using map method and displayed what we actually needed.(resource_id,name,imageurl)
+ 
  
 ```SQL
-
 select * FROM RESOURCE_TABLE WHERE LOWER(resource  ->> 'name') LIKE LOWER ( $1||'%')
-
+ 
+````````````filering the data ``````````````
+ 
+    extractedData = res.rows.map(row => ({
+            resource_id:row.id,
+            name: row.resource.name,
+            imageurl: row.resource.imageurl
+        }));
+    ````````````````````````
+ 
+ 
 ```
 
 # Get Total Projects, Total Tasks, and Percentage of completed projects
@@ -579,47 +589,41 @@ UPDATE projects_table SET project = $1 WHERE id = $2, [existingData.project, pro
 
 # Assigning stage to a resource
  
-Retrieves  without filtering.
- 
 Method: PUT
  
+- UPDATE usecase_table: Begins the update operation on the usecase_table.
  
-- If resposne is 404 (stage or usecase  name not found)
-          message: 'No matching records found'
+- SET usecase = jsonb_set(...):
  
-- If resposne is 200 (on succefully assigning the resource to stage)
-          message: 'Stage updated successfully'
-         
-- If resposne is 500 (If error occured while connecting to database)
-          message: 'Error While assigning'
+     - Used nested jsonb_set functions to update specific keys within the usecase JSONB column.
  
+     - The jsonb_set functions are structured to modify several nested keys (assigne_id, assigned_by_id, - - updated_by_id, description) within the workflow section identified by ${stage_name}.
  
--   Using the pg client create a SQL query for a SELECT statment to get all rows in the resource table
+- WHERE id = '${usecase_id}' AND usecase->'workflow' ? '${stage_name}':
  
- 
-> This Api may or may not need pagation support
+      - Specifies the condition for updating, ensuring the record matches the provided usecase_id and the - JSONB column usecase contains the specified ${stage_name} within the workflow section.
  
 ```SQL
- UPDATE usecase_table
-                              SET usecase =
-                                  jsonb_set(
-                                      jsonb_set(
-                                          jsonb_set(
-                                              jsonb_set(
-                                                  usecase,
-                                                  '{workflow, ${stage_name}, assigne_id}',
-                                                  '"${assigned_to_id}"'
-                                              ),
-                                              '{workflow, ${stage_name}, assigned_by_id}',
-                                              '"${assigned_by_id}"'
-                                          ),
-                                          '{workflow, ${stage_name}, updated_by_id}',
-                                          '"${updated_by_id}"'
-                                      ),
-                                      '{workflow, ${stage_name}, description}',
-                                      '"${description}"'
-                                  )
-                              WHERE id = '${usecase_id}' AND usecase->'workflow' ? '${stage_name}'
+UPDATE usecase_table
+                                SET usecase =
+                                    jsonb_set(
+                                        jsonb_set(
+                                            jsonb_set(
+                                                jsonb_set(
+                                                    usecase,
+                                                    '{workflow, ${stage_name}, assigne_id}',
+                                                    '"${assigned_to_id}"'
+                                                ),
+                                                '{workflow, ${stage_name}, assigned_by_id}',
+                                                '"${assigned_by_id}"'
+                                            ),
+                                            '{workflow, ${stage_name}, updated_by_id}',
+                                            '"${updated_by_id}"'
+                                        ),
+                                        '{workflow, ${stage_name}, description}',
+                                        '"${description}"'
+                                    )
+                                WHERE id = '${usecase_id}' AND usecase->'workflow' ? '${stage_name}'
 ```
 # Add new project
 
@@ -824,7 +828,9 @@ Method: Post
             }]
 
 --- projects_table ---
-'SELECT project->\'stages\' as stages FROM projects_table WHERE id = $1',[project_id]
+SELECT project->'workflows'->'${workflow_name}' AS workflow
+          FROM projects_table
+          WHERE id = $1;
 
 --- usecases_table ---
 'UPDATE usecases_table SET usecase = jsonb_set(usecase, $1, $2) WHERE id = $3', ['{stages}', stagesData, insertedData.id]
@@ -836,20 +842,25 @@ Method: Post
  
 Method: PUT
  
-Request:  
+- UPDATE task_table: Initiates an update operation on the task_table.
  
-Response:
+- SET task = jsonb_set(...): Utilizes nested jsonb_set functions to modify specific keys within the task column.
  
+- jsonb_set(task, '{start_date}', '"${start_date}"'): Aims to update the start_date field within the JSONB structure of the task.
  
--   Using the pg client create a SQL query for a UPDATE the status,resource_start_date in the task_table by checking the    task_id
+- jsonb_set(task, '{status}', '"Incomplete"'): Intends to set the status field to "Incomplete".
  
- 
-> This Api may or may not need pagation support
+- WHERE id = '${task_id}' AND assigne_id = '${resource_id}': Specifies the condition for the update operation, filtering the rows by the provided task_id and resource_id.
  
 ```SQL
+UPDATE task_table
+        SET task = jsonb_set(
+            jsonb_set(task, '{start_date}', '"${start_date}"'),
+            '{status}', '"Incomplete"'
+        )
+        WHERE id = '${task_id}' AND assigne_id = '${resource_id}'
  
-  UPDATE task_table SET task = jsonb_set(jsonb_set(task, '{start_date}', '"${start_date}"'),'{status}', '"Incomplete"') WHERE id = '${task_id}' AND assigne_id = '${resource_id}'
-       
+ 
 ```
 
 # Get resources by role
@@ -885,3 +896,36 @@ let query = 'SELECT id, resource->>\'name\' as name, resource->>\'image\' as ima
                     queryParams.push(`%${resourceName}%`);
                 }
 ```
+
+# assign task
+ 
+METHOD : PUT
+ 
+- assigning task for a usecase.
+ 
+ ```SQL
+UPDATE tasks_table
+   SET
+       assignee_id = '${assigne_id}',
+       task =
+           jsonb_set(jsonb_set(
+               jsonb_set(
+                   jsonb_set(
+                       jsonb_set(
+                           task,
+                           '{resource_start_date}',
+                           '"${startdate}"'::jsonb
+                       ),
+                       '{resource_end_date}',
+                       '"${enddate}"'::jsonb
+                   ),
+                   '{updated_by_id}',
+                   '"${updatedby}"'::jsonb
+               ),
+               '{assigned_by_id}',
+               '"${assignedby}"'::jsonb
+           ), '{comments}', '"${cmt}"')
+   WHERE
+       id = '${taskid}'
+ 
+ ```

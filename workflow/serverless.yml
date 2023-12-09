@@ -198,7 +198,7 @@ functions:
     role: ${env:LAMBDA_ROLE}
     events:
       - http:
-          path: /project/usecases/assign_stage
+          path: /project/usecase/assign_stage
           method: put
           cors: true
 
@@ -218,5 +218,14 @@ functions:
       - http:
           path: /get_resource_by_role
           method: get
+          cors: true
+
+  assignTask:
+    handler: project/assignTask.assignTask
+    role: ${env:LAMBDA_ROLE}
+    events:
+      - http:
+          path: /project/usecase/assign_task
+          method: put
           cors: true
           
