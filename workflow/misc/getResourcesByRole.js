@@ -6,12 +6,17 @@ exports.getResourcesByRole = async (event) => {
     const role = event.queryStringParameters.role;
     const resourceName = event.queryStringParameters.resource_name;
 
+    const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
+    const secretsManagerClient = new SecretsManagerClient({ region: 'us-east-1' });
+    const configuration = await secretsManagerClient.send(new GetSecretValueCommand({ SecretId: 'serverless/lambda/credintials' }));
+    const dbConfig = JSON.parse(configuration.SecretString);
+
     const client = new Client({
-        host: "localhost",
-        port: "5432",
-        database: "workflow",
-        user: "postgres",
-        password: "postgres"
+        host: dbConfig.host,
+        port: dbConfig.port,
+        database: 'workflow',
+        user: dbConfig.engine,
+        password: dbConfig.password
     });
 
     try {
