@@ -25,16 +25,18 @@ exports.getResourcesByRole = async (event) => {
         const teamsData = teamDataResult.rows[0]?.teams || {};
 
         if (teamsData[team_name]) {
-
             if (teamsData[team_name][role]) {
                 const resourceIds = teamsData[team_name][role];
 
-                let query = 'SELECT id, resource->>\'name\' as name, resource->>\'image\' as image FROM resources_table WHERE id = ANY($1)';
+                let query = 'SELECT id, resource->>\'name\' as name, resource->>\'image_url\' as image_url FROM resources_table WHERE id = ANY($1)';
+
                 const queryParams = [resourceIds];
 
                 if (resourceName) {
                     query += ' AND resource->>\'name\' ILIKE $2';
                     queryParams.push(`%${resourceName}%`);
+                } else {
+                    query += ' LIMIT 10';
                 }
 
                 const resourceResult = await client.query(query, queryParams);
@@ -50,7 +52,6 @@ exports.getResourcesByRole = async (event) => {
 
                 return response;
             } else {
-
                 return {
                     statusCode: 404,
                     body: JSON.stringify({ message: 'Role not found in the specified team' }),
