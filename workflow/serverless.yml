@@ -89,17 +89,18 @@ functions:
     role: ${env:LAMBDA_ROLE}
     events:
       - http:
-          path: /resources
+          path: /resource
           method: get
           cors: true
 
   getProjectsOverview:
-    handler: project/getProjectsOverview.getProjectsOverview
+    handler: dashboard/getProjectsOverview.getProjectsOverview
     role: ${env:LAMBDA_ROLE}
     events:
-      - httpApi:
+      - http:
           path: /projects_overview
-          method: get    
+          method: get
+          cors: true    
 
   getResourcesTasksStatus:
     handler: dashboard/getResourcesTasksStatus.getResourcesTasksStatus
@@ -174,12 +175,12 @@ functions:
         method: post
         cors: true
   #addusecase
-  addusecases:
+  addusecase:
     handler: project/addusecase.addusecase
     role: ${env:LAMBDA_ROLE}
     events:
       - http:
-          path: /project/usecases/new
+          path: /project/usecase/new
           method: post
           cors: true
   # stages
