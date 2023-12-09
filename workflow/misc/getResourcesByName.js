@@ -15,7 +15,7 @@ exports.getResourcesByName = async (event) => {
     });
     try {
         await client.connect();
-        let res = await client.query(`select * FROM RESOURCE_TABLE WHERE LOWER(resource  ->> 'name') LIKE LOWER ( $1||'%')`, [params]);
+        let res = await client.query(`select * FROM resources_table WHERE LOWER(resource  ->> 'name') LIKE LOWER ( $1||'%')`, [params]);
         const extractedData = res.rows.map(row => ({
             resource_id: row.id,
             name: row.resource.name,

@@ -18,7 +18,7 @@ exports.assignStage = async (event) => {
 
     try {
         await client.connect();
-        const result = await client.query(`UPDATE usecase_table
+        const result = await client.query(`UPDATE usecases_table
                                 SET usecase =
                                     jsonb_set(
                                         jsonb_set(

@@ -483,7 +483,7 @@ Method: GET
  
  
 ```SQL
-select * FROM RESOURCE_TABLE WHERE LOWER(resource  ->> 'name') LIKE LOWER ( $1||'%')
+select * FROM resources_table WHERE LOWER(resource  ->> 'name') LIKE LOWER ( $1||'%')
  
 ````````````filering the data ``````````````
  
@@ -744,12 +744,12 @@ r.resource->>'role' = 'Manager' AND p.project->>'status'=$1
 ```SQL
 --- without pagination ---
 
-SELECT project->>'name' as name,project->>'startdate'as startdate,project->>'enddate' as duedate, project ->> 'resources'AS noofresources FROM project
+SELECT project->>'name' as name,project->>'startdate'as startdate,project->>'enddate' as duedate, project ->> 'resources'AS noofresources FROM projects_table
   WHERE status = 'filter_string';
 
 --- with pagination ---
 
-SELECT project->>'name' as name,project->>'startdate'as startdate,project->>'enddate' as duedate, project ->> 'resources'AS noofresources FROM project
+SELECT project->>'name' as name,project->>'startdate'as startdate,project->>'enddate' as duedate, project ->> 'resources'AS noofresources FROM projects_table
   WHERE status = 'filter_string'
   ORDER BY id
   LIMIT 10
@@ -842,25 +842,36 @@ SELECT project->'workflows'->'${workflow_name}' AS workflow
  
 Method: PUT
  
-- UPDATE task_table: Initiates an update operation on the task_table.
+```SQL updating tasks_table status
  
-- SET task = jsonb_set(...): Utilizes nested jsonb_set functions to modify specific keys within the task column.
- 
-- jsonb_set(task, '{start_date}', '"${start_date}"'): Aims to update the start_date field within the JSONB structure of the task.
- 
-- jsonb_set(task, '{status}', '"Incomplete"'): Intends to set the status field to "Incomplete".
- 
-- WHERE id = '${task_id}' AND assigne_id = '${resource_id}': Specifies the condition for the update operation, filtering the rows by the provided task_id and resource_id.
- 
-```SQL
-UPDATE task_table
-        SET task = jsonb_set(
-            jsonb_set(task, '{start_date}', '"${start_date}"'),
-            '{status}', '"Incomplete"'
-        )
-        WHERE id = '${task_id}' AND assigne_id = '${resource_id}'
+                UPDATE tasks_table AS t
+                SET task = jsonb_set(
+                    jsonb_set(t.task, '{start_date}', '"${start_date}"'),
+                    '{status}', '"InProgress"'
+                )
+                FROM resources_table AS r
+                WHERE
+                    t.id = '${task_id}'
+                    AND t.assignee_id = '${resource_id}'
+                    AND r.id = '${resource_id}';
  
  
+```
+                                                           
+ 
+```SQL   While doing starttask the resources_table is also updating current_task field in resources
+ 
+            UPDATE resources_table
+            SET resource = jsonb_set(
+                resource, '{current_task}',
+                jsonb_build_object('task_id', '${task_id}', 'task_name', t.task->>'name')
+            )
+            FROM tasks_table AS t
+            WHERE
+                t.id = '${task_id}'
+                AND t.assignee_id = '${resource_id}'
+                AND resources_table.id = '${resource_id}'
+        ;
 ```
 
 # Get resources by role
