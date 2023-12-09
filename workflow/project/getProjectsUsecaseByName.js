@@ -12,7 +12,7 @@ exports.getProjectsUsecaseByName = async (event, context, callback) => {
     client.connect();
 
     let data = {};
-
+    const name= event.pathParameters.name
     if (event.queryStringParameters) {
         data = event.queryStringParameters;
     }
@@ -27,12 +27,12 @@ exports.getProjectsUsecaseByName = async (event, context, callback) => {
                 u.usecase->>'start_date' AS usecase_startdate,
                 u.usecase->>'end_date' AS usecase_enddate,
                 u.usecase->>'usecase_assignee_id' AS assignedid,
-                COUNT(DISTINCT t.assignee_id) AS totalresources
+                COUNT(DISTINCT t.assignee_id)+1 AS totalresources
             FROM usecases_table u
             LEFT JOIN tasks_table t ON u.id = t.usecase_id
             WHERE u.project_id = $1 AND u.usecase->>'name' = $2
             GROUP BY u.id
-        `, [data.project_id, data.name]);
+        `, [data.project_id, name]);
 
         const useCaseDetails = useCaseDetailsResult.rows.map(row => ({
             usecase_id: row.usecase_id,

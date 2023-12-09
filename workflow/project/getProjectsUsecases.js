@@ -21,7 +21,7 @@ exports.getProjectsUsecases = async (event, context, callback) => {
                 u.usecase->>'start_date' AS usecase_startdate,
                 u.usecase->>'end_date' AS usecase_enddate,
                 u.usecase->>'usecase_assignee_id' AS assignedid,
-                COUNT(DISTINCT t.assignee_id) AS totalresources
+                COUNT(DISTINCT t.assignee_id)+1 AS totalresources
             FROM usecases_table u
             LEFT JOIN tasks_table t ON u.id = t.usecase_id
             GROUP BY u.id

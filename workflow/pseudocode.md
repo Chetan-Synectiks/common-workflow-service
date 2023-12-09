@@ -5,8 +5,8 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 ## Table of Contents
 
 - [Workflow Management](#workflow-management)
-- [Table of Contents](#table-of-contents)
-- [Common Logic For For All APIs](#common-logic-for-for-all-apis)
+  - [Table of Contents](#table-of-contents)
+    - [Common Logic For For All APIs](#common-logic-for-for-all-apis)
 - [Get the overview of projects](#get-the-overview-of-projects)
 - [get no of completed and incomplete usecases for all projects between dates](#get-no-of-completed-and-incomplete-usecases-for-all-projects-between-dates)
 - [get no of completed and incomplete usecases for a project between dates](#get-no-of-completed-and-incomplete-usecases-for-a-project-between-dates)
@@ -23,7 +23,7 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [Search All resource details based on starting letter](#search-all-resource-details-based-on-starting-letter)
 - [Get Total Projects, Total Tasks, and Percentage of completed projects](#get-total-projects-total-tasks-and-percentage-of-completed-projects)
 - [Get Total Projects With Status Completed,Inprogress,Unassigned Projects](#get-total-projects-with-status-completedinprogressunassigned-projects)
-- [Add Project Workflow To Project](#add-project-workflow-to-project)
+- [Add Project workflow to project](#add-project-workflow-to-project)
 - [Assigning stage to a resource](#assigning-stage-to-a-resource)
 - [Add new project](#add-new-project)
 - [Get all stages and tasks for creating a usecase](#get-all-stages-and-tasks-for-creating-a-usecase)
@@ -33,7 +33,7 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [Add a new usecase to a project](#add-a-new-usecase-to-a-project)
 - [To start task after clicking start button](#to-start-task-after-clicking-start-button)
 - [Get resources by role](#get-resources-by-role)
-- [Assign task](#assign-task)
+- [assign task](#assign-task)
 
 
 
@@ -407,7 +407,7 @@ Method : GET
                 u.usecase->>'start_date' AS usecase_startdate,
                 u.usecase->>'end_date' AS usecase_enddate,
                 u.usecase->>'usecase_assignee_id' AS assignedid,
-                COUNT(DISTINCT t.assignee_id) AS totalresources
+                COUNT(DISTINCT t.assignee_id)+1 AS totalresources
             FROM usecases_table u
             LEFT JOIN tasks_table t ON u.id = t.usecase_id
             GROUP BY u.id
@@ -430,7 +430,7 @@ Method : GET
                 u.usecase->>'start_date' AS usecase_startdate,
                 u.usecase->>'end_date' AS usecase_enddate,
                 u.usecase->>'usecase_assignee_id' AS assignedid,
-                COUNT(DISTINCT t.assignee_id) AS totalresources
+                COUNT(DISTINCT t.assignee_id)+1 AS totalresources
             FROM usecases_table u
             LEFT JOIN tasks_table t ON u.id = t.usecase_id
             WHERE u.project_id = $1 AND u.usecase->>'name' = $2

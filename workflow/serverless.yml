@@ -125,7 +125,7 @@ functions:
     role: ${env:LAMBDA_ROLE}
     events:
     - http:
-        path:  /projects/usecases
+        path:  /project/usecase
         method: get
         cors: true 
 
@@ -134,7 +134,7 @@ functions:
     role: ${env:LAMBDA_ROLE}
     events:
     - http:
-        path: /projects/usecases/{name}
+        path: /project/usecase/{name}
         method: get
         cors: true 
 
