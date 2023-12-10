@@ -31,6 +31,7 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [Add a new stage to the existing project](#add-a-new-stage-to-the-existing-project)
 - [Assign task to a resource](#assign-task-to-a-resource)
 - [Add a new usecase to a project](#add-a-new-usecase-to-a-project)
+- [get the list view of tasks assigned to a resource](#get-the-list-view-of-tasks-assigned-to-a-resource)
 - [To start task after clicking start button](#to-start-task-after-clicking-start-button)
 - [Get resources by role](#get-resources-by-role)
 - [assign task](#assign-task)
@@ -836,6 +837,21 @@ SELECT project->'workflows'->'${workflow_name}' AS workflow
 'UPDATE usecases_table SET usecase = jsonb_set(usecase, $1, $2) WHERE id = $3', ['{stages}', stagesData, insertedData.id]
 --- tasks_table ---
 'INSERT INTO tasks_table (usecase_id, project_id, assignee_id, stage, task) VALUES ($1, $2, $3, $4, $5)', [taskData.usecase_id, taskData.project_id, taskData.assignee_id, taskData.stage, taskData.task]
+```
+# get the list view of tasks assigned to a resource 
+
+get the list view of tasks assigned to a resource
+
+Method : GET
+
+-   Using the pg client create a SQL query to GET tasks assigned to a resource
+
+```SQL
+
+-- Query to get the tasks assigned to a resource
+  SELECT * 
+  FROM tasks_table 
+  WHERE assignee_id = $1,[resource_id]
 ```
 
 # To start task after clicking start button
