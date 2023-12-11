@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.470.0",
     "pg": "^8.11.3",
     "serverless": "^3.36.0",
     "serverless-offline": "^13.2.0"
