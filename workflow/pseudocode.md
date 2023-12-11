@@ -35,7 +35,7 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [To start task after clicking start button](#to-start-task-after-clicking-start-button)
 - [Get resources by role](#get-resources-by-role)
 - [assign task](#assign-task)
-
+- [Add Stage To Project](#add-stage-to-project) 
 
 
 ### Common Logic For For All APIs
@@ -956,3 +956,12 @@ UPDATE tasks_table
        id = '${taskid}'
  
  ```
+
+# Add stage to project
+ 
+METHOD : PUT
+ 
+- adding stage to projects_table.
+ 
+ ```SQL 
+UPDATE usecases_table SET usecase = $1 WHERE id = $2', [existingData.usecase, usecase_id]); 
