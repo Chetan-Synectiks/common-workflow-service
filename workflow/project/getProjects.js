@@ -1,11 +1,12 @@
+const { Client } = require("pg");
+const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
+
 exports.getProjects = async (event) => {
   
-  const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
   const secretsManagerClient = new SecretsManagerClient({ region: 'us-east-1' });
   const configuration = await secretsManagerClient.send(new GetSecretValueCommand({ SecretId: 'serverless/lambda/credintials' }));
   const dbConfig = JSON.parse(configuration.SecretString);
   
-  const { Client } = require("pg");
   const client = new Client({
     host: dbConfig.host,
     port: dbConfig.port,
@@ -20,9 +21,18 @@ exports.getProjects = async (event) => {
   if (values) {
       status = values.status;
   }
+    let usecase;
 
   try {
-      let usecase;
+        await client
+        .connect()
+        .then(() => {
+            console.log("Connected to the database");
+        })
+        .catch((err) => {
+            console.log("Error connecting to the database. Error :" + err);
+        });
+
       if (status) {
           usecase = await client.query(
               `SELECT
@@ -43,7 +53,7 @@ exports.getProjects = async (event) => {
                   projects_table.id, projects_table.project`,
               [status]
           );
-      } else {
+      }else{
         usecase = await client.query(`SELECT
               projects_table.id AS project_id,
               projects_table.project->>'status' as project_status,
@@ -58,7 +68,7 @@ exports.getProjects = async (event) => {
           LEFT JOIN LATERAL jsonb_each(projects_table.project->'teams') AS teams ON true
           GROUP BY
               projects_table.id, projects_table.project`);
-      }
+        }
 
       let projectsDetails = usecase.rows.map((row) => ({
           project_id: row.project_id,
@@ -71,10 +81,13 @@ exports.getProjects = async (event) => {
 
       client.end();
       return {
-        statusCode: 200,
-        body: JSON.stringify({projectsDetails}),
-      };
-  } catch (e) {
+            statusCode: 200,
+            headers: {
+                "Access-Control-Allow-Origin": "*",
+            },
+            body: JSON.stringify({projectsDetails}),
+        };
+  }catch (e) {
       client.end();
 
       return {
@@ -83,6 +96,6 @@ exports.getProjects = async (event) => {
               "Access-Control-Allow-Origin": "*",
           },
           message: "error",
-      };
-  }
+        };
+    }
 };
