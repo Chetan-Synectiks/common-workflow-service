@@ -19,7 +19,7 @@ exports.addProject = async (event) => {
         await client.connect();
 
         const result = await client.query(
-            'INSERT INTO projects_table (project) VALUES ($1::jsonb) RETURNING id as project_id, (project->>\'name\')::text as project_name',[requestBody]
+            'INSERT INTO projects_table (project) VALUES ($1::jsonb) RETURNING id as project_id, (project->>\'project_name\')::text as project_name',[requestBody]
         );
 
         const insertedData = result.rows[0];
