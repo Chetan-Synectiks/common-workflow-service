@@ -1,12 +1,7 @@
 const { Client } = require('pg');
-
+const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
 exports.getResourcesByRole = async (event) => {
-    const project_id = event.queryStringParameters.project_id;
-    const team_name = event.queryStringParameters.team_name;
-    const role = event.queryStringParameters.role;
-    const resourceName = event.queryStringParameters.resource_name;
 
-    const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
     const secretsManagerClient = new SecretsManagerClient({ region: 'us-east-1' });
     const configuration = await secretsManagerClient.send(new GetSecretValueCommand({ SecretId: 'serverless/lambda/credintials' }));
     const dbConfig = JSON.parse(configuration.SecretString);
@@ -19,8 +14,20 @@ exports.getResourcesByRole = async (event) => {
         password: dbConfig.password
     });
 
+    const project_id = event.queryStringParameters.project_id;
+    const team_name = event.queryStringParameters.team_name;
+    const role = event.queryStringParameters.role;
+    const resourceName = event.queryStringParameters.resource_name;
+
     try {
-        await client.connect();
+        await client
+            .connect()
+            .then(() => {
+                console.log("Connected to the database");
+            })
+            .catch((err) => {
+                console.log("Error connecting to the database. Error :" + err);
+            });
 
         const teamDataResult = await client.query(
             'SELECT project->\'teams\' as teams FROM projects_table WHERE id = $1',
@@ -50,6 +57,9 @@ exports.getResourcesByRole = async (event) => {
 
                 const response = {
                     statusCode: 200,
+                    headers: {
+                        'Access-Control-Allow-Origin': '*',
+                    },
                     body: JSON.stringify({
                         resources: resources,
                     }),
@@ -59,12 +69,18 @@ exports.getResourcesByRole = async (event) => {
             } else {
                 return {
                     statusCode: 404,
+                    headers: {
+                        'Access-Control-Allow-Origin': '*',
+                    },
                     body: JSON.stringify({ message: 'Role not found in the specified team' }),
                 };
             }
         } else {
             return {
                 statusCode: 404,
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                },
                 body: JSON.stringify({ message: 'Team not found' }),
             };
         }
@@ -73,6 +89,9 @@ exports.getResourcesByRole = async (event) => {
 
         return {
             statusCode: 500,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+            },
             body: JSON.stringify({ message: 'Internal Server Error' }),
         };
     } finally {

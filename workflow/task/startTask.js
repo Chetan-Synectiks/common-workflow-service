@@ -1,10 +1,7 @@
+const { Client } = require('pg');
+const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
 exports.startTask = async (event) => {
-    const requestBody = JSON.parse(event.body);
-    const { task_id, start_date } = requestBody;
-    const { resource_id } = event.queryStringParameters;
 
-    const { Client } = require('pg');
-    const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
     const secretsManagerClient = new SecretsManagerClient({ region: 'us-east-1' });
     const configuration = await secretsManagerClient.send(new GetSecretValueCommand({ SecretId: 'serverless/lambda/credintials' }));
     const dbConfig = JSON.parse(configuration.SecretString);
@@ -16,8 +13,19 @@ exports.startTask = async (event) => {
         user: dbConfig.engine,
         password: dbConfig.password
     });
+
+    const requestBody = JSON.parse(event.body);
+    const { task_id, start_date } = requestBody;
+    const { resource_id } = event.queryStringParameters;
     try {
-        await client.connect();
+        await client
+            .connect()
+            .then(() => {
+                console.log("Connected to the database");
+            })
+            .catch((err) => {
+                console.log("Error connecting to the database. Error :" + err);
+            });
 
         const startingtask = `
             UPDATE tasks_table AS t
@@ -51,12 +59,18 @@ exports.startTask = async (event) => {
 
         return {
             statusCode: 200,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+            },
             body: JSON.stringify({ message: "Task started" })
         };
     } catch (error) {
         console.error("error", error);
         return {
             statusCode: 500,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+            },
             body: JSON.stringify({ message: "Error while starting task " })
         };
     } finally {
