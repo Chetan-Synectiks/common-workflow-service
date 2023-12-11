@@ -113,6 +113,9 @@ exports.addusecase = async (event) => {
 
         const response = {
             statusCode: 201,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+            },
             body: JSON.stringify({
                 usecase_id,
                 project_id,
@@ -131,6 +134,9 @@ exports.addusecase = async (event) => {
             await client.query('ROLLBACK');
             return {
                 statusCode: 400,
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                },
                 body: JSON.stringify({
                     message: 'Bad Request - Invalid input'
                 }),
@@ -140,6 +146,9 @@ exports.addusecase = async (event) => {
 
         return {
             statusCode: 500,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+            },
             body: JSON.stringify({ message: 'Internal Server Error' }),
         };
     } finally {
