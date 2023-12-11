@@ -1,5 +1,4 @@
 exports.stageDetailsForCreatingUsecase = async (event, context, callback) => {
-    
     const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
     const secretsManagerClient = new SecretsManagerClient({ region: 'us-east-1' });
     const configuration = await secretsManagerClient.send(new GetSecretValueCommand({ SecretId: 'serverless/lambda/credintials' }));
@@ -24,13 +23,12 @@ exports.stageDetailsForCreatingUsecase = async (event, context, callback) => {
     console.log(data);
 
     try {
-        const result = await client.query(`SELECT
-            stages_data.workflow_name,
-            stages_data.stage_details
-        FROM
-            projects_table,
-        LATERAL jsonb_each(project->'workflows') AS stages_data(workflow_name, stage_details)
-        WHERE projects_table.id = $1;`,[data.id]);
+        const result = await client.query(`
+            SELECT workflow_name.workflow_name
+            FROM projects_table,
+            LATERAL jsonb_each(project->'workflows') AS workflow_name(workflow_name)
+            WHERE projects_table.id = $1
+        `, [data.id]); // Assuming you have an 'id' property in your queryStringParameters
 
         await client.end();
 
@@ -42,8 +40,11 @@ exports.stageDetailsForCreatingUsecase = async (event, context, callback) => {
             body: JSON.stringify(result.rows)
         };
     } catch (e) {
-        objReturn.code = 400;
-        objReturn.message = e.message || "An error occurred";
+        const objReturn = {
+            code: 400,
+            message: e.message || "An error occurred"
+        };
+
         await client.end();
 
         return {
