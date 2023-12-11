@@ -19,6 +19,16 @@ exports.getResourcesByRole = async (event) => {
     const role = event.queryStringParameters.role;
     const resourceName = event.queryStringParameters.resource_name;
 
+    if (!project_id || !team_name || !role) {
+        return {
+            statusCode: 400,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+            },
+            body: JSON.stringify({ message: 'Missing required parameters: project_id, team_name, role' }),
+        };
+    }
+
     try {
         await client
             .connect()
@@ -60,9 +70,7 @@ exports.getResourcesByRole = async (event) => {
                     headers: {
                         'Access-Control-Allow-Origin': '*',
                     },
-                    body: JSON.stringify({
-                        resources: resources,
-                    }),
+                    body: JSON.stringify(resources),
                 };
 
                 return response;
