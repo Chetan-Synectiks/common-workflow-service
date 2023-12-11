@@ -72,14 +72,16 @@ exports.assignTask = async (event) => {
 
         client.end();
         return {
-            "statusCode": 400,
-            "headers": {
-                "Access-Control-Allow-Origin": "*"
+            statusCode: 200,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
             },
-            "msg": "error"
+            body: JSON.stringify({
+                "message": "error"
+            }),
         };
 
+    }finally {
+        await client.end();
     }
-
-
 }
