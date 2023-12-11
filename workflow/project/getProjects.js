@@ -14,7 +14,6 @@ exports.getProjects = async (event) => {
     user: dbConfig.engine,
     password: dbConfig.password
   });
-  client.connect();
 
   let values = event.queryStringParameters;
   let status;
