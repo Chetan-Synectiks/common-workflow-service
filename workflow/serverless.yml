@@ -147,12 +147,12 @@ functions:
         method: get
         cors: true 
 
-  add_ProjectTeam:
-    handler: add_ProjectTeam.add_ProjectTeam
-    # role: ${env:LAMBDA_ROLE}
+  addTeamToProject:
+    handler: project/addTeamToProject.addTeamToProject
+    role: ${env:LAMBDA_ROLE}
     events:
     - http:
-        path: /addteam
+        path: /project/team/new
         method: put
         cors: true
 ##searchbargetresourcebyname
