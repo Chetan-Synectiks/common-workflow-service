@@ -5,8 +5,8 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 ## Table of Contents
 
 - [Workflow Management](#workflow-management)
-- [Table of Contents](#table-of-contents)
-- [Common Logic For For All APIs](#common-logic-for-for-all-apis)
+  - [Table of Contents](#table-of-contents)
+    - [Common Logic For For All APIs](#common-logic-for-for-all-apis)
 - [Get the overview of projects](#get-the-overview-of-projects)
 - [get no of completed and incomplete usecases for all projects between dates](#get-no-of-completed-and-incomplete-usecases-for-all-projects-between-dates)
 - [get no of completed and incomplete usecases for a project between dates](#get-no-of-completed-and-incomplete-usecases-for-a-project-between-dates)
@@ -23,7 +23,7 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [Search All resource details based on starting letter](#search-all-resource-details-based-on-starting-letter)
 - [Get Total Projects, Total Tasks, and Percentage of completed projects](#get-total-projects-total-tasks-and-percentage-of-completed-projects)
 - [Get Total Projects With Status Completed,Inprogress,Unassigned Projects](#get-total-projects-with-status-completedinprogressunassigned-projects)
-- [Add Project Workflow To Project](#add-project-workflow-to-project)
+- [Add Project workflow to project](#add-project-workflow-to-project)
 - [Assigning stage to a resource](#assigning-stage-to-a-resource)
 - [Add new project](#add-new-project)
 - [Get all stages and tasks for creating a usecase](#get-all-stages-and-tasks-for-creating-a-usecase)
@@ -31,9 +31,11 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [Add a new stage to the existing project](#add-a-new-stage-to-the-existing-project)
 - [Assign task to a resource](#assign-task-to-a-resource)
 - [Add a new usecase to a project](#add-a-new-usecase-to-a-project)
+- [get the list view of tasks assigned to a resource](#get-the-list-view-of-tasks-assigned-to-a-resource)
 - [To start task after clicking start button](#to-start-task-after-clicking-start-button)
 - [Get resources by role](#get-resources-by-role)
-
+- [assign task](#assign-task)
+- [Add Stage To Project](#add-stage-to-project) 
 
 
 ### Common Logic For For All APIs
@@ -406,7 +408,7 @@ Method : GET
                 u.usecase->>'start_date' AS usecase_startdate,
                 u.usecase->>'end_date' AS usecase_enddate,
                 u.usecase->>'usecase_assignee_id' AS assignedid,
-                COUNT(DISTINCT t.assignee_id) AS totalresources
+                COUNT(DISTINCT t.assignee_id)+1 AS totalresources
             FROM usecases_table u
             LEFT JOIN tasks_table t ON u.id = t.usecase_id
             GROUP BY u.id
@@ -429,7 +431,7 @@ Method : GET
                 u.usecase->>'start_date' AS usecase_startdate,
                 u.usecase->>'end_date' AS usecase_enddate,
                 u.usecase->>'usecase_assignee_id' AS assignedid,
-                COUNT(DISTINCT t.assignee_id) AS totalresources
+                COUNT(DISTINCT t.assignee_id)+1 AS totalresources
             FROM usecases_table u
             LEFT JOIN tasks_table t ON u.id = t.usecase_id
             WHERE u.project_id = $1 AND u.usecase->>'name' = $2
@@ -468,23 +470,32 @@ UPDATE projects_table SET project = $1 WHERE id = $2, [existingData.project, pro
 ```
 # Search All resource details based on starting letter
  
-Retrieves  without filtering.
- 
 Method: GET
  
-Request:
+- SELECT *: Retrieve all columns (*) from the RESOURCE_TABLE.
  
-Response: resource details(Id,name,image_url)
+- FROM RESOURCE_TABLE: The table from which data will be retrieved.
  
--   Using the pg client create a SQL query for a SELECT statment to get all rows in the resource table
+- WHERE LOWER(resource ->> 'name'): Filter condition where the value stored in the name field of the    resource column is converted to lowercase.
  
+- LIKE LOWER ($1 || '%'): Checks for partial matches where the lowercase name starts with a provided string  and is followed by any characters using the wildcard %.
  
-> This Api may or may not need pagation support
+- Filtered the using map method and displayed what we actually needed.(resource_id,name,imageurl)
+ 
  
 ```SQL
-
-select * FROM RESOURCE_TABLE WHERE LOWER(resource  ->> 'name') LIKE LOWER ( $1||'%')
-
+select * FROM resources_table WHERE LOWER(resource  ->> 'name') LIKE LOWER ( $1||'%')
+ 
+````````````filering the data ``````````````
+ 
+    extractedData = res.rows.map(row => ({
+            resource_id:row.id,
+            name: row.resource.name,
+            imageurl: row.resource.imageurl
+        }));
+    ````````````````````````
+ 
+ 
 ```
 
 # Get Total Projects, Total Tasks, and Percentage of completed projects
@@ -579,47 +590,41 @@ UPDATE projects_table SET project = $1 WHERE id = $2, [existingData.project, pro
 
 # Assigning stage to a resource
  
-Retrieves  without filtering.
- 
 Method: PUT
  
+- UPDATE usecase_table: Begins the update operation on the usecase_table.
  
-- If resposne is 404 (stage or usecase  name not found)
-          message: 'No matching records found'
+- SET usecase = jsonb_set(...):
  
-- If resposne is 200 (on succefully assigning the resource to stage)
-          message: 'Stage updated successfully'
-         
-- If resposne is 500 (If error occured while connecting to database)
-          message: 'Error While assigning'
+     - Used nested jsonb_set functions to update specific keys within the usecase JSONB column.
  
+     - The jsonb_set functions are structured to modify several nested keys (assigne_id, assigned_by_id, - - updated_by_id, description) within the workflow section identified by ${stage_name}.
  
--   Using the pg client create a SQL query for a SELECT statment to get all rows in the resource table
+- WHERE id = '${usecase_id}' AND usecase->'workflow' ? '${stage_name}':
  
- 
-> This Api may or may not need pagation support
+      - Specifies the condition for updating, ensuring the record matches the provided usecase_id and the - JSONB column usecase contains the specified ${stage_name} within the workflow section.
  
 ```SQL
- UPDATE usecase_table
-                              SET usecase =
-                                  jsonb_set(
-                                      jsonb_set(
-                                          jsonb_set(
-                                              jsonb_set(
-                                                  usecase,
-                                                  '{workflow, ${stage_name}, assigne_id}',
-                                                  '"${assigned_to_id}"'
-                                              ),
-                                              '{workflow, ${stage_name}, assigned_by_id}',
-                                              '"${assigned_by_id}"'
-                                          ),
-                                          '{workflow, ${stage_name}, updated_by_id}',
-                                          '"${updated_by_id}"'
-                                      ),
-                                      '{workflow, ${stage_name}, description}',
-                                      '"${description}"'
-                                  )
-                              WHERE id = '${usecase_id}' AND usecase->'workflow' ? '${stage_name}'
+UPDATE usecase_table
+                                SET usecase =
+                                    jsonb_set(
+                                        jsonb_set(
+                                            jsonb_set(
+                                                jsonb_set(
+                                                    usecase,
+                                                    '{workflow, ${stage_name}, assigne_id}',
+                                                    '"${assigned_to_id}"'
+                                                ),
+                                                '{workflow, ${stage_name}, assigned_by_id}',
+                                                '"${assigned_by_id}"'
+                                            ),
+                                            '{workflow, ${stage_name}, updated_by_id}',
+                                            '"${updated_by_id}"'
+                                        ),
+                                        '{workflow, ${stage_name}, description}',
+                                        '"${description}"'
+                                    )
+                                WHERE id = '${usecase_id}' AND usecase->'workflow' ? '${stage_name}'
 ```
 # Add new project
 
@@ -740,12 +745,12 @@ r.resource->>'role' = 'Manager' AND p.project->>'status'=$1
 ```SQL
 --- without pagination ---
 
-SELECT project->>'name' as name,project->>'startdate'as startdate,project->>'enddate' as duedate, project ->> 'resources'AS noofresources FROM project
+SELECT project->>'name' as name,project->>'startdate'as startdate,project->>'enddate' as duedate, project ->> 'resources'AS noofresources FROM projects_table
   WHERE status = 'filter_string';
 
 --- with pagination ---
 
-SELECT project->>'name' as name,project->>'startdate'as startdate,project->>'enddate' as duedate, project ->> 'resources'AS noofresources FROM project
+SELECT project->>'name' as name,project->>'startdate'as startdate,project->>'enddate' as duedate, project ->> 'resources'AS noofresources FROM projects_table
   WHERE status = 'filter_string'
   ORDER BY id
   LIMIT 10
@@ -824,32 +829,65 @@ Method: Post
             }]
 
 --- projects_table ---
-'SELECT project->\'stages\' as stages FROM projects_table WHERE id = $1',[project_id]
+SELECT project->'workflows'->'${workflow_name}' AS workflow
+          FROM projects_table
+          WHERE id = $1;
 
 --- usecases_table ---
 'UPDATE usecases_table SET usecase = jsonb_set(usecase, $1, $2) WHERE id = $3', ['{stages}', stagesData, insertedData.id]
 --- tasks_table ---
 'INSERT INTO tasks_table (usecase_id, project_id, assignee_id, stage, task) VALUES ($1, $2, $3, $4, $5)', [taskData.usecase_id, taskData.project_id, taskData.assignee_id, taskData.stage, taskData.task]
 ```
+# get the list view of tasks assigned to a resource 
+
+get the list view of tasks assigned to a resource
+
+Method : GET
+
+-   Using the pg client create a SQL query to GET tasks assigned to a resource
+
+```SQL
+
+-- Query to get the tasks assigned to a resource
+  SELECT * 
+  FROM tasks_table 
+  WHERE assignee_id = $1,[resource_id]
+```
 
 # To start task after clicking start button
  
 Method: PUT
  
-Request:  
+```SQL updating tasks_table status
  
-Response:
+                UPDATE tasks_table AS t
+                SET task = jsonb_set(
+                    jsonb_set(t.task, '{start_date}', '"${start_date}"'),
+                    '{status}', '"InProgress"'
+                )
+                FROM resources_table AS r
+                WHERE
+                    t.id = '${task_id}'
+                    AND t.assignee_id = '${resource_id}'
+                    AND r.id = '${resource_id}';
  
  
--   Using the pg client create a SQL query for a UPDATE the status,resource_start_date in the task_table by checking the    task_id
+```
+                                                           
  
+```SQL   While doing starttask the resources_table is also updating current_task field in resources
  
-> This Api may or may not need pagation support
- 
-```SQL
- 
-  UPDATE task_table SET task = jsonb_set(jsonb_set(task, '{start_date}', '"${start_date}"'),'{status}', '"Incomplete"') WHERE id = '${task_id}' AND assigne_id = '${resource_id}'
-       
+            UPDATE resources_table
+            SET resource = jsonb_set(
+                resource, '{current_task}',
+                jsonb_build_object('task_id', '${task_id}', 'task_name', t.task->>'name')
+            )
+            FROM tasks_table AS t
+            WHERE
+                t.id = '${task_id}'
+                AND t.assignee_id = '${resource_id}'
+                AND resources_table.id = '${resource_id}'
+        ;
 ```
 
 # Get resources by role
@@ -885,3 +923,45 @@ let query = 'SELECT id, resource->>\'name\' as name, resource->>\'image\' as ima
                     queryParams.push(`%${resourceName}%`);
                 }
 ```
+
+# assign task
+ 
+METHOD : PUT
+ 
+- assigning task for a usecase.
+ 
+ ```SQL
+UPDATE tasks_table
+   SET
+       assignee_id = '${assigne_id}',
+       task =
+           jsonb_set(jsonb_set(
+               jsonb_set(
+                   jsonb_set(
+                       jsonb_set(
+                           task,
+                           '{resource_start_date}',
+                           '"${startdate}"'::jsonb
+                       ),
+                       '{resource_end_date}',
+                       '"${enddate}"'::jsonb
+                   ),
+                   '{updated_by_id}',
+                   '"${updatedby}"'::jsonb
+               ),
+               '{assigned_by_id}',
+               '"${assignedby}"'::jsonb
+           ), '{comments}', '"${cmt}"')
+   WHERE
+       id = '${taskid}'
+ 
+ ```
+
+# Add stage to project
+ 
+METHOD : PUT
+ 
+- adding stage to projects_table.
+ 
+ ```SQL 
+UPDATE usecases_table SET usecase = $1 WHERE id = $2', [existingData.usecase, usecase_id]); 

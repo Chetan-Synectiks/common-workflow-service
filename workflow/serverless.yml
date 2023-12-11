@@ -34,12 +34,12 @@ functions:
         method: get
         cors: true
 
-  add_workflow:
-    handler: add_workflow.add_workflow
+  addWorkflowToProject:
+    handler: addWorkflowToProject.addWorkflowToProject
     role: ${env:LAMBDA_ROLE}
     events:
       - httpApi:
-          path: /update
+          path: / /project/workflow/new
           method: put       
 
   allresources:
@@ -80,7 +80,7 @@ functions:
     role: ${env:LAMBDA_ROLE}
     events:
     - http:
-        path: /projects
+        path: /project
         method: get
         cors: true
 
@@ -89,17 +89,18 @@ functions:
     role: ${env:LAMBDA_ROLE}
     events:
       - http:
-          path: /resources
+          path: /resource
           method: get
           cors: true
 
   getProjectsOverview:
-    handler: project/getProjectsOverview.getProjectsOverview
+    handler: dashboard/getProjectsOverview.getProjectsOverview
     role: ${env:LAMBDA_ROLE}
     events:
-      - httpApi:
+      - http:
           path: /projects_overview
-          method: get    
+          method: get
+          cors: true    
 
   getResourcesTasksStatus:
     handler: dashboard/getResourcesTasksStatus.getResourcesTasksStatus
@@ -124,7 +125,7 @@ functions:
     role: ${env:LAMBDA_ROLE}
     events:
     - http:
-        path:  /projects/usecases
+        path:  /project/usecase
         method: get
         cors: true 
 
@@ -133,7 +134,7 @@ functions:
     role: ${env:LAMBDA_ROLE}
     events:
     - http:
-        path: /projects/usecases/{name}
+        path: /project/usecase/{name}
         method: get
         cors: true 
 
@@ -170,16 +171,16 @@ functions:
     role: ${env:LAMBDA_ROLE}
     events:
     - http:
-        path: /addProject
+        path: /Project
         method: post
         cors: true
   #addusecase
-  addusecases:
+  addusecase:
     handler: project/addusecase.addusecase
     role: ${env:LAMBDA_ROLE}
     events:
       - http:
-          path: /project/usecases/new
+          path: /project/usecase/new
           method: post
           cors: true
   # stages
@@ -188,7 +189,7 @@ functions:
     role: ${env:LAMBDA_ROLE}
     events:
     - http:
-        path: /project/usecases/stage_details
+        path: /project/workflow/all
         method: get
         cors: true
   #assignStage
@@ -197,9 +198,26 @@ functions:
     role: ${env:LAMBDA_ROLE}
     events:
       - http:
-          path: /project/usecases/assign_stage
+          path: /project/usecase/assign_stage
           method: put
           cors: true
+  addStages:
+    handler: addStages.addStages
+    role: ${env:LAMBDA_ROLE}
+    events:
+    - http:
+        path: /project/{usecase_id}/stages
+        method: put
+        cors: true        
+  
+  getTaskDetails:
+    handler: task/getTaskDetails.getTaskDetails
+    role: ${env:LAMBDA_ROLE}
+    events:
+    - http:
+        path: /task/details
+        method: get
+        cors: true 
 
   startTask:
     handler: task/startTask.startTask
@@ -217,5 +235,14 @@ functions:
       - http:
           path: /get_resource_by_role
           method: get
+          cors: true
+
+  assignTask:
+    handler: project/assignTask.assignTask
+    role: ${env:LAMBDA_ROLE}
+    events:
+      - http:
+          path: /project/usecase/assign_task
+          method: put
           cors: true
           

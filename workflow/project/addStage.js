@@ -1,9 +1,8 @@
-exports.add_ProjectTeam = async (event, context, callback) => {
+exports.addStages = async (event, context, callback) => {
     const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
     const secretsManagerClient = new SecretsManagerClient({ region: 'us-east-1' });
     const configuration = await secretsManagerClient.send(new GetSecretValueCommand({ SecretId: 'serverless/lambda/credintials' }));
     const dbConfig = JSON.parse(configuration.SecretString);
-    
     const { Client } = require('pg');
     const client = new Client({
         host: dbConfig.host,
@@ -14,23 +13,23 @@ exports.add_ProjectTeam = async (event, context, callback) => {
     });
     
     await client.connect();
-
+ 
     try {
-        const projectId = event.queryStringParameters.projectId;
-
+        const usecase_id = event.pathParameters.usecase_id;
+ 
         // Fetch the existing JSON data from the database
-        const result = await client.query('SELECT id, project FROM projects_table WHERE id = $1', [projectId]);
+        const result = await client.query('SELECT id, usecase FROM usecases_table WHERE id = $1', [usecase_id]);
         const existingData = result.rows[0];
-
+ 
         // Parse the "teams" object from the request body
-        const teamsObject = JSON.parse(event.body);
-
+        const workflowobject = JSON.parse(event.body);
+ 
         // Update the JSON data with the provided "teams" object
-        existingData.project.teams = teamsObject;
-
+        existingData.usecase.workflow = workflowobject;
+ 
         // Update the JSON data back to the database
-        await client.query('UPDATE projects_table SET project = $1 WHERE id = $2', [existingData.project, projectId]);
-
+        await client.query('UPDATE usecases_table SET usecase = $1 WHERE id = $2', [existingData.usecase, usecase_id]);
+ 
         return {
             statusCode: 200,
             body: JSON.stringify({ message: 'Data updated successfully' }),

@@ -1,17 +1,19 @@
-// projectoverview Dashboard API
+const { Client } = require('pg');
+const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
 
 exports.getProjectOverview = async (event, context, callback) => {
-    const { Client } = require('pg');
-
+    
+    const secretsManagerClient = new SecretsManagerClient({ region: 'us-east-1' });
+    const configuration = await secretsManagerClient.send(new GetSecretValueCommand({ SecretId: 'serverless/lambda/credintials' }));
+    const dbConfig = JSON.parse(configuration.SecretString);
+    
     const client = new Client({
-        host: "localhost",
-        port: "5432",
-        database: "workflow",
-        user: "postgres",
-        password: "postgres"
+        host: dbConfig.host,
+        port: dbConfig.port,
+        database: 'workflow',
+        user: dbConfig.engine,
+        password: dbConfig.password
     });
-
-    client.connect();
 
     let data = {};
 
@@ -20,6 +22,15 @@ exports.getProjectOverview = async (event, context, callback) => {
     }
 
     try {
+        await client
+		.connect()
+		.then(() => {
+			console.log("Connected to the database");
+		})
+		.catch((err) => {
+			console.log("Error connecting to the database. Error :" + err);
+		});
+
         const result = await client.query(`
         SELECT
             projects_table.id,
@@ -30,7 +41,7 @@ exports.getProjectOverview = async (event, context, callback) => {
         usecases_table ON projects_table.id = usecases_table.project_id
             WHERE projects_table.id = $1 
             AND usecases_table.usecase->>'start_date' >= $2
-            AND usecases_table.usecase->>'end_date' <= $3`, [data.id, data.from_date, data.to_date]
+            AND usecases_table.usecase->>'end_date' <= $3`, [data.project_id, data.from_date, data.to_date]
         );
 
         let incompleteCount = [];
@@ -64,7 +75,7 @@ exports.getProjectOverview = async (event, context, callback) => {
             headers: {
                 "Access-Control-Allow-Origin": "*"
             },
-            body: JSON.stringify({ error: e.message || "An error occurred" })
+            "body": JSON.stringify({ error: e.message || "An error occurred" })
         };
     }
 };
