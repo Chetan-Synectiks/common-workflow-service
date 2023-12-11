@@ -1,6 +1,7 @@
 const { Client } = require('pg');
+const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
 exports.getResources = async (event) => {
-    const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
+
     const secretsManagerClient = new SecretsManagerClient({ region: 'us-east-1' });
     const configuration = await secretsManagerClient.send(new GetSecretValueCommand({ SecretId: 'serverless/lambda/credintials' }));
     const dbConfig = JSON.parse(configuration.SecretString);
@@ -14,7 +15,14 @@ exports.getResources = async (event) => {
     });
 
     try {
-        await client.connect();
+        await client
+            .connect()
+            .then(() => {
+                console.log("Connected to the database");
+            })
+            .catch((err) => {
+                console.log("Error connecting to the database. Error :" + err);
+            });
 
         const projectFilter = event.queryStringParameters && event.queryStringParameters.project_id;
 
@@ -34,12 +42,18 @@ exports.getResources = async (event) => {
 
         return {
             statusCode: 200,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+            },
             body: JSON.stringify(outputData),
         };
     } catch (error) {
         console.error('Error executing query:', error);
         return {
             statusCode: 500,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+            },
             body: JSON.stringify({ message: 'Internal Server Error' }),
         };
     } finally {

@@ -1,9 +1,7 @@
 const { Client } = require('pg');
+const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
 exports.addusecase = async (event) => {
-    const requestBody = JSON.parse(event.body);
-    const { project_id, usecase_name, assigned_to_id, description, workflow_name } = requestBody;
 
-    const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
     const secretsManagerClient = new SecretsManagerClient({ region: 'us-east-1' });
     const configuration = await secretsManagerClient.send(new GetSecretValueCommand({ SecretId: 'serverless/lambda/credintials' }));
     const dbConfig = JSON.parse(configuration.SecretString);
@@ -16,8 +14,20 @@ exports.addusecase = async (event) => {
         password: dbConfig.password
     });
 
+    const requestBody = JSON.parse(event.body);
+    const { project_id, usecase_name, assigned_to_id, description, workflow_name } = requestBody;
+
     try {
-        await client.connect();
+
+        await client
+            .connect()
+            .then(() => {
+                console.log("Connected to the database");
+            })
+            .catch((err) => {
+                console.log("Error connecting to the database. Error :" + err);
+            });
+
         await client.query('BEGIN');
 
         const projectQuery = `
@@ -107,6 +117,9 @@ exports.addusecase = async (event) => {
 
         const response = {
             statusCode: 200,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+            },
             body: JSON.stringify({
                 usecase_id,
                 project_id,
@@ -123,6 +136,9 @@ exports.addusecase = async (event) => {
 
         return {
             statusCode: 500,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+            },
             body: JSON.stringify({ message: 'Internal Server Error' }),
         };
     } finally {
