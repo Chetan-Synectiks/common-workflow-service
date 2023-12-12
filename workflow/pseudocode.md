@@ -20,6 +20,7 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [Get a usecase by name](#get-a-usecase-by-name)
 - [search usecase from the search bar](#search-usecase-from-the-search-bar)
 - [Add ProjectTeam to project](#add-projectteam-to-project)
+- [delete a usecase of project](#delete-a-usecase-of-project)
 - [Search All resource details based on starting letter](#search-all-resource-details-based-on-starting-letter)
 - [Get Total Projects, Total Tasks, and Percentage of completed projects](#get-total-projects-total-tasks-and-percentage-of-completed-projects)
 - [Get Total Projects With Status Completed,Inprogress,Unassigned Projects](#get-total-projects-with-status-completedinprogressunassigned-projects)
@@ -35,7 +36,7 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [To start task after clicking start button](#to-start-task-after-clicking-start-button)
 - [Get resources by role](#get-resources-by-role)
 - [assign task](#assign-task)
-- [Add Stage To Project](#add-stage-to-project) 
+- [Add stage to project](#add-stage-to-project)
 - [delete project](#delete-project)
 
 ### Common Logic For For All APIs
@@ -467,6 +468,21 @@ Method : PUT
 SELECT id, project FROM projects_table WHERE id = $1, [projectId]
 
 UPDATE projects_table SET project = $1 WHERE id = $2, [existingData.project, projectId]
+```
+# delete a usecase of project 
+
+delete a usecase of project based on usecaseid
+
+Method : DELETE
+
+-   Using the pg client create a SQL query to DELETE usecase with usecaseid
+
+```SQL
+
+-- Query to delete a usecase 
+DELETE FROM usecases_table
+        WHERE usecase->>'id' = $1
+        RETURNING *;
 ```
 # Search All resource details based on starting letter
  

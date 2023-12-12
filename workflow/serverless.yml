@@ -155,6 +155,15 @@ functions:
         path: /project/team/new
         method: put
         cors: true
+  delete_usecase:
+    handler: project/delete_usecase.delete_usecase
+    role: ${env:LAMBDA_ROLE}
+    events:
+    - http:
+        path: /project/usecase/delete
+        method: put
+        cors: true
+
 ##searchbargetresourcebyname
   getResourcesByName:
     handler: misc/getResourcesByName.getResourcesByName
