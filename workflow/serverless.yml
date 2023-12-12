@@ -107,7 +107,7 @@ functions:
     role: ${env:LAMBDA_ROLE}
     events:
     - http:
-        path: /resource_task_status
+        path: /resouce_task_status
         method: get
         cors: true
  
