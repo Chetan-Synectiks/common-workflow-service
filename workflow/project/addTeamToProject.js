@@ -47,7 +47,14 @@ exports.handler = async (event) => {
                 
                 // Ensure that 'teams' property exists in existingData.project
                 existingData.project.teams = existingData.project.teams || {};
-        
+                
+                  // Check if the team already exists
+                if (existingData.project.teams[teamName]) {
+                    return {
+                        statusCode: 409,
+                        body: JSON.stringify({ message: 'Team with the same name already exists' }),
+                    };
+                }
                 // Update the JSON data with the provided "teams" object
                 const newTeam = {
                     roles: roles,
