@@ -13,7 +13,6 @@ exports.handler = async (event) => {
         user: dbConfig.engine,
         password: dbConfig.password
     });
-    client.connect();
 
         try {
         await client

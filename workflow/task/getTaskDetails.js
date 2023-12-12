@@ -12,8 +12,18 @@ exports.handler = async (event, context, callback) => {
         user: dbConfig.engine,
         password: dbConfig.password
     });
-    await client.connect();
+
 try {
+
+  await client
+  .connect()
+  .then(() => {
+      console.log("Connected to the database");
+  })
+  .catch((err) => {
+      console.log("Error connecting to the database. Error :" + err);
+  });
+
     const resource_id = event.queryStringParameters.resource_id;
     const query = `
   SELECT * 

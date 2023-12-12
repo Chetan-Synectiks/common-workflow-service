@@ -14,8 +14,6 @@ exports.handler = async (event) => {
         password: dbConfig.password
     });
 
-    client.connect();
-
     try {
 
         await client
