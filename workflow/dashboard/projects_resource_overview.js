@@ -1,4 +1,4 @@
-exports.project_resource_overview=async(event)=>
+exports.handler=async(event)=>
 {
 const {Client}=require('pg')
 const client=new Client({

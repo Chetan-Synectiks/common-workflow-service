@@ -1,4 +1,4 @@
-exports.getTaskDetails = async (event, context, callback) => {
+exports.handler = async (event, context, callback) => {
     const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
     const secretsManagerClient = new SecretsManagerClient({ region: 'us-east-1' });
     const configuration = await secretsManagerClient.send(new GetSecretValueCommand({ SecretId: 'serverless/lambda/credintials' }));

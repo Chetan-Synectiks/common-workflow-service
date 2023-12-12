@@ -1,7 +1,7 @@
 const { Client } = require('pg');
 const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
 
-exports.addWorkflowToProject = async (event) => {
+exports.handler = async (event) => {
     const secretsManagerClient = new SecretsManagerClient({ region: 'us-east-1' });
     const configuration = await secretsManagerClient.send(new GetSecretValueCommand({ SecretId: 'serverless/lambda/credintials' }));
     const dbConfig = JSON.parse(configuration.SecretString);
@@ -23,7 +23,7 @@ exports.addWorkflowToProject = async (event) => {
             console.log("Error connecting to the database. Error :" + err);
         });
         
-        const projectId = event.queryStringParameters.projectId;
+        const projectId = event.queryStringParameters.project_id;
  
         // Fetch the existing JSON data from the database
         const result = await client.query('SELECT id, project FROM projects_table WHERE id = $1', [projectId]);

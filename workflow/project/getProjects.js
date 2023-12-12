@@ -1,7 +1,7 @@
 const { Client } = require("pg");
 const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
 
-exports.getProjects = async (event) => {
+exports.handler = async (event) => {
   
   const secretsManagerClient = new SecretsManagerClient({ region: 'us-east-1' });
   const configuration = await secretsManagerClient.send(new GetSecretValueCommand({ SecretId: 'serverless/lambda/credintials' }));

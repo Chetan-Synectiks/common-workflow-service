@@ -1,4 +1,4 @@
-exports.get_usecasedetails = async (event, context, callback) => {
+exports.handler = async (event, context, callback) => {
  
     const { Client } = require('pg');
  

@@ -1,4 +1,4 @@
-exports.usecase_search = async (event) => {
+exports.handler = async (event) => {
     params = event.queryStringParameters.name;
     const { Client } = require('pg')
     const client = new Client({
