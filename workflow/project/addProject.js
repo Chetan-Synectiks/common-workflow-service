@@ -34,8 +34,7 @@ exports.addProject = async (event) => {
         const result = await client.query(
             `INSERT INTO projects_table (project)
              VALUES ($1::jsonb) RETURNING id as project_id,
-            (project->>\'name\')::text as project_name, 
-            project->>\'status\' as status`,
+            (project->>\'name\')::text as project_name`,
             [requestBody]  
         );
         
@@ -49,8 +48,7 @@ exports.addProject = async (event) => {
             },
             body: JSON.stringify({
                 project_id: insertedData.project_id,
-                project_name: insertedData.project_name,
-                status: insertedData.status
+                project_name: insertedData.project_name
             }),
         };
     } catch (error) {
