@@ -865,10 +865,10 @@ Method : GET
 
 ```SQL
 
--- Query to get the tasks assigned to a resource
-  SELECT * 
-  FROM tasks_table 
-  WHERE assignee_id = $1,[resource_id]
+-- Queries to get the tasks assigned to a resource,projectname from project table, resourcename from resources_table 
+ SELECT * FROM tasks_table WHERE assignee_id = $1,[resource_id]
+ SELECT * FROM projects_table WHERE id = $1, [row.project_id]
+ SELECT * FROM resources_table WHERE id = $1, [row.task.assigned_by_id]
 ```
 
 # To start task after clicking start button
