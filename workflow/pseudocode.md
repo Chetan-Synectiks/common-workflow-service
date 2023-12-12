@@ -36,7 +36,7 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [Get resources by role](#get-resources-by-role)
 - [assign task](#assign-task)
 - [Add Stage To Project](#add-stage-to-project) 
-
+- [delete project](#delete-project)
 
 ### Common Logic For For All APIs
 
@@ -965,3 +965,37 @@ METHOD : PUT
  
  ```SQL 
 UPDATE usecases_table SET usecase = $1 WHERE id = $2', [existingData.usecase, usecase_id]); 
+```
+
+
+# delete project
+
+- using await the queries will be executed one by one 
+
+- There is a dependency(primarykey and foreignkey) on one on another table so the functions executes (tasks_table , usecases_table , projects_table).
+
+- deleting the task by project_id from the tasks_table.
+
+```SQL
+                DELETE FROM tasks_table
+                            WHERE project_id = '${project_id}'
+
+
+```
+- deleting the usecase by project_id from the usecases_table.
+
+```SQL
+                DELETE FROM usecases_table
+                            WHERE project_id = '${project_id}'
+
+
+```
+- deleting the project by project_id from the projects_table.
+
+```SQL
+
+                DELETE FROM projects_table
+                            WHERE id = '${project_id}'
+
+
+```

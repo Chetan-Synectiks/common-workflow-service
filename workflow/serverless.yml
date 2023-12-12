@@ -245,4 +245,13 @@ functions:
           path: /project/usecase/assign_task
           method: put
           cors: true
+
+  deleteProject:
+    handler: delete/deleteProject.deleteProject
+    role: ${env:LAMBDA_ROLE}
+    events:
+      - http:
+          path: /deleteProject
+          method: delete
+          cors: true       
           
