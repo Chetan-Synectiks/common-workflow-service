@@ -14,14 +14,6 @@ exports.getAllResourcesTasksStatus = async (event) => {
         password: dbConfig.password
     });
 
-    client.connect();
-
-    let data = {};
-
-    if (event.queryStringParameters) {
-        data = event.queryStringParameters;
-    }
-
     try {
 
         await client
@@ -32,6 +24,11 @@ exports.getAllResourcesTasksStatus = async (event) => {
 		.catch((err) => {
 			console.log("Error connecting to the database. Error :" + err);
 		});
+        let data = {};
+
+        if (event.queryStringParameters) {
+        data = event.queryStringParameters;
+        }
         // Fetch tasks and resource information using JOIN
         const tasksResult = await client.query(`
             SELECT t.*, r.resource->>'name' AS resource_name

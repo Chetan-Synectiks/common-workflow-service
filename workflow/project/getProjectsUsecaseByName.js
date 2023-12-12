@@ -15,13 +15,7 @@ exports.getProjectsUsecaseByName = async (event) => {
     });
     client.connect();
 
-    let data = {};
-    const name= event.pathParameters.name
-    if (event.queryStringParameters) {
-        data = event.queryStringParameters;
-    }
-
-    try {
+        try {
         await client
 		.connect()
 		.then(() => {
@@ -30,6 +24,12 @@ exports.getProjectsUsecaseByName = async (event) => {
 		.catch((err) => {
 			console.log("Error connecting to the database. Error :" + err);
 		});
+
+        let data = {};
+        const name= event.pathParameters.name
+        if (event.queryStringParameters) {
+        data = event.queryStringParameters;
+        }
         // Fetch use case details for the specified project and use case name
         const useCaseDetailsResult = await client.query(`
             SELECT
