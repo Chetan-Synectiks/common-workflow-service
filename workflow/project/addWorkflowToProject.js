@@ -47,14 +47,14 @@ exports.addWorkflowToProject = async (event) => {
         });
 
         await client.query(`
-            UPDATE projects_table
-            SET project = jsonb_set(
-                project,
-                '{workflows, ${workflowName}}',
-                '{"stages": {${stageUpdates.join(',')}}}',
-                true
-            )
-            WHERE id = $1;
+        UPDATE projects_table
+        SET project = jsonb_set(
+        COALESCE(project, '{}'::jsonb),
+        '{workflows, ${workflowName}}',
+        '{"created_by_id": "${updateData.created_by_id}", "created_time": "${updateData.created_time}", "stages": {${stageUpdates.join(',')}}}',
+        true
+        )
+        WHERE id = $1;
         `, [updateData.project_id]);
 
         console.log(`Workflows updated for project: ${updateData.project_id}, workflow: ${workflowName}`);
