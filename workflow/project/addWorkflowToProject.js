@@ -16,14 +16,22 @@ exports.addWorkflowToProject = async (event) => {
 
     const updateData = JSON.parse(event.body);
     try {
-        await client
-            .connect()
-            .then(() => {
-                console.log("Connected to the database");
-            })
-            .catch((err) => {
-                console.log("Error connecting to the database. Error :" + err);
-            });
+        await client.connect();
+
+        // Check if the workflow name already exists
+        const existingWorkflow = await client.query(`
+            SELECT project->'workflows'->'${updateData.workflow_name}' AS workflow
+            FROM projects_table
+            WHERE id = $1;
+        `, [updateData.project_id]);
+
+        if (existingWorkflow.rows.length > 0 && existingWorkflow.rows[0].workflow) {
+            console.log(`Workflow "${updateData.workflow_name}" already present for project ${updateData.project_id}`);
+            return {
+                statusCode: 200,
+                body: JSON.stringify(`Workflow "${updateData.workflow_name}" already present for project ${updateData.project_id}`),
+            };
+        }
 
         const workflowName = updateData.workflow_name;
         const stages = updateData.stages;
