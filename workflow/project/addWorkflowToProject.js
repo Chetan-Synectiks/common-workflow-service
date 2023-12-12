@@ -1,6 +1,6 @@
 const { Client } = require('pg');
 const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
-exports.addWorkflowToProject = async (event) => {
+exports.handler = async (event) => {
 
     const secretsManagerClient = new SecretsManagerClient({ region: 'us-east-1' });
     const configuration = await secretsManagerClient.send(new GetSecretValueCommand({ SecretId: 'serverless/lambda/credintials' }));
@@ -14,60 +14,62 @@ exports.addWorkflowToProject = async (event) => {
         password: dbConfig.password
     });
 
-    const updateData = JSON.parse(event.body);
     try {
-        await client.connect();
+        await client
+            .connect()
+            .then(() => {
+                console.log("Connected to the database");
+            })
+            .catch((err) => {
+                console.log("Error connecting to the database. Error :" + err);
+            });
 
-        // Check if the workflow name already exists
-        const existingWorkflow = await client.query(`
-            SELECT project->'workflows'->'${updateData.workflow_name}' AS workflow
-            FROM projects_table
-            WHERE id = $1;
-        `, [updateData.project_id]);
+        const requestBody = JSON.parse(event.body);
 
-        if (existingWorkflow.rows.length > 0 && existingWorkflow.rows[0].workflow) {
-            console.log(`Workflow "${updateData.workflow_name}" already present for project ${updateData.project_id}`);
+        const projectId = requestBody.project_id;
+        const workflowName = requestBody.workflow_name;
+        const stages = requestBody.stages;
+
+        const result = await client.query('SELECT id, project FROM projects_table WHERE id = $1', [projectId]);
+        const existingData = result.rows[0];
+
+        if (!existingData) {
             return {
-                statusCode: 200,
-                body: JSON.stringify(`Workflow "${updateData.workflow_name}" already present for project ${updateData.project_id}`),
+                statusCode: 404,
+                body: JSON.stringify({ message: 'Project not found' }),
             };
         }
 
-        const workflowName = updateData.workflow_name;
-        const stages = updateData.stages;
+        existingData.project = existingData.project || {};
 
-        const stageUpdates = Object.keys(stages).map((stageName) => {
-            const tasks = stages[stageName].tasks;
-            const checklists = stages[stageName].checklists;
+        existingData.project.workflows = existingData.project.workflows || {};
 
-            return `"${stageName}": {
-                "tasks": ${JSON.stringify(tasks)},
-                "checklists": ${JSON.stringify(checklists)}
-            }`;
-        });
+        if (existingData.project.workflows[workflowName]) {
+            return {
+                statusCode: 409,
+                body: JSON.stringify({ message: 'Workflow with the same name already exists' }),
+            };
+        }
 
-        await client.query(`
-        UPDATE projects_table
-        SET project = jsonb_set(
-        COALESCE(project, '{}'::jsonb),
-        '{workflows, ${workflowName}}',
-        '{"created_by_id": "${updateData.created_by_id}", "created_time": "${updateData.created_time}", "stages": {${stageUpdates.join(',')}}}',
-        true
-        )
-        WHERE id = $1;
-        `, [updateData.project_id]);
+        const newWorkflow = {
+            created_by_id: requestBody.created_by_id,
+            created_time: requestBody.created_time,
+            stages: stages
+        };
 
-        console.log(`Workflows updated for project: ${updateData.project_id}, workflow: ${workflowName}`);
+        existingData.project.workflows[workflowName] = newWorkflow;
+
+        await client.query('UPDATE projects_table SET project = $1 WHERE id = $2', [existingData.project, projectId]);
 
         return {
-            statusCode: 201,
-            body: JSON.stringify('Workflows updated successfully'),
+            statusCode: 200,
+            body: JSON.stringify({ message: 'Workflow added successfully' }),
         };
     } catch (error) {
-        console.error('Error updating workflows data:', error);
+        console.error('Error updating data:', error);
         return {
             statusCode: 500,
-            body: JSON.stringify('Internal Server Error'),
+            body: JSON.stringify({ message: 'Internal Server Error' }),
         };
     } finally {
         await client.end();
