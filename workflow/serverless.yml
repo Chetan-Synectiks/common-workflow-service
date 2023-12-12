@@ -35,7 +35,7 @@ functions:
         cors: true
 
   addWorkflowToProject:
-    handler: project/addWorkflowToProject.handler
+    handler: project/addWorkflowToProject.addWorkflowToProject
     role: ${env:LAMBDA_ROLE}
     events:
       - httpApi:
