@@ -262,7 +262,6 @@ functions:
     events:
       - httpApi:
           path: /deleteProject
-          path: /deleteProject
           method: delete
           cors: true       
           
