@@ -22,29 +22,33 @@ exports.handler = async (event) => {
         .catch((err) => {
             console.log("Error connecting to the database. Error :" + err);
         });
-        const usecase_id = event.pathParameters.usecase_id;
- 
-        const result = await client.query('SELECT id, usecase FROM usecases_table WHERE id = $1', [usecase_id]);
-        const existingData = result.rows[0];
- 
-        const workflowobject = JSON.parse(event.body);
-        
-        existingData.usecase.workflow = workflowobject;
- 
-        await client.query('UPDATE usecases_table SET usecase = $1 WHERE id = $2', [existingData.usecase, usecase_id]);
- 
-        return {
-            statusCode: 200,
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-            },
-            body: JSON.stringify({ message: 'Data updated successfully' }),
-        };
+        const deleteStageQuery = `
+            UPDATE usecases_table
+            SET usecase = usecase || '{"workflow": {"requirement": null}}'::jsonb
+            WHERE id = $1
+        `;
+
+        const result = await client.query(deleteStageQuery, [usecase_id]);
+
+        if (result.rowCount > 0) {
+            return {
+                statusCode: 200,
+                headers: {
+                    "Access-Control-Allow-Origin": "*"
+                },
+                body: JSON.stringify({ message: "Stage deleted successfully" })
+            };
+        } else {
+            return {
+                statusCode: 404,
+                body: JSON.stringify({ message: "Usecase not found" })
+            };
+        }
     } catch (error) {
-        console.error('Error updating data:', error);
+        console.error("Error deleting stage:", error);
         return {
             statusCode: 500,
-            body: JSON.stringify({ message: 'Internal Server Error' }),
+            body: JSON.stringify({ message: "Error deleting stage" })
         };
     } finally {
         await client.end();

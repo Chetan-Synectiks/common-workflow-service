@@ -28,7 +28,7 @@ exports.handler = async (event) => {
             FROM projects_table,
             LATERAL jsonb_each(project->'workflows') AS workflow_name(workflow_name)
             WHERE projects_table.id = $1
-        `, [data.id]); // Assuming you have an 'id' property in your queryStringParameters
+        `, [data.id]); 
 
         await client.end();
 

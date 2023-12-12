@@ -37,12 +37,15 @@ exports.handler = async (event) => {
 
         return {
             statusCode: 200,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+            },
             body: JSON.stringify({
-                //totalProjects: resultTotalProjects.rows[0].count,
+               
                 completedProjects: resultCompletedProjects.rows[0].count,
                 inProgressProjects: resultInProgressProjects.rows[0].count,
                 unassignedProjects: resultUnassignProjects.rows[0].count,
-                //message: "Success"
+                
             })
         };
     } catch (error) {

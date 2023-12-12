@@ -38,6 +38,7 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [assign task](#assign-task)
 - [Add stage to project](#add-stage-to-project)
 - [delete project](#delete-project)
+- [delete stage from usecase](#delete-stage-from-usecase)
 
 ### Common Logic For For All APIs
 
@@ -1014,4 +1015,15 @@ UPDATE usecases_table SET usecase = $1 WHERE id = $2', [existingData.usecase, us
                             WHERE id = '${project_id}'
 
 
+```
+# delete stage from usecase
+
+- using await the queries will be executed one by one 
+- deleting the stage by usecase_id from the usecases_table.
+
+```SQL
+                UPDATE usecases_table
+            SET usecase = usecase || '{"workflow": {"requirement": null}}'::jsonb
+            WHERE id = $1
+        `;
 ```

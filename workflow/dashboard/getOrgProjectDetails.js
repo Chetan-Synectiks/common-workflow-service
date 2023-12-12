@@ -48,9 +48,11 @@ exports.handler = async (event) => {
 
         totaltasks = queryTotalTasks.rows[0].total_tasks;
 
-        // Return response
         return {
             statusCode: 200,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+            },
             body: JSON.stringify({
                 totalProjects: resultTotalProjects,
                 totalTasks: totaltasks,
