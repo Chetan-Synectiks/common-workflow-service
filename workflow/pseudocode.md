@@ -877,34 +877,33 @@ Method: PUT
  
 ```SQL updating tasks_table status
  
-                UPDATE tasks_table AS t
-                SET task = jsonb_set(
-                    jsonb_set(t.task, '{start_date}', '"${start_date}"'),
-                    '{status}', '"InProgress"'
-                )
-                FROM resources_table AS r
-                WHERE
-                    t.id = '${task_id}'
-                    AND t.assignee_id = '${resource_id}'
-                    AND r.id = '${resource_id}';
- 
+                        UPDATE tasks_table AS t
+                        SET task = jsonb_set(
+                            jsonb_set(t.task, '{start_date}', $1::jsonb),
+                            '{status}', '"InProgress"'
+                        )
+                        FROM resources_table AS r
+                        WHERE 
+                            t.id = $2
+                            AND t.assignee_id = $3
+                            AND r.id = $4
+    
  
 ```
                                                            
  
 ```SQL   While doing starttask the resources_table is also updating current_task field in resources
  
-            UPDATE resources_table
-            SET resource = jsonb_set(
-                resource, '{current_task}',
-                jsonb_build_object('task_id', '${task_id}', 'task_name', t.task->>'name')
-            )
-            FROM tasks_table AS t
-            WHERE
-                t.id = '${task_id}'
-                AND t.assignee_id = '${resource_id}'
-                AND resources_table.id = '${resource_id}'
-        ;
+                        UPDATE resources_table 
+                        SET resource = jsonb_set(
+                            resource, '{current_task}', 
+                            jsonb_build_object('task_id', $1::text, 'task_name', t.task->>'name')
+                        )
+                        FROM tasks_table AS t
+                        WHERE 
+                            t.id = $2
+                            AND t.assignee_id = $3
+                            AND resources_table.id = $4
 ```
 
 # Get resources by role
@@ -995,7 +994,7 @@ UPDATE usecases_table SET usecase = $1 WHERE id = $2', [existingData.usecase, us
 
 ```SQL
                 DELETE FROM tasks_table
-                            WHERE project_id = '${project_id}'
+                            WHERE project_id = $1
 
 
 ```
@@ -1003,7 +1002,7 @@ UPDATE usecases_table SET usecase = $1 WHERE id = $2', [existingData.usecase, us
 
 ```SQL
                 DELETE FROM usecases_table
-                            WHERE project_id = '${project_id}'
+                            WHERE project_id = $1
 
 
 ```
@@ -1012,7 +1011,7 @@ UPDATE usecases_table SET usecase = $1 WHERE id = $2', [existingData.usecase, us
 ```SQL
 
                 DELETE FROM projects_table
-                            WHERE id = '${project_id}'
+                            WHERE id = $1
 
 
 ```

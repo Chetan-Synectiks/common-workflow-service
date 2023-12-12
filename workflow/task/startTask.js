@@ -27,35 +27,35 @@ exports.handler = async (event) => {
                 console.log("Error connecting to the database. Error :" + err);
             });
 
-        const startingtask = `
+            const startingTaskQuery = `
             UPDATE tasks_table AS t
             SET task = jsonb_set(
-                jsonb_set(t.task, '{start_date}', '"${start_date}"'),
+                jsonb_set(t.task, '{start_date}', $1::jsonb),
                 '{status}', '"InProgress"'
             )
             FROM resources_table AS r
-            WHERE
-                t.id = '${task_id}'
-                AND t.assignee_id = '${resource_id}'
-                AND r.id = '${resource_id}'
+            WHERE 
+                t.id = $2
+                AND t.assignee_id = $3
+                AND r.id = $4
         `;
 
-        await client.query(startingtask);
+        await client.query(startingTaskQuery, [JSON.stringify(start_date), task_id, resource_id, resource_id]);
 
-        const updateResource = `
-            UPDATE resources_table
+        const updateResourceQuery = `
+            UPDATE resources_table 
             SET resource = jsonb_set(
-                resource, '{current_task}',
-                jsonb_build_object('task_id', '${task_id}', 'task_name', t.task->>'name')
+                resource, '{current_task}', 
+                jsonb_build_object('task_id', $1::text, 'task_name', t.task->>'name')
             )
             FROM tasks_table AS t
-            WHERE
-                t.id = '${task_id}'
-                AND t.assignee_id = '${resource_id}'
-                AND resources_table.id = '${resource_id}'
+            WHERE 
+                t.id = $2
+                AND t.assignee_id = $3
+                AND resources_table.id = $4
         `;
 
-        await client.query(updateResource);
+        await client.query(updateResourceQuery, [task_id, task_id, resource_id, resource_id]);
 
         return {
             statusCode: 200,

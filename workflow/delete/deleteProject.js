@@ -24,19 +24,19 @@ exports.handler = async (event) => {
             });
         const deleteUsecasesQuery = `
             DELETE FROM usecases_table
-            WHERE project_id = '${project_id}'
+            WHERE project_id = $1
         `;
         const deleteTasksQuery = `
             DELETE FROM tasks_table
-            WHERE project_id = '${project_id}'
+            WHERE project_id = $1
         `;
         const deleteProjectQuery = `
             DELETE FROM projects_table
-            WHERE id = '${project_id}'
+            WHERE id = $1
         `;
-        await client.query(deleteTasksQuery);
-        await client.query(deleteUsecasesQuery);
-        await client.query(deleteProjectQuery);
+        await client.query(deleteTasksQuery,[project_id]);
+        await client.query(deleteUsecasesQuery,[project_id]);
+        await client.query(deleteProjectQuery,[project_id]);
         return {
             statusCode: 200,
             headers: {
