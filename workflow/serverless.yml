@@ -162,7 +162,7 @@ functions:
     events:
     - httpApi:
         path: /project/usecase/delete
-        method: put
+        method: delete
         cors: true
 
 ##searchbargetresourcebyname
