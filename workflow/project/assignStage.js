@@ -26,26 +26,36 @@ exports.handler = async (event) => {
                 console.log("Error connecting to the database. Error :" + err);
             });
 
-        const result = await client.query(`UPDATE usecases_table
+            const updateStageQuery = `UPDATE usecases_table
                                 SET usecase =
                                     jsonb_set(
                                         jsonb_set(
                                             jsonb_set(
                                                 jsonb_set(
                                                     usecase,
-                                                    '{workflow, ${stage_name}, assigne_id}',
-                                                    '"${assigned_to_id}"'
+                                                    '{workflow,  ${stage_name} , assigne_id}',
+                                                    $1::jsonb
                                                 ),
                                                 '{workflow, ${stage_name}, assigned_by_id}',
-                                                '"${assigned_by_id}"'
+                                                $2::jsonb
                                             ),
                                             '{workflow, ${stage_name}, updated_by_id}',
-                                            '"${updated_by_id}"'
+                                            $3::jsonb
                                         ),
                                         '{workflow, ${stage_name}, description}',
-                                        '"${description}"'
+                                        $4::jsonb
                                     )
-                                WHERE id = '${usecase_id}' AND usecase->'workflow' ? '${stage_name}' `);
+                                WHERE id = $5 AND usecase->'workflow' ? $6 `;
+                        
+            const result = await client.query(updateStageQuery, [
+               JSON.stringify (assigned_to_id),
+               JSON.stringify (assigned_by_id),
+               JSON.stringify (updated_by_id),
+               JSON.stringify (description),
+                usecase_id,
+               stage_name
+            
+            ]);
         if (result.rowCount === 0) {
             return {
                 statusCode: 400,

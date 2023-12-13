@@ -609,39 +609,29 @@ UPDATE projects_table SET project = $1 WHERE id = $2, [existingData.project, pro
  
 Method: PUT
  
-- UPDATE usecase_table: Begins the update operation on the usecase_table.
- 
-- SET usecase = jsonb_set(...):
- 
-     - Used nested jsonb_set functions to update specific keys within the usecase JSONB column.
- 
-     - The jsonb_set functions are structured to modify several nested keys (assigne_id, assigned_by_id, - - updated_by_id, description) within the workflow section identified by ${stage_name}.
- 
-- WHERE id = '${usecase_id}' AND usecase->'workflow' ? '${stage_name}':
- 
-      - Specifies the condition for updating, ensuring the record matches the provided usecase_id and the - JSONB column usecase contains the specified ${stage_name} within the workflow section.
- 
 ```SQL
-UPDATE usecase_table
+                        UPDATE usecases_table
                                 SET usecase =
                                     jsonb_set(
                                         jsonb_set(
                                             jsonb_set(
                                                 jsonb_set(
                                                     usecase,
-                                                    '{workflow, ${stage_name}, assigne_id}',
-                                                    '"${assigned_to_id}"'
+                                                    '{workflow,  ${stage_name} , assigne_id}',
+                                                    $1::jsonb
                                                 ),
                                                 '{workflow, ${stage_name}, assigned_by_id}',
-                                                '"${assigned_by_id}"'
+                                                $2::jsonb
                                             ),
                                             '{workflow, ${stage_name}, updated_by_id}',
-                                            '"${updated_by_id}"'
+                                            $3::jsonb
                                         ),
                                         '{workflow, ${stage_name}, description}',
-                                        '"${description}"'
+                                        $4::jsonb
                                     )
-                                WHERE id = '${usecase_id}' AND usecase->'workflow' ? '${stage_name}'
+                                WHERE id = $5 AND usecase->'workflow' ? $6 
+
+                        
 ```
 # Add new project
 
