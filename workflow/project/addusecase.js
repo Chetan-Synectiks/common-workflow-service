@@ -92,6 +92,8 @@ exports.handler = async (event) => {
                         end_date: "",
                         resource_start_date: "",
                         resource_end_date: "",
+                        task_assigned_date: "",
+                        assigned_by_id: "",
                         status: "",
                         comments: [],
                     },
