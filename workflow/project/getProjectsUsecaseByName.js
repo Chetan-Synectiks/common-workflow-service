@@ -2,6 +2,7 @@ const { Client } = require('pg');
 const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
 
 exports.handler = async (event) => {
+
     const secretsManagerClient = new SecretsManagerClient({ region: 'us-east-1' });
     const configuration = await secretsManagerClient.send(new GetSecretValueCommand({ SecretId: 'serverless/lambda/credintials' }));
     const dbConfig = JSON.parse(configuration.SecretString);
@@ -56,8 +57,6 @@ exports.handler = async (event) => {
         }));
 
         await client.end();
-
-        // Return the response without code, message, and type
         return {
             statusCode: 200,
             headers: {
@@ -67,8 +66,6 @@ exports.handler = async (event) => {
         };
     } catch (e) {
         await client.end();
-
-        // Return an error response without code, message, and type
         return {
             statusCode: 400,
             headers: {

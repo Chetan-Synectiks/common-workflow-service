@@ -13,7 +13,6 @@ exports.handler = async (event) => {
         user: dbConfig.engine,
         password: dbConfig.password
     });
-    
     try {
         await client
             .connect()
@@ -22,30 +21,48 @@ exports.handler = async (event) => {
             })
             .catch((err) => {
                 console.log("Error connecting to the database. Error :" + err);
+                throw new Error('Error connecting to the database');
             });
-             // Assuming event.querySTringParameters.usecase_id contains the usecase_id
-    const usecase_id = event.queryStringParameters.usecase_id;
- 
-    const query = `
-        DELETE FROM usecases_table
-        WHERE usecase->>'id' = $1
-        RETURNING *;
-    `;
- 
-    const result = await client.query(query, [usecase_id]);
- 
-    // Process the result or return it as a response
-    return {
-        statusCode: 200,
-        body: JSON.stringify({ message: 'Use case deleted successfully' }),
-    };
-} catch (error) {
-    console.error('Error executing query:', error);
-    return {
-        statusCode: 500,
-        body: JSON.stringify({ error: 'Internal Server Error' }),
-    };
-} finally {
-    await client.end();
-}
+
+        const usecase_id = event.queryStringParameters.usecase_id;
+
+        // Check for tasks existence
+        const tasksExistQuery = 'SELECT COUNT(*) FROM tasks_table WHERE usecase_id = $1';
+        const tasksExistResult = await client.query(tasksExistQuery, [usecase_id]);
+
+        if (tasksExistResult.rows[0].count !== '0') {
+            // Tasks found, delete them first
+            const deleteTasksQuery = 'DELETE FROM tasks_table WHERE usecase_id = $1';
+            await client.query(deleteTasksQuery, [usecase_id]);
+        }
+
+        // Check for usecase existence
+        const usecaseExistQuery = 'SELECT COUNT(*) FROM usecases_table WHERE id = $1';
+        const usecaseExistResult = await client.query(usecaseExistQuery, [usecase_id]);
+
+        if (usecaseExistResult.rows[0].count !== '0') {
+            // Usecase found, delete it
+            const deleteUsecaseQuery = 'DELETE FROM usecases_table WHERE id = $1';
+            await client.query(deleteUsecaseQuery, [usecase_id]);
+        } else {
+            // Usecase not found
+            return {
+                statusCode: 404,
+                body: JSON.stringify({ message: 'Usecase not found for the specified ID' }),
+            };
+        }
+
+        return {
+            statusCode: 200,
+            body: JSON.stringify({ message: 'Usecase deleted successfully' }),
+        };
+    } catch (error) {
+        console.error('Error executing query', error);
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ message: 'Internal server error' }),
+        };
+    } finally {
+        await client.end();
+    }
 };

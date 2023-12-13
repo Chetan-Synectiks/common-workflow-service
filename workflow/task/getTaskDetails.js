@@ -51,11 +51,11 @@ try {
       if (assignedByResult.rows.length === 0) {
           return {
               task_id: row.id,
-              task_name: row.stage, // or row.task_name depending on your actual structure
+              task_name: row.stage, 
               project_id: row.project_id,
-              project_name: project.name, // Get project name from projects_table
+              project_name: project.name, 
               assigned_by_id: row.task.assigned_by_id,
-              assigned_by_name: 'Unknown', // or handle it differently based on your requirements
+              assigned_by_name: 'Unknown', 
               task_assigned_date: row.task.task_assigned_date,
           };
       }
@@ -64,11 +64,11 @@ try {
 
       return {
           task_id: row.id,
-          task_name: row.stage, // or row.task_name depending on your actual structure
+          task_name: row.stage, 
           project_id: row.project_id,
-          project_name: project.name, // Get project name from projects_table
+          project_name: project.name, 
           assigned_by_id: row.task.assigned_by_id,
-          assigned_by_name: assignedByResource.name, // Get assigned_by_name from resources_table
+          assigned_by_name: assignedByResource.name, 
           task_assigned_date: row.task.task_assigned_date,
       };
   });

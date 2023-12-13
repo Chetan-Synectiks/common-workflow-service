@@ -51,8 +51,6 @@ exports.handler = async (event) => {
         }));
 
         await client.end();
-
-        // Return the response without code, message, and type
         return {
             statusCode: 200,
             headers: {
@@ -62,8 +60,6 @@ exports.handler = async (event) => {
         };
     } catch (e) {
         await client.end();
-
-        // Return an error response without code, message, and type
         return {
             statusCode: 400,
             headers: {
