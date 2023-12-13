@@ -156,6 +156,7 @@ functions:
         path: /project/team/new
         method: put
         cors: true
+        
   delete_usecase:
     handler: project/delete_usecase.handler
     role: ${env:LAMBDA_ROLE}
