@@ -23,16 +23,24 @@ exports.handler = async (event) => {
             console.log("Error connecting to the database. Error :" + err);
         });
         const usecase_id = event.pathParameters.usecase_id;
- 
+        console.log('Received usecase_id:', usecase_id);
+       
+        const requestBody = JSON.parse(event.body);
+        const stageName = requestBody.stage_name;
+        
         const result = await client.query('SELECT id, usecase FROM usecases_table WHERE id = $1', [usecase_id]);
         const existingData = result.rows[0];
- 
-        const workflowobject = JSON.parse(event.body);
-        
-        existingData.usecase.workflow = workflowobject;
- 
+
+        existingData.usecase.stages = {
+            ...existingData.usecase.stages,
+            [stageName]: {
+                tasks: [],
+                checklists: []
+            }
+        };
+
         await client.query('UPDATE usecases_table SET usecase = $1 WHERE id = $2', [existingData.usecase, usecase_id]);
- 
+
         return {
             statusCode: 200,
             headers: {
@@ -42,9 +50,10 @@ exports.handler = async (event) => {
         };
     } catch (error) {
         console.error('Error updating data:', error);
+
         return {
             statusCode: 500,
-            body: JSON.stringify({ message: 'Internal Server Error' }),
+            body: JSON.stringify({ message: 'Internal Server Error', error: error.message }),
         };
     } finally {
         await client.end();

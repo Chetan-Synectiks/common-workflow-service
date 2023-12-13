@@ -481,9 +481,8 @@ Method : DELETE
 ```SQL
 
 -- Query to delete a usecase 
-DELETE FROM usecases_table
-        WHERE usecase->>'id' = $1
-        RETURNING *;
+ DELETE FROM tasks_table WHERE usecase_id = $1,[usecase_id]
+ DELETE FROM usecases_table WHERE id = $1,[usecase_id]
 ```
 # Search All resource details based on starting letter
  
