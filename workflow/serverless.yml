@@ -274,12 +274,12 @@ functions:
           path: /deleteStage
           method: delete
           cors: true
-  addresource:
+  addresource :
     handler: resource/addresource.handler
     role: ${env:LAMBDA_ROLE}
     events:
       - httpApi:
-          path: /addresource
+          path: /resource
           method: post
           cors: true           
           
