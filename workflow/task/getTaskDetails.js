@@ -51,7 +51,7 @@ try {
       if (assignedByResult.rows.length === 0) {
           return {
               task_id: row.id,
-              task_name: row.stage, 
+              task_name: row.task.name, 
               project_id: row.project_id,
               project_name: project.name, 
               assigned_by_id: row.task.assigned_by_id,
@@ -64,7 +64,7 @@ try {
 
       return {
           task_id: row.id,
-          task_name: row.stage, 
+          task_name: row.task.name, 
           project_id: row.project_id,
           project_name: project.name, 
           assigned_by_id: row.task.assigned_by_id,
