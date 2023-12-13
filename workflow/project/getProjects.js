@@ -81,7 +81,8 @@ function processDatabaseData(projects, usecases) {
             project_name: projectData.name || '', 
             project_status: projectData.status || '', 
             total_resources: totalRoles,
-            total_usecases: totalUsecases
+            total_usecases: totalUsecases,
+            project_icon_url: projectData. project_icon_url || ''
         };
     });
 
