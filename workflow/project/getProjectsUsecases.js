@@ -14,7 +14,8 @@ exports.handler = async (event) => {
         user: dbConfig.engine,
         password: dbConfig.password
     });
-
+    const project_id = event.queryStringParameters.project_id;
+    console.log(project_id)
     try {
 
         await client
@@ -27,18 +28,20 @@ exports.handler = async (event) => {
 		});
         // Fetch use case details and related tasks
         const useCaseDetailsResult = await client.query(`
-            SELECT
+                SELECT
                 u.id AS usecase_id,
                 u.usecase->>'name' AS name,
                 u.usecase->>'current_stage' AS currentstage,
                 u.usecase->>'start_date' AS usecase_startdate,
                 u.usecase->>'end_date' AS usecase_enddate,
                 u.usecase->>'usecase_assignee_id' AS assignedid,
-                COUNT(DISTINCT t.assignee_id)+1 AS totalresources
+                COUNT(DISTINCT t.assignee_id) + 1 AS totalresources
             FROM usecases_table u
             LEFT JOIN tasks_table t ON u.id = t.usecase_id
+            JOIN projects_table p ON u.project_id = p.id
+            WHERE p.id = $1
             GROUP BY u.id
-        `);
+        `, [project_id]);
 
         const useCaseDetails = useCaseDetailsResult.rows.map(row => ({
             usecase_id: row.usecase_id,
