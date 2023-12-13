@@ -39,6 +39,7 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [Add stage to project](#add-stage-to-project)
 - [delete project](#delete-project)
 - [delete stage from usecase](#delete-stage-from-usecase)
+- [add resource](#add-resource)
 
 ### Common Logic For For All APIs
 
@@ -1014,4 +1015,14 @@ UPDATE usecases_table SET usecase = $1 WHERE id = $2', [existingData.usecase, us
             SET usecase = usecase || '{"workflow": {"requirement": null}}'::jsonb
             WHERE id = $1
         `;
+```
+# add-resource
+
+- adding new resource details to the database 
+
+```SQL
+
+          INSERT INTO resources_table (resource) VALUES ($1::jsonb)
+
+
 ```
