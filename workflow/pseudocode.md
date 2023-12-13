@@ -20,6 +20,7 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [Get a usecase by name](#get-a-usecase-by-name)
 - [search usecase from the search bar](#search-usecase-from-the-search-bar)
 - [Add ProjectTeam to project](#add-projectteam-to-project)
+- [delete a usecase of project](#delete-a-usecase-of-project)
 - [Search All resource details based on starting letter](#search-all-resource-details-based-on-starting-letter)
 - [Get Total Projects, Total Tasks, and Percentage of completed projects](#get-total-projects-total-tasks-and-percentage-of-completed-projects)
 - [Get Total Projects With Status Completed,Inprogress,Unassigned Projects](#get-total-projects-with-status-completedinprogressunassigned-projects)
@@ -35,8 +36,9 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [To start task after clicking start button](#to-start-task-after-clicking-start-button)
 - [Get resources by role](#get-resources-by-role)
 - [assign task](#assign-task)
-- [Add Stage To Project](#add-stage-to-project) 
-
+- [Add stage to project](#add-stage-to-project)
+- [delete project](#delete-project)
+- [delete stage from usecase](#delete-stage-from-usecase)
 
 ### Common Logic For For All APIs
 
@@ -468,6 +470,20 @@ SELECT id, project FROM projects_table WHERE id = $1, [projectId]
 
 UPDATE projects_table SET project = $1 WHERE id = $2, [existingData.project, projectId]
 ```
+# delete a usecase of project 
+
+delete a usecase of project based on usecaseid
+
+Method : DELETE
+
+-   Using the pg client create a SQL query to DELETE usecase with usecaseid
+
+```SQL
+
+-- Query to delete a usecase 
+ DELETE FROM tasks_table WHERE usecase_id = $1,[usecase_id]
+ DELETE FROM usecases_table WHERE id = $1,[usecase_id]
+```
 # Search All resource details based on starting letter
  
 Method: GET
@@ -848,10 +864,10 @@ Method : GET
 
 ```SQL
 
--- Query to get the tasks assigned to a resource
-  SELECT * 
-  FROM tasks_table 
-  WHERE assignee_id = $1,[resource_id]
+-- Queries to get the tasks assigned to a resource,projectname from project table, resourcename from resources_table 
+ SELECT * FROM tasks_table WHERE assignee_id = $1,[resource_id]
+ SELECT * FROM projects_table WHERE id = $1, [row.project_id]
+ SELECT * FROM resources_table WHERE id = $1, [row.task.assigned_by_id]
 ```
 
 # To start task after clicking start button
@@ -860,34 +876,33 @@ Method: PUT
  
 ```SQL updating tasks_table status
  
-                UPDATE tasks_table AS t
-                SET task = jsonb_set(
-                    jsonb_set(t.task, '{start_date}', '"${start_date}"'),
-                    '{status}', '"InProgress"'
-                )
-                FROM resources_table AS r
-                WHERE
-                    t.id = '${task_id}'
-                    AND t.assignee_id = '${resource_id}'
-                    AND r.id = '${resource_id}';
- 
+                        UPDATE tasks_table AS t
+                        SET task = jsonb_set(
+                            jsonb_set(t.task, '{start_date}', $1::jsonb),
+                            '{status}', '"InProgress"'
+                        )
+                        FROM resources_table AS r
+                        WHERE 
+                            t.id = $2
+                            AND t.assignee_id = $3
+                            AND r.id = $4
+    
  
 ```
                                                            
  
 ```SQL   While doing starttask the resources_table is also updating current_task field in resources
  
-            UPDATE resources_table
-            SET resource = jsonb_set(
-                resource, '{current_task}',
-                jsonb_build_object('task_id', '${task_id}', 'task_name', t.task->>'name')
-            )
-            FROM tasks_table AS t
-            WHERE
-                t.id = '${task_id}'
-                AND t.assignee_id = '${resource_id}'
-                AND resources_table.id = '${resource_id}'
-        ;
+                        UPDATE resources_table 
+                        SET resource = jsonb_set(
+                            resource, '{current_task}', 
+                            jsonb_build_object('task_id', $1::text, 'task_name', t.task->>'name')
+                        )
+                        FROM tasks_table AS t
+                        WHERE 
+                            t.id = $2
+                            AND t.assignee_id = $3
+                            AND resources_table.id = $4
 ```
 
 # Get resources by role
@@ -965,3 +980,48 @@ METHOD : PUT
  
  ```SQL 
 UPDATE usecases_table SET usecase = $1 WHERE id = $2', [existingData.usecase, usecase_id]); 
+```
+
+
+# delete project
+
+- using await the queries will be executed one by one 
+
+- There is a dependency(primarykey and foreignkey) on one on another table so the functions executes (tasks_table , usecases_table , projects_table).
+
+- deleting the task by project_id from the tasks_table.
+
+```SQL
+                DELETE FROM tasks_table
+                            WHERE project_id = $1
+
+
+```
+- deleting the usecase by project_id from the usecases_table.
+
+```SQL
+                DELETE FROM usecases_table
+                            WHERE project_id = $1
+
+
+```
+- deleting the project by project_id from the projects_table.
+
+```SQL
+
+                DELETE FROM projects_table
+                            WHERE id = $1
+
+
+```
+# delete stage from usecase
+
+- using await the queries will be executed one by one 
+- deleting the stage by usecase_id from the usecases_table.
+
+```SQL
+                UPDATE usecases_table
+            SET usecase = usecase || '{"workflow": {"requirement": null}}'::jsonb
+            WHERE id = $1
+        `;
+```

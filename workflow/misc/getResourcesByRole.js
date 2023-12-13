@@ -1,6 +1,6 @@
 const { Client } = require('pg');
 const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
-exports.getResourcesByRole = async (event) => {
+exports.handler = async (event) => {
 
     const secretsManagerClient = new SecretsManagerClient({ region: 'us-east-1' });
     const configuration = await secretsManagerClient.send(new GetSecretValueCommand({ SecretId: 'serverless/lambda/credintials' }));
@@ -18,6 +18,16 @@ exports.getResourcesByRole = async (event) => {
     const team_name = event.queryStringParameters.team_name;
     const role = event.queryStringParameters.role;
     const resourceName = event.queryStringParameters.resource_name;
+
+    if (!project_id || !team_name || !role) {
+        return {
+            statusCode: 400,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+            },
+            body: JSON.stringify({ message: 'Missing required parameters: project_id, team_name, role' }),
+        };
+    }
 
     try {
         await client
@@ -60,9 +70,7 @@ exports.getResourcesByRole = async (event) => {
                     headers: {
                         'Access-Control-Allow-Origin': '*',
                     },
-                    body: JSON.stringify({
-                        resources: resources,
-                    }),
+                    body: JSON.stringify(resources),
                 };
 
                 return response;

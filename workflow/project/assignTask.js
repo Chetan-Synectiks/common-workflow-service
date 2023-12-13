@@ -1,6 +1,6 @@
 const { Client } = require('pg');
 const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
-exports.assignTask = async (event) => {
+exports.handler = async (event) => {
 
     const secretsManagerClient = new SecretsManagerClient({ region: 'us-east-1' });
     const configuration = await secretsManagerClient.send(new GetSecretValueCommand({ SecretId: 'serverless/lambda/credintials' }));
@@ -72,14 +72,16 @@ exports.assignTask = async (event) => {
 
         client.end();
         return {
-            "statusCode": 400,
-            "headers": {
-                "Access-Control-Allow-Origin": "*"
+            statusCode: 200,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
             },
-            "msg": "error"
+            body: JSON.stringify({
+                "message": "error"
+            }),
         };
 
+    }finally {
+        await client.end();
     }
-
-
 }

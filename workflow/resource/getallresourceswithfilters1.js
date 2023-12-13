@@ -1,4 +1,4 @@
-exports.getallresourceswithfilters1=async(event)=>
+exports.handler=async(event)=>
 {
 const {Client}=require('pg')
 const client=new Client({

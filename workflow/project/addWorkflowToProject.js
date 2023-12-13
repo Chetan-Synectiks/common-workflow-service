@@ -1,9 +1,11 @@
-exports.addWorkflowToProject = async (event, context, callback) => {
-    const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
+const { Client } = require('pg');
+const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
+exports.handler = async (event) => {
+
     const secretsManagerClient = new SecretsManagerClient({ region: 'us-east-1' });
     const configuration = await secretsManagerClient.send(new GetSecretValueCommand({ SecretId: 'serverless/lambda/credintials' }));
     const dbConfig = JSON.parse(configuration.SecretString);
-    const { Client } = require('pg');
+
     const client = new Client({
         host: dbConfig.host,
         port: dbConfig.port,
@@ -11,28 +13,57 @@ exports.addWorkflowToProject = async (event, context, callback) => {
         user: dbConfig.engine,
         password: dbConfig.password
     });
-    
-    await client.connect();
- 
+
     try {
-        const projectId = event.queryStringParameters.projectId;
- 
-        // Fetch the existing JSON data from the database
+        await client
+            .connect()
+            .then(() => {
+                console.log("Connected to the database");
+            })
+            .catch((err) => {
+                console.log("Error connecting to the database. Error :" + err);
+            });
+
+        const requestBody = JSON.parse(event.body);
+
+        const projectId = requestBody.project_id;
+        const workflowName = requestBody.workflow_name;
+        const stages = requestBody.stages;
+
         const result = await client.query('SELECT id, project FROM projects_table WHERE id = $1', [projectId]);
         const existingData = result.rows[0];
- 
-        // Parse the "workflows" object from the request body
-        const workflowsObject = JSON.parse(event.body);
- 
-        // Update the JSON data with the provided "workflows" object
-        existingData.project.workflows = workflowsObject;
- 
-        // Update the JSON data back to the database
+
+        if (!existingData) {
+            return {
+                statusCode: 404,
+                body: JSON.stringify({ message: 'Project not found' }),
+            };
+        }
+
+        existingData.project = existingData.project || {};
+
+        existingData.project.workflows = existingData.project.workflows || {};
+
+        if (existingData.project.workflows[workflowName]) {
+            return {
+                statusCode: 409,
+                body: JSON.stringify({ message: 'Workflow with the same name already exists' }),
+            };
+        }
+
+        const newWorkflow = {
+            created_by_id: requestBody.created_by_id,
+            created_time: requestBody.created_time,
+            stages: stages
+        };
+
+        existingData.project.workflows[workflowName] = newWorkflow;
+
         await client.query('UPDATE projects_table SET project = $1 WHERE id = $2', [existingData.project, projectId]);
- 
+
         return {
             statusCode: 200,
-            body: JSON.stringify({ message: 'Data updated successfully' }),
+            body: JSON.stringify({ message: 'Workflow added successfully' }),
         };
     } catch (error) {
         console.error('Error updating data:', error);

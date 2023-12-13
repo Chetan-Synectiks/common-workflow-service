@@ -1,4 +1,4 @@
-exports.getallprojectswithfilters=async(event)=>
+exports.handler=async(event)=>
 {
     //vinay
 const {Client}=require('pg')

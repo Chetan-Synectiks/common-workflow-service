@@ -1,29 +1,21 @@
-const { Client } = require("pg");
+const { Client } = require('pg');
 const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
 
-exports.getProjects = async (event) => {
-  
+exports.handler = async (event) => {
+    
   const secretsManagerClient = new SecretsManagerClient({ region: 'us-east-1' });
   const configuration = await secretsManagerClient.send(new GetSecretValueCommand({ SecretId: 'serverless/lambda/credintials' }));
   const dbConfig = JSON.parse(configuration.SecretString);
-  
-  const client = new Client({
-    host: dbConfig.host,
-    port: dbConfig.port,
-    database: 'workflow',
-    user: dbConfig.engine,
-    password: dbConfig.password
-  });
-  client.connect();
+    
+    const client = new Client({
+        host: dbConfig.host,
+        port: dbConfig.port,
+        database: 'workflow',
+        user: dbConfig.engine,
+        password: dbConfig.password
+      });
 
-  let values = event.queryStringParameters;
-  let status;
-  if (values) {
-      status = values.status;
-  }
-    let usecase;
-
-  try {
+    try {
         await client
         .connect()
         .then(() => {
@@ -33,69 +25,64 @@ exports.getProjects = async (event) => {
             console.log("Error connecting to the database. Error :" + err);
         });
 
-      if (status) {
-          usecase = await client.query(
-              `SELECT
-                  projects_table.id AS project_id,
-                  projects_table.project->>'status' as project_status,
-                  projects_table.project->>'project_icon' as project_icon,
-                  projects_table.project->>'name' as project_name,
-                  SUM(jsonb_array_length(value->'role')) AS total_resources,
-                  COUNT(usecases_table.project_id) AS total_usecases
-              FROM
-                  projects_table
-              LEFT JOIN
-                  usecases_table ON projects_table.id = usecases_table.project_id
-              LEFT JOIN LATERAL jsonb_each(projects_table.project->'teams') AS teams ON true
-              WHERE
-                  projects_table.project->>'status' = $1 
-              GROUP BY
-                  projects_table.id, projects_table.project`,
-              [status]
-          );
-      }else{
-        usecase = await client.query(`SELECT
-              projects_table.id AS project_id,
-              projects_table.project->>'status' as project_status,
-              projects_table.project->>'project_icon' as project_icon,
-              projects_table.project->>'name' as project_name,
-              SUM(jsonb_array_length(value->'role')) AS total_resources,
-              COUNT(usecases_table.project_id) AS total_usecases
-          FROM
-              projects_table
-          LEFT JOIN
-              usecases_table ON projects_table.id = usecases_table.project_id
-          LEFT JOIN LATERAL jsonb_each(projects_table.project->'teams') AS teams ON true
-          GROUP BY
-              projects_table.id, projects_table.project`);
+        const projectFilter = event.queryStringParameters && event.queryStringParameters.status;
+        console.log(projectFilter);
+
+        let projectsQuery = `
+            SELECT
+                projects_table.id AS project_id,
+                projects_table.project->>'name' AS project_name,
+                projects_table.project->>'project_icon' AS project_icon_url,
+                COUNT(usecases_table.project_id) AS total_usecases,
+                projects_table.project->>'status' AS project_status,
+                SUM(CASE WHEN jsonb_typeof(roles) = 'array' THEN jsonb_array_length(roles) ELSE 0 END) AS total_resources
+            FROM
+                projects_table
+            LEFT JOIN
+                usecases_table ON projects_table.id = usecases_table.project_id
+            LEFT JOIN LATERAL (
+                SELECT value->'role' AS roles
+                FROM jsonb_each(projects_table.project->'teams')
+            ) AS team_roles ON true
+        `;
+
+        if (projectFilter) {
+            projectsQuery += ` WHERE projects_table.project->>'status' = '${projectFilter}'`;
         }
 
-      let projectsDetails = usecase.rows.map((row) => ({
-          project_id: row.project_id,
-          project_name: row.project_name,
-          total_usecases: row.total_usecases,
-          project_status: row.project_status,
-          total_resources: row.total_resources,
-          project_icon_url: row.project_icon,
-      }));
+        projectsQuery += `
+            GROUP BY
+                projects_table.id, projects_table.project
+        `;
 
-      client.end();
-      return {
+        const projectsResult = await client.query(projectsQuery);
+
+        const outputData = projectsResult.rows.map((project) => ({
+            project_id: project.project_id,
+            project_name: project.project_name,
+            project_icon_url: project.project_icon_url,
+            total_usecases: project.total_usecases || 0,
+            total_resources: project.total_resources || 0,
+            project_status: project.project_status
+        }));
+
+        return {
             statusCode: 200,
             headers: {
-                "Access-Control-Allow-Origin": "*",
+                'Access-Control-Allow-Origin': '*'
             },
-            body: JSON.stringify({projectsDetails}),
+            body: JSON.stringify(outputData)
         };
-  }catch (e) {
-      client.end();
-
-      return {
-          statusCode: 400,
-          headers: {
-              "Access-Control-Allow-Origin": "*",
-          },
-          message: "error",
+    } catch (error) {
+        console.error('Error executing query:', error);
+        return {
+            statusCode: 500,
+            headers: {
+                'Access-Control-Allow-Origin': '*'
+            },
+            body: JSON.stringify({ message: 'Internal Server Error' })
         };
+    } finally {
+        await client.end();
     }
 };

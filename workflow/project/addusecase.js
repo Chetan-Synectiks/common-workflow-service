@@ -1,6 +1,6 @@
 const { Client } = require('pg');
 const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
-exports.addusecase = async (event) => {
+exports.handler = async (event) => {
 
     const secretsManagerClient = new SecretsManagerClient({ region: 'us-east-1' });
     const configuration = await secretsManagerClient.send(new GetSecretValueCommand({ SecretId: 'serverless/lambda/credintials' }));
@@ -15,10 +15,9 @@ exports.addusecase = async (event) => {
     });
 
     const requestBody = JSON.parse(event.body);
-    const { project_id, usecase_name, assigned_to_id, description, workflow_name } = requestBody;
+    const { project_id, created_by_id, usecase_name, assigned_to_id, description, workflow_name } = requestBody;
 
     try {
-
         await client
             .connect()
             .then(() => {
@@ -27,7 +26,6 @@ exports.addusecase = async (event) => {
             .catch((err) => {
                 console.log("Error connecting to the database. Error :" + err);
             });
-
         await client.query('BEGIN');
 
         const projectQuery = `
@@ -50,10 +48,8 @@ exports.addusecase = async (event) => {
         for (const stageName in workflowDetails) {
             const stage = workflowDetails[stageName];
 
-            const assigne_id = assigned_to_id;
-
             Workflow[stageName] = {
-                assigne_id,
+                assigne_id: "",
                 checklists: stage.checklists.map((item, index) => ({
                     item_id: index + 1,
                     description: item,
@@ -68,6 +64,7 @@ exports.addusecase = async (event) => {
             {
                 name: usecase_name,
                 usecase_assignee_id: assigned_to_id,
+                created_by_id,
                 description,
                 start_date: "",
                 end_date: "",
@@ -86,15 +83,14 @@ exports.addusecase = async (event) => {
 
             for (const taskName of stage.tasks) {
                 const taskInsertQuery = `
-                  INSERT INTO tasks_table (usecase_id, project_id, assignee_id, stage, task)
-                  VALUES ($1, $2, $3, $4, $5)
+                  INSERT INTO tasks_table (usecase_id, project_id, stage, task)
+                  VALUES ($1, $2, $3, $4)
                   RETURNING id;
                 `;
 
                 const taskValues = [
                     usecase_id,
                     project_id,
-                    assigned_to_id,
                     stageName,
                     {
                         name: taskName,
@@ -116,13 +112,14 @@ exports.addusecase = async (event) => {
         await client.query('COMMIT');
 
         const response = {
-            statusCode: 200,
+            statusCode: 201,
             headers: {
                 'Access-Control-Allow-Origin': '*',
             },
             body: JSON.stringify({
                 usecase_id,
                 project_id,
+                created_by_id,
                 usecase_name,
                 assigned_to_id,
                 description,
@@ -132,6 +129,19 @@ exports.addusecase = async (event) => {
         return response;
     } catch (error) {
         console.error('Error inserting data:', error);
+        if (error.message.includes('invalid input')) {
+
+            await client.query('ROLLBACK');
+            return {
+                statusCode: 400,
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                },
+                body: JSON.stringify({
+                    message: 'Bad Request - Invalid input'
+                }),
+            };
+        }
         await client.query('ROLLBACK');
 
         return {
