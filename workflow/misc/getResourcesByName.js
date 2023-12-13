@@ -27,7 +27,7 @@ exports.handler = async (event) => {
         const extractedData = res.rows.map(row => ({
             resource_id: row.id,
             name: row.resource.name,
-            imageurl: row.resource.imageurl
+            imageurl: row.resource.image
         }));
 
         return {
