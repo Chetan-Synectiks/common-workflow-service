@@ -18,25 +18,19 @@ exports.handler = async (event) => {
     const { project_id, created_by_id, usecase_name, assigned_to_id, description, workflow_name } = requestBody;
 
     try {
-        await client
-            .connect()
-            .then(() => {
-                console.log("Connected to the database");
-            })
-            .catch((err) => {
-                console.log("Error connecting to the database. Error :" + err);
-            });
-        await client.query('BEGIN');
+        await client.connect();
 
         const projectQuery = `
-          SELECT project->'workflows'->'${workflow_name}' AS workflow
-          FROM projects_table
-          WHERE id = $1;
+            SELECT project->'workflows'->$1 AS workflow
+            FROM projects_table
+            WHERE id = $2;
         `;
 
-        const projectValues = [project_id];
+        const projectValues = [workflow_name, project_id];
         const projectResult = await client.query(projectQuery, projectValues);
-        const workflowDetails = projectResult.rows[0].workflow;
+        const workflowDetails = projectResult.rows[0].workflow.stages;
+
+        await client.query('BEGIN');
 
         const usecaseInsertQuery = `
           INSERT INTO usecases_table (project_id, usecase)
@@ -56,7 +50,6 @@ exports.handler = async (event) => {
                     checked: false,
                 })),
             };
-
         }
 
         const usecaseValues = [
@@ -105,7 +98,6 @@ exports.handler = async (event) => {
                 ];
 
                 const taskResult = await client.query(taskInsertQuery, taskValues);
-                const taskId = taskResult.rows[0].id;
             }
         }
 
@@ -130,7 +122,6 @@ exports.handler = async (event) => {
     } catch (error) {
         console.error('Error inserting data:', error);
         if (error.message.includes('invalid input')) {
-
             await client.query('ROLLBACK');
             return {
                 statusCode: 400,
