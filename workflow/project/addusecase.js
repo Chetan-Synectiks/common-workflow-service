@@ -18,7 +18,14 @@ exports.handler = async (event) => {
     const { project_id, created_by_id, usecase_name, assigned_to_id, description, workflow_name } = requestBody;
 
     try {
-        await client.connect();
+        await client
+            .connect()
+            .then(() => {
+                console.log("Connected to the database");
+            })
+            .catch((err) => {
+                console.log("Error connecting to the database. Error :" + err);
+            });
 
         const projectQuery = `
             SELECT project->'workflows'->$1 AS workflow
@@ -28,6 +35,19 @@ exports.handler = async (event) => {
 
         const projectValues = [workflow_name, project_id];
         const projectResult = await client.query(projectQuery, projectValues);
+
+        if (!projectResult.rows[0] || !projectResult.rows[0].workflow || !projectResult.rows[0].workflow.stages) {
+            return {
+                statusCode: 400,
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                },
+                body: JSON.stringify({
+                    message: 'Bad Request - Invalid project data or missing workflow stages'
+                }),
+            };
+        }
+
         const workflowDetails = projectResult.rows[0].workflow.stages;
 
         await client.query('BEGIN');
@@ -38,18 +58,22 @@ exports.handler = async (event) => {
           RETURNING id;
         `;
 
-        const Workflow = {};
+        const Workflow = [];
         for (const stageName in workflowDetails) {
             const stage = workflowDetails[stageName];
 
-            Workflow[stageName] = {
-                assigne_id: "",
-                checklists: stage.checklists.map((item, index) => ({
-                    item_id: index + 1,
-                    description: item,
-                    checked: false,
-                })),
+            const workflowStage = {
+                [stageName]: {
+                    assigne_id: assigned_to_id,
+                    checklists: stage.checklists.map((item, index) => ({
+                        item_id: index + 1,
+                        description: item,
+                        checked: false,
+                    })),
+                },
             };
+
+            Workflow.push(workflowStage);
         }
 
         const usecaseValues = [
@@ -57,14 +81,13 @@ exports.handler = async (event) => {
             {
                 name: usecase_name,
                 usecase_assignee_id: assigned_to_id,
-                created_by_id,
                 description,
                 start_date: "",
                 end_date: "",
                 creation_date: "",
                 status: "",
                 current_stage: "",
-                workflow_name: Workflow,
+                workflow: Workflow,
             },
         ];
 
