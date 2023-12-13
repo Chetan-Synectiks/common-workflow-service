@@ -937,29 +937,32 @@ METHOD : PUT
 - assigning task for a usecase.
  
  ```SQL
-UPDATE tasks_table
-   SET
-       assignee_id = '${assigne_id}',
-       task =
-           jsonb_set(jsonb_set(
-               jsonb_set(
-                   jsonb_set(
-                       jsonb_set(
-                           task,
-                           '{resource_start_date}',
-                           '"${startdate}"'::jsonb
-                       ),
-                       '{resource_end_date}',
-                       '"${enddate}"'::jsonb
-                   ),
-                   '{updated_by_id}',
-                   '"${updatedby}"'::jsonb
-               ),
-               '{assigned_by_id}',
-               '"${assignedby}"'::jsonb
-           ), '{comments}', '"${cmt}"')
-   WHERE
-       id = '${taskid}'
+           UPDATE tasks_table
+                            SET 
+                                assignee_id = $1,
+                                task = jsonb_set(
+                                    jsonb_set(
+                                        jsonb_set(
+                                            jsonb_set(
+                                                jsonb_set(
+                                                    task,
+                                                    '{resource_start_date}',
+                                                    $2::jsonb
+                                                ),
+                                                '{resource_end_date}',
+                                                $3::jsonb
+                                            ),
+                                            '{updated_by_id}',
+                                            $4::jsonb
+                                        ),
+                                        '{assigned_by_id}',
+                                        $5::jsonb
+                                    ),
+                                    '{description}',
+                                    $6::jsonb
+                                )
+                            WHERE 
+                                id = $7 
  
  ```
 
