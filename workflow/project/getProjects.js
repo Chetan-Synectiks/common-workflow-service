@@ -25,11 +25,23 @@ exports.handler = async (event) => {
         });
 
         const projectStatusFilter = event.queryStringParameters && event.queryStringParameters.status;
+        const projectIDFilter = event.queryStringParameters && event.queryStringParameters.project_id;
 
-        const projectsQuery = projectStatusFilter
-            ? `SELECT * FROM projects_table WHERE project->>'status' = '${projectStatusFilter}'`
-            : 'SELECT * FROM projects_table';
-        console.log(projectsQuery)
+        let projectsQuery;
+
+        if (projectIDFilter) {
+            
+            projectsQuery = `SELECT * FROM projects_table WHERE id = '${projectIDFilter}'`;
+        
+        } else if (projectStatusFilter) {
+            
+            projectsQuery = `SELECT * FROM projects_table WHERE project->>'status' = '${projectStatusFilter}'`;
+        
+        } else {
+            
+            projectsQuery = 'SELECT * FROM projects_table';
+        }
+
         const usecasesQuery = 'SELECT * FROM usecases_table';
 
         const projectsResult = await client.query(projectsQuery);
@@ -63,7 +75,7 @@ function processDatabaseData(projects, usecases) {
         const projectUsecases = usecases.filter(u => u.project_id === project.id);
         const totalUsecases = projectUsecases.length;
 
-        const projectData = project.project || {}; 
+        const projectData = project.project || {};
 
         const totalRoles = projectData.teams
             ? Object.values(projectData.teams).reduce((acc, team) => {
@@ -78,14 +90,13 @@ function processDatabaseData(projects, usecases) {
 
         return {
             project_id: project.id,
-            project_name: projectData.name || '', 
-            project_status: projectData.status || '', 
-            total_resources: totalRoles,
+            project_name: projectData.name || '',
+            project_icon_url: projectData.project_icon_url || '',
             total_usecases: totalUsecases,
-            project_icon_url: projectData. project_icon_url || ''
+            total_resources: totalRoles,
+            project_status: projectData.status || ''
         };
     });
 
     return outputData;
 }
-
