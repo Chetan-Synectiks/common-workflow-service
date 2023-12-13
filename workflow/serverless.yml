@@ -280,6 +280,6 @@ functions:
     events:
       - httpApi:
           path: /addresource
-          method: delete
+          method: post
           cors: true           
           
