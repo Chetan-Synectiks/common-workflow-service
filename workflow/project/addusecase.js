@@ -66,7 +66,7 @@ exports.handler = async (event) => {
 
             const workflowStage = {
                 [stageName]: {
-                    assigne_id: '',
+                    assignee_id: '',
                     checklists: checklists.map((item, index) => ({
                         item_id: index + 1,
                         description: item,
