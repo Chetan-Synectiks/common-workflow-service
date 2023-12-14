@@ -869,7 +869,7 @@ Method: PUT
  
                         UPDATE tasks_table AS t
                         SET task = jsonb_set(
-                            jsonb_set(t.task, '{start_date}', $1::jsonb),
+                            jsonb_set(t.task, '{task_assigned_date}', $1::jsonb),
                             '{status}', '"InProgress"'
                         )
                         FROM resources_table AS r
