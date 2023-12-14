@@ -195,8 +195,8 @@ functions:
           method: post
           cors: true
   # stages
-  stageDetailsForCreatingUsecase:
-    handler: project/stageDetailsForCreatingUsecase.handler
+  getAllWorkflows:
+    handler: project/getAllWorkflows.handler
     role: ${env:LAMBDA_ROLE}
     events:
     - http:
