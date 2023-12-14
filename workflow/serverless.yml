@@ -13,10 +13,6 @@ provider:
   timeout: 15
   runtime: nodejs18.x
   region: us-east-1
-  httpApi:
-    payload: "2.0"
-    disableDefaultEndpoint: true
-    cors: true
 
 functions:
 
@@ -24,33 +20,34 @@ functions:
     handler: dashboard/getProjectOverview.handler 
     role: ${env:LAMBDA_ROLE}
     events:
-    - httpApi:
+    - http:
         path: /project_usecase_overview
         method: get
-      
+        cors: true
 
   getAllProjectsOverview:
     handler: dashboard/getAllProjectsOverview.handler 
     role: ${env:LAMBDA_ROLE}
     events:
-    - httpApi:
+    - http:
         path: /projects_usecase_overview
         method: get
-        
+        cors: true
 
   addWorkflowToProject:
     handler: project/addWorkflowToProject.handler
     role: ${env:LAMBDA_ROLE}
     events:
-      - httpApi:
+      - http:
           path: /project/workflow/new
           method: put     
+          cors : true  
 
   allresources:
     handler: getallresources.handler
     role: ${env:LAMBDA_ROLE}
     events:
-    - httpApi:
+    - http:
         path: /allresource
         method: get
 
@@ -58,7 +55,7 @@ functions:
     handler: getallresourcebyfilter.handler
     role: ${env:LAMBDA_ROLE}
     events:
-    - httpApi:
+    - http:
         path: /allresourcebyfilter
         method: get
 
@@ -66,7 +63,7 @@ functions:
     handler: dashboard/getOrgProjectDetails.handler
     role: ${env:LAMBDA_ROLE}
     events:
-      - httpApi:
+      - http:
           path: /org_projects_overview
           method: get
 
@@ -74,7 +71,7 @@ functions:
     handler: dashboard/getOrgAllProjectStatusDetails.handler
     role: ${env:LAMBDA_ROLE}
     events:
-      - httpApi:
+      - http:
           path: /org_projects_status_overview
           method: get
   
@@ -83,206 +80,206 @@ functions:
     handler: project/getProjects.handler 
     role: ${env:LAMBDA_ROLE}
     events:
-    - httpApi:
+    - http:
         path: /project
         method: get
-        
+        cors: true
 
   getResources:
     handler: resource/getResources.handler
     role: ${env:LAMBDA_ROLE}
     events:
-      - httpApi:
+      - http:
           path: /resource
           method: get
-          
+          cors: true
 
   getProjectsOverview:
     handler: dashboard/getProjectsOverview.handler
     role: ${env:LAMBDA_ROLE}
     events:
-      - httpApi:
+      - http:
           path: /projects_overview
           method: get
-              
+          cors: true    
 
   getResourcesTasksStatus:
     handler: dashboard/getResourcesTasksStatus.handler
     role: ${env:LAMBDA_ROLE}
     events:
-    - httpApi:
+    - http:
         path: /resouce_task_status
         method: get
-        
+        cors: true
  
   getAllResourcesTasksStatus:
     handler: dashboard/getAllResourcesTasksStatus.handler
     role: ${env:LAMBDA_ROLE}
     events:
-    - httpApi:
+    - http:
         path: /resources_task_status
         method: get
-            
+        cors: true    
 
   getProjectsUsecases:
     handler: project/getProjectsUsecases.handler
     role: ${env:LAMBDA_ROLE}
     events:
-    - httpApi:
+    - http:
         path:  /project/usecase/all
         method: get
-         
+        cors: true 
 
   getProjectsUsecaseByName:
     handler: project/getProjectsUsecaseByName.handler
     role: ${env:LAMBDA_ROLE}
     events:
-    - httpApi:
+    - http:
         path: /project/usecase/{name}
         method: get
-         
+        cors: true 
 
   usecase_search:
     handler: usecase/usecase_search.handler
     role: ${env:LAMBDA_ROLE}
     events:
-    - httpApi:
+    - http:
         path: /searchusecase
         method: get
-         
+        cors: true 
 
   addTeamToProject:
     handler: project/addTeamToProject.handler
     role: ${env:LAMBDA_ROLE}
     events:
-    - httpApi:
+    - http:
         path: /project/team/new
         method: put
-        
+        cors: true
         
   delete_usecase:
     handler: project/delete_usecase.handler
     role: ${env:LAMBDA_ROLE}
     events:
-    - httpApi:
+    - http:
         path: /project/usecase/delete
         method: delete
-        
+        cors: true
 
 ##searchbargetresourcebyname
   getResourcesByName:
     handler: misc/getResourcesByName.handler
     role: ${env:LAMBDA_ROLE}
     events:
-    - httpApi:
+    - http:
         path: /get_resource_by_name
         method: get
-        
+        cors: true
   
   # addProject
   addProject:
     handler: project/addProject.handler
     role: ${env:LAMBDA_ROLE}
     events:
-    - httpApi:
+    - http:
         path: /Project
         method: post
-        
+        cors: true
   #addusecase
   addusecase:
     handler: project/addusecase.handler
     role: ${env:LAMBDA_ROLE}
     events:
-      - httpApi:
+      - http:
           path: /project/usecase/new
           method: post
-          
+          cors: true
   # stages
   stageDetailsForCreatingUsecase:
     handler: project/stageDetailsForCreatingUsecase.handler
     role: ${env:LAMBDA_ROLE}
     events:
-    - httpApi:
+    - http:
         path: /project/workflow/all
         method: get
-        
+        cors: true
   #assignStage
   assignStage:
     handler: project/assignStage.handler
     role: ${env:LAMBDA_ROLE}
     events:
-      - httpApi:
+      - http:
           path: /project/usecase/assign_stage
           method: put
-          
+          cors: true
   addStage:
     handler: /project/addStage.handler
     role: ${env:LAMBDA_ROLE}
     events:
-    - httpApi:
+    - http:
         path: /project/{usecase_id}/stage
         method: put
-                
+        cors: true        
   
   getTaskDetails:
     handler: task/getTaskDetails.handler
     role: ${env:LAMBDA_ROLE}
     events:
-    - httpApi:
+    - http:
         path: /task/details
         method: get
-         
+        cors: true 
 
   startTask:
     handler: task/startTask.handler
     role: ${env:LAMBDA_ROLE}
     events:
-      - httpApi:
+      - http:
           path: /task/start
           method: put
-          
+          cors: true
 
   getResourcesByRole:
     handler: misc/getResourcesByRole.handler
     role: ${env:LAMBDA_ROLE}
     events:
-      - httpApi:
+      - http:
           path: /get_resource_by_role
           method: get
-          
+          cors: true
 
   assignTask:
     handler: project/assignTask.handler
     role: ${env:LAMBDA_ROLE}
     events:
-      - httpApi:
+      - http:
           path: /project/usecase/assign_task
           method: put
-          
+          cors: true
 
   deleteProject:
     handler: delete/deleteProject.handler
     role: ${env:LAMBDA_ROLE}
     events:
-      - httpApi:
+      - http:
           path: /deleteProject
           method: delete
-             
+          cors: true   
 
   DeleteStageFromUsecase:
     handler: usecase/DeleteStageFromUsecase.handler
     role: ${env:LAMBDA_ROLE}
     events:
-      - httpApi:
+      - http:
           path: /deleteStage
           method: delete
-          
+          cors: true
   addresource :
     handler: resource/addresource.handler
     role: ${env:LAMBDA_ROLE}
     events:
-      - httpApi:
+      - http:
           path: /resource
           method: post
-                     
+          cors: true           
           
