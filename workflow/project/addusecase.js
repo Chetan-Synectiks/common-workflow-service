@@ -59,17 +59,19 @@ exports.handler = async (event) => {
         `;
 
         const Workflow = [];
-        for (const stageName in workflowDetails) {
-            const stage = workflowDetails[stageName];
+        for (const stage of workflowDetails) {
+            const stageName = Object.keys(stage)[0];
+
+            const checklists = Array.isArray(stage[stageName].checklists) ? stage[stageName].checklists : [];
 
             const workflowStage = {
                 [stageName]: {
-                    assigne_id: assigned_to_id,
-                    checklists: stage.checklists.map((item, index) => ({
+                    assigne_id: '',
+                    checklists: checklists.map((item, index) => ({
                         item_id: index + 1,
                         description: item,
                         checked: false,
-                    })),
+                    }))
                 },
             };
 
@@ -94,14 +96,14 @@ exports.handler = async (event) => {
         const usecaseResult = await client.query(usecaseInsertQuery, usecaseValues);
         const usecase_id = usecaseResult.rows[0].id;
 
-        for (const stageName in workflowDetails) {
-            const stage = workflowDetails[stageName];
+        for (const stage of workflowDetails) {
+            const stageName = Object.keys(stage)[0];
 
-            for (const taskName of stage.tasks) {
+            for (const taskName of stage[stageName].tasks) {
                 const taskInsertQuery = `
-                  INSERT INTO tasks_table (usecase_id, project_id, stage, task)
-                  VALUES ($1, $2, $3, $4)
-                  RETURNING id;
+                    INSERT INTO tasks_table (usecase_id, project_id, stage, task)
+                    VALUES ($1, $2, $3, $4)
+                    RETURNING id;
                 `;
 
                 const taskValues = [
@@ -122,7 +124,7 @@ exports.handler = async (event) => {
                     },
                 ];
 
-                const taskResult = await client.query(taskInsertQuery, taskValues);
+                await client.query(taskInsertQuery, taskValues);
             }
         }
 
