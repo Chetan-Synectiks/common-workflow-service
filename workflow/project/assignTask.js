@@ -33,10 +33,10 @@ exports.handler = async (event) => {
                                             jsonb_set(
                                                 jsonb_set(
                                                     task,
-                                                    '{resource_start_date}',
+                                                    '{start_date}',
                                                     $2::jsonb
                                                 ),
-                                                '{resource_end_date}',
+                                                '{end_date}',
                                                 $3::jsonb
                                             ),
                                             '{updated_by_id}',
