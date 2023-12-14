@@ -13,6 +13,10 @@ provider:
   timeout: 15
   runtime: nodejs18.x
   region: us-east-1
+  httpApi:
+    payload: "2.0"
+    disableDefaultEndpoint: true
+    cors: true
 
 functions:
 
@@ -23,7 +27,7 @@ functions:
     - httpApi:
         path: /project_usecase_overview
         method: get
-        cors: true
+      
 
   getAllProjectsOverview:
     handler: dashboard/getAllProjectsOverview.handler 
@@ -32,7 +36,7 @@ functions:
     - httpApi:
         path: /projects_usecase_overview
         method: get
-        cors: true
+        
 
   addWorkflowToProject:
     handler: project/addWorkflowToProject.handler
@@ -41,7 +45,6 @@ functions:
       - httpApi:
           path: /project/workflow/new
           method: put     
-          cors : true  
 
   allresources:
     handler: getallresources.handler
@@ -83,7 +86,7 @@ functions:
     - httpApi:
         path: /project
         method: get
-        cors: true
+        
 
   getResources:
     handler: resource/getResources.handler
@@ -92,7 +95,7 @@ functions:
       - httpApi:
           path: /resource
           method: get
-          cors: true
+          
 
   getProjectsOverview:
     handler: dashboard/getProjectsOverview.handler
@@ -101,7 +104,7 @@ functions:
       - httpApi:
           path: /projects_overview
           method: get
-          cors: true    
+              
 
   getResourcesTasksStatus:
     handler: dashboard/getResourcesTasksStatus.handler
@@ -110,7 +113,7 @@ functions:
     - httpApi:
         path: /resouce_task_status
         method: get
-        cors: true
+        
  
   getAllResourcesTasksStatus:
     handler: dashboard/getAllResourcesTasksStatus.handler
@@ -119,7 +122,7 @@ functions:
     - httpApi:
         path: /resources_task_status
         method: get
-        cors: true    
+            
 
   getProjectsUsecases:
     handler: project/getProjectsUsecases.handler
@@ -128,7 +131,7 @@ functions:
     - httpApi:
         path:  /project/usecase/all
         method: get
-        cors: true 
+         
 
   getProjectsUsecaseByName:
     handler: project/getProjectsUsecaseByName.handler
@@ -137,7 +140,7 @@ functions:
     - httpApi:
         path: /project/usecase/{name}
         method: get
-        cors: true 
+         
 
   usecase_search:
     handler: usecase/usecase_search.handler
@@ -146,7 +149,7 @@ functions:
     - httpApi:
         path: /searchusecase
         method: get
-        cors: true 
+         
 
   addTeamToProject:
     handler: project/addTeamToProject.handler
@@ -155,7 +158,7 @@ functions:
     - httpApi:
         path: /project/team/new
         method: put
-        cors: true
+        
         
   delete_usecase:
     handler: project/delete_usecase.handler
@@ -164,7 +167,7 @@ functions:
     - httpApi:
         path: /project/usecase/delete
         method: delete
-        cors: true
+        
 
 ##searchbargetresourcebyname
   getResourcesByName:
@@ -174,7 +177,7 @@ functions:
     - httpApi:
         path: /get_resource_by_name
         method: get
-        cors: true
+        
   
   # addProject
   addProject:
@@ -184,7 +187,7 @@ functions:
     - httpApi:
         path: /Project
         method: post
-        cors: true
+        
   #addusecase
   addusecase:
     handler: project/addusecase.handler
@@ -193,7 +196,7 @@ functions:
       - httpApi:
           path: /project/usecase/new
           method: post
-          cors: true
+          
   # stages
   stageDetailsForCreatingUsecase:
     handler: project/stageDetailsForCreatingUsecase.handler
@@ -202,7 +205,7 @@ functions:
     - httpApi:
         path: /project/workflow/all
         method: get
-        cors: true
+        
   #assignStage
   assignStage:
     handler: project/assignStage.handler
@@ -211,15 +214,15 @@ functions:
       - httpApi:
           path: /project/usecase/assign_stage
           method: put
-          cors: true
-  addStages:
-    handler: addStages.handler
+          
+  addStage:
+    handler: /project/addStage.handler
     role: ${env:LAMBDA_ROLE}
     events:
     - httpApi:
-        path: /project/{usecase_id}/stages
+        path: /project/{usecase_id}/stage
         method: put
-        cors: true        
+                
   
   getTaskDetails:
     handler: task/getTaskDetails.handler
@@ -228,7 +231,7 @@ functions:
     - httpApi:
         path: /task/details
         method: get
-        cors: true 
+         
 
   startTask:
     handler: task/startTask.handler
@@ -237,7 +240,7 @@ functions:
       - httpApi:
           path: /task/start
           method: put
-          cors: true
+          
 
   getResourcesByRole:
     handler: misc/getResourcesByRole.handler
@@ -246,7 +249,7 @@ functions:
       - httpApi:
           path: /get_resource_by_role
           method: get
-          cors: true
+          
 
   assignTask:
     handler: project/assignTask.handler
@@ -255,7 +258,7 @@ functions:
       - httpApi:
           path: /project/usecase/assign_task
           method: put
-          cors: true
+          
 
   deleteProject:
     handler: delete/deleteProject.handler
@@ -264,7 +267,7 @@ functions:
       - httpApi:
           path: /deleteProject
           method: delete
-          cors: true   
+             
 
   DeleteStageFromUsecase:
     handler: usecase/DeleteStageFromUsecase.handler
@@ -273,7 +276,7 @@ functions:
       - httpApi:
           path: /deleteStage
           method: delete
-          cors: true
+          
   addresource :
     handler: resource/addresource.handler
     role: ${env:LAMBDA_ROLE}
@@ -281,5 +284,5 @@ functions:
       - httpApi:
           path: /resource
           method: post
-          cors: true           
+                     
           

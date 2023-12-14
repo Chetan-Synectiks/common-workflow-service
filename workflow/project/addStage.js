@@ -46,7 +46,7 @@ exports.handler = async (event) => {
             headers: {
                 'Access-Control-Allow-Origin': '*',
             },
-            body: JSON.stringify({ message: 'Data updated successfully' }),
+            body: JSON.stringify({ message: 'Stage added successfully'}),
         };
     } catch (error) {
         console.error('Error updating data:', error);
