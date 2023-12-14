@@ -47,8 +47,9 @@ exports.handler = async (event) => {
         const teamsData = teamDataResult.rows[0]?.teams || {};
 
         if (teamsData[team_name]) {
-            if (teamsData[team_name][role]) {
-                const resourceIds = teamsData[team_name][role];
+            const teamRoles = teamsData[team_name].roles || {};
+            if (teamRoles[role]) {
+                const resourceIds = teamRoles[role];
 
                 let query = 'SELECT id, resource->>\'name\' as name, resource->>\'image_url\' as image_url FROM resources_table WHERE id = ANY($1)';
 
@@ -62,15 +63,13 @@ exports.handler = async (event) => {
                 }
 
                 const resourceResult = await client.query(query, queryParams);
-
-                const resources = resourceResult.rows;
-
+                const resultdata = resourceResult.rows;
                 const response = {
                     statusCode: 200,
                     headers: {
                         'Access-Control-Allow-Origin': '*',
                     },
-                    body: JSON.stringify(resources),
+                    body: JSON.stringify(resultdata),
                 };
 
                 return response;
