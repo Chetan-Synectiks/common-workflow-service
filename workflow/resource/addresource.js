@@ -13,7 +13,7 @@ exports.handler = async (event) => {
         user: dbConfig.engine,
         password: dbConfig.password
     });
-    const Body = JSON.parse(event.body);
+    const body = JSON.parse(event.body);
     try {
         await client
         .connect()
@@ -24,7 +24,7 @@ exports.handler = async (event) => {
             console.log("Error connecting to the database. Error :" + err);
         });
 
-        await client.query(`INSERT INTO resources_table (resource) VALUES ($1::jsonb)`,[Body]);
+        await client.query(`INSERT INTO resources_table (resource) VALUES ($1)`,[body]);
        
         return {
             statusCode: 200,
@@ -34,13 +34,13 @@ exports.handler = async (event) => {
             body: JSON.stringify({ message: "Successfully resource details inserted " })
         };
     } catch (error) {
-        console.error("Error:", error);
+        console.error("Error: ", error);
         return {
             statusCode: 500,
             headers: {
                 'Access-Control-Allow-Origin': '*',
             },
-            body: JSON.stringify({ message: 'Error while inserting resource' })
+            body: JSON.stringify({ message: 'Internal server error' })
         };
     } finally {
         await client.end();

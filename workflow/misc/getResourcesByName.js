@@ -23,11 +23,15 @@ exports.handler = async (event) => {
             .catch((err) => {
                 console.log("Error connecting to the database. Error :" + err);
             });
-        let res = await client.query(`select * FROM resources_table WHERE LOWER(resource  ->> 'name') LIKE LOWER ( $1||'%')`, [params]);
-        const extractedData = res.rows.map(row => ({
+            let res = await client.query(`
+                SELECT * 
+                FROM resources_table 
+                WHERE LOWER(resource ->> 'name') LIKE LOWER($1||'%')`,
+             [params]);
+            const extractedData = res.rows.map(row => ({
             resource_id: row.id,
             name: row.resource.name,
-            imageurl: row.resource.image
+            imageurl: row.resource.image ? row.resource.image : null
         }));
 
         return {
