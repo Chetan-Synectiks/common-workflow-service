@@ -98,5 +98,5 @@ function calculateCompletedTasksPercentage(tasks) {
         return 0;
     }
 
-    return (completedTasks / totalTasks) * 100;
+    return Math.round((completedTasks / totalTasks) * 100);
 }
