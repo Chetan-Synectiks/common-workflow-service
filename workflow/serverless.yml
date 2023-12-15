@@ -235,7 +235,7 @@ functions:
     role: ${env:LAMBDA_ROLE}
     events:
       - http:
-          path: /task/start
+          path: /task/{task_id}/start
           method: put
           cors: true
 
