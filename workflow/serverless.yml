@@ -59,20 +59,12 @@ functions:
         path: /allresourcebyfilter
         method: get
 
-  getOrgProjectDetails:
-    handler: dashboard/getOrgProjectDetails.handler
+  getOrgProjectsOverview:
+    handler: dashboard/getOrgProjectsOverview.handler
     role: ${env:LAMBDA_ROLE}
     events:
       - http:
           path: /org_projects_overview
-          method: get
-
-  getOrgAllProjectStatusDetails:
-    handler: dashboard/getOrgAllProjectStatusDetails.handler
-    role: ${env:LAMBDA_ROLE}
-    events:
-      - http:
-          path: /org_projects_status_overview
           method: get
   
   # allProject
