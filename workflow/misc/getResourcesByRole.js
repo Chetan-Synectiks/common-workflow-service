@@ -40,20 +40,34 @@ exports.handler = async (event) => {
                                 resource->>'email' as email
                                 from resources_table 
                                 where id = $1`;
-        let resourceArray = [];
-        for(const resource of roleResources){
-            const result =await client.query(resourceQuery,[resource]);
-            const name = result.rows[0].name
-            const image = result.rows[0].image_url
-            const email = result.rows[0].email
-            const resourceObj = {
+            // giving frequent timeout errors
+        // let resourceArray = [];
+        // for(const resource of roleResources){
+        //     const result =await client.query(resourceQuery,[resource]);
+        //     const name = result.rows[0].name
+        //     const image = result.rows[0].image_url
+        //     const email = result.rows[0].email
+        //     const resourceObj = {
+        //         id: resource,
+        //         name: name,
+        //         image_url: image,
+        //         email: email
+        //     };
+        //     resourceArray.push(resourceObj)
+        // }
+        const resourceArray = await Promise.all(roleResources.map(( async resource => {
+            const result = await client.query(resourceQuery, [resource]);
+            const name = result.rows[0].name;
+            const image = result.rows[0].image_url;
+            const email = result.rows[0].email;
+        
+            return {
                 id: resource,
                 name: name,
                 image_url: image,
                 email: email
             };
-            resourceArray.push(resourceObj)
-        }
+        })));
         return {
             statuscode: 200,
             headers: {
