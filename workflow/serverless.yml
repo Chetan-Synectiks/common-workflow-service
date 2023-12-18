@@ -16,17 +16,8 @@ provider:
 
 functions:
 
-  getProjectOverview:
-    handler: dashboard/getProjectOverview.handler 
-    role: ${env:LAMBDA_ROLE}
-    events:
-    - http:
-        path: /project_usecase_overview
-        method: get
-        cors: true
-
-  getAllProjectsOverview:
-    handler: dashboard/getAllProjectsOverview.handler 
+  getProjectsUsecaseOverview:
+    handler: dashboard/getProjectsUsecaseOverview.handler 
     role: ${env:LAMBDA_ROLE}
     events:
     - http:
