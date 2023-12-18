@@ -91,18 +91,9 @@ functions:
     role: ${env:LAMBDA_ROLE}
     events:
     - http:
-        path: /resouce_task_status
-        method: get
-        cors: true
- 
-  getAllResourcesTasksStatus:
-    handler: dashboard/getAllResourcesTasksStatus.handler
-    role: ${env:LAMBDA_ROLE}
-    events:
-    - http:
         path: /resources_task_status
         method: get
-        cors: true    
+        cors: true
 
   getProjectsUsecases:
     handler: project/getProjectsUsecases.handler

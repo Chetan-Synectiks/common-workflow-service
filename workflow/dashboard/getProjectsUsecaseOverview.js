@@ -21,7 +21,8 @@ exports.handler = async (event, context, callback) => {
 		password: dbConfig.password,
 	});
 
-	const projectId = event.queryStringParameters.project_id
+	const projectId = event.queryStringParameters && event.queryStringParameters.project_id
+	console.log(projectId)
 	try {
 		await client
 			.connect()
@@ -31,7 +32,8 @@ exports.handler = async (event, context, callback) => {
 			.catch((err) => {
 				console.log("Error connecting to the database. Error :" + err);
 			});
-		let quey = `SELECT
+		let query = `
+					SELECT
 						p.id AS project_id,
 						(p.project->>'name') AS project_name,
 						COUNT(u.id) AS usecase_count,
@@ -40,17 +42,19 @@ exports.handler = async (event, context, callback) => {
 						projects_table AS p
 					LEFT JOIN
 						usecases_table AS u ON p.id = u.project_id`;
-		if(projectId){
-			query += `WHERE p.id = ${projectId}`
+		if(projectId !== null){
+			query += `
+					WHERE
+						p.id = '${projectId}'`
 		}
-		query+= `GROUP BY
-					p.id, project_name`;
+			query += `
+					GROUP BY
+						p.id`;
 		const result = await client.query(query);
 
 		const usecase_overview = {};
 
 		result.rows.forEach((row) => {
-			console.log
             const projectId = row.project_id;
             const projectName = row.project_name;
             const usecaseCount = row.usecase_count;
@@ -79,6 +83,6 @@ exports.handler = async (event, context, callback) => {
 			body: JSON.stringify({ error: e.message || "An error occurred" }),
 		};
 	}finally{
-         client.end
+         client.end()
     }
 };
