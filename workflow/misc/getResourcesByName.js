@@ -70,7 +70,7 @@ exports.handler = async (event) => {
             headers: {
                 'Access-Control-Allow-Origin': '*',
             },
-            body: JSON.stringify("search error")
+            body: JSON.stringify({message:"search error"})
         };
     } finally {
         await client.end();
