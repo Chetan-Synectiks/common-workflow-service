@@ -31,7 +31,10 @@ exports.handler = async (event) => {
 				console.log("Error connecting to the database. Error :" + err);
 			});
 
-		const resource_id = event.queryStringParameters.resource_id;
+			const resource_id = event.queryStringParameters?.resource_id?? null; // Optional chaining for queryStringParameters
+			if (!resource_id) {
+				throw new Error('Missing or invalid resource_id parameter');
+			}
 		const query = `
                     SELECT * 
                     FROM tasks_table 

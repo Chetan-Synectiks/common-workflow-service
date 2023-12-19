@@ -14,8 +14,7 @@ exports.handler = async (event) => {
         user: dbConfig.engine,
         password: dbConfig.password
     });
-    const project_id = event.queryStringParameters.project_id;
-    console.log(project_id)
+    
     try {
 
         await client
@@ -26,6 +25,12 @@ exports.handler = async (event) => {
 		.catch((err) => {
 			console.log("Error connecting to the database. Error :" + err);
 		});
+        const project_id = event.queryStringParameters?.project_id?? null;
+
+        // Validate the project_id parameter
+        if (!project_id) {
+            throw new Error('Missing or invalid project_id parameter');
+        }
         // Fetch use case details and related tasks
         const useCaseDetailsResult = await client.query(`
                 SELECT

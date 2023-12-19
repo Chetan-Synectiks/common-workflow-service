@@ -26,10 +26,20 @@ exports.handler = async (event) => {
 		});
 
         let data = {};
-        const name= event.pathParameters.name
-        if (event.queryStringParameters) {
-        data = event.queryStringParameters;
+        const name = event.pathParameters?.name; 
+        if (!name) {
+            throw new Error('Missing or invalid use case name in path parameters');
         }
+
+        if (event.queryStringParameters) {
+            data = event.queryStringParameters;
+            if (!data.project_id) {
+                throw new Error('Missing or invalid project_id in query parameters');
+            }
+        } else {
+            throw new Error('Missing query parameters');
+        }
+
         // Fetch use case details for the specified project and use case name
         const useCaseDetailsResult = await client.query(`
             SELECT

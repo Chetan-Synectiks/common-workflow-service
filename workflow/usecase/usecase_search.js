@@ -24,7 +24,11 @@ exports.handler = async (event) => {
             .catch((err) => {
                 console.log("Error connecting to the database. Error :" + err);
             });
-
+            const params = event.queryStringParameters?.name?? null; 
+            if (!params) {
+                throw new Error('Missing name parameter');
+            }
+    
         let res = await client.query(`select * FROM usecases_table WHERE LOWER(usecase ->> 'name') LIKE LOWER ( $1||'%')`, [params]);
         const extractedData = res.rows.map(row => ({
             name: row.usecase.name,
