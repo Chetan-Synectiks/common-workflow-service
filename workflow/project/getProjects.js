@@ -24,8 +24,8 @@ exports.handler = async (event) => {
             console.log("Error connecting to the database. Error :" + err);
         });
 
-        const projectStatusFilter = event.queryStringParameters?.status ?? null;
-        const projectIDFilter = event.queryStringParameters?.project_id ?? null;
+        const projectStatusFilter = event.queryStringParameters && event.queryStringParameters.status;
+        const projectIDFilter = event.queryStringParameters && event.queryStringParameters.project_id;
 
         let projectsQuery;
 
