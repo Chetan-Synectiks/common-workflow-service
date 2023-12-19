@@ -20,9 +20,18 @@ exports.handler = async (event) => {
 		password: dbConfig.password,
 	});
 
-	const resource_id = event.queryStringParameters.resource_id;
-	const task_id = event.pathParameters.task_id;
+	const resource_id = event.queryStringParameters?.resource_id;
+	const task_id = event.pathParameters?.task_id;
 	try {
+		if (!resource_id || !task_id ) {
+            return {
+                statuscode: 400,
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                },
+                body: JSON.stringify({message:"Give values"}),
+            };
+        }
 		await client
 			.connect()
 			.then(() => {

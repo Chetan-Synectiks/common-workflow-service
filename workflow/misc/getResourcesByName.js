@@ -13,8 +13,17 @@ exports.handler = async (event) => {
         user: dbConfig.engine,
         password: dbConfig.password
     });
-    params = event.queryStringParameters.name;
+    params = event.queryStringParameters?.name;
     try {
+        if (!params) {
+            return {
+                statuscode: 400,
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                },
+                body: JSON.stringify({message:"Give any value"}),
+            };
+        }
         await client
             .connect()
             .then(() => {
@@ -28,6 +37,16 @@ exports.handler = async (event) => {
                 FROM resources_table 
                 WHERE LOWER(resource ->> 'name') LIKE LOWER($1||'%')`,
              [params]);
+             const data = res.rows[0];
+             if (!data) {
+                return {
+                    statuscode: 400,
+                    headers: {
+                        'Access-Control-Allow-Origin': '*',
+                    },
+                    body: JSON.stringify({message:"No record found"}),
+                };
+            }
             const extractedData = res.rows.map(row => ({
             resource_id: row.id,
             name: row.resource.name,
