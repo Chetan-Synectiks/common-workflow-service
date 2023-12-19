@@ -32,7 +32,10 @@ functions:
       - http:
           path: /project/workflow/new
           method: put     
-          cors : true  
+          cors : true
+          request:
+            schemas:
+              application/json: ${file(models\add_workflow.json)}  
 
   allresources:
     handler: getallresources.handler
