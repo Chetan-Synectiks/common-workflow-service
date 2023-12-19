@@ -14,9 +14,20 @@ exports.handler = async (event) => {
         password: dbConfig.password
     });
 
-    const project_id = event.queryStringParameters.project_id;
-    const role = event.queryStringParameters.role;
-    const resourceName = event.queryStringParameters.resource_name;
+    const project_id = event.queryStringParameters?.project_id ?? null;
+    const role = event.queryStringParameters?.role ?? null;
+
+    if (project_id == null || role == null) {
+        return {
+            statusCode: 400,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+            },
+            body: JSON.stringify({
+                message: "The 'project_id' & 'role' query parameters are required and must have a non-empty value."
+            }),
+        };
+    }
 
     try {
         await client
@@ -32,15 +43,15 @@ exports.handler = async (event) => {
             `SELECT (project->'teams'->jsonb_object_keys(project->'teams')->'roles'->$1) AS roleResources
             FROM projects_table
             WHERE id = $2`,
-            [role,project_id]
-            );
+            [role, project_id]
+        );
         const roleResources = result.rows[0].roleresources
         const resourceQuery = `select resource->>'name' as name,
                                 resource->>'image' as image_url,
                                 resource->>'email' as email
                                 from resources_table 
                                 where id = $1`;
-            // giving frequent timeout errors
+        // giving frequent timeout errors
         // let resourceArray = [];
         // for(const resource of roleResources){
         //     const result =await client.query(resourceQuery,[resource]);
@@ -55,12 +66,12 @@ exports.handler = async (event) => {
         //     };
         //     resourceArray.push(resourceObj)
         // }
-        const resourceArray = await Promise.all(roleResources.map(( async resource => {
+        const resourceArray = await Promise.all(roleResources.map((async resource => {
             const result = await client.query(resourceQuery, [resource]);
             const name = result.rows[0].name;
             const image = result.rows[0].image_url;
             const email = result.rows[0].email;
-        
+
             return {
                 id: resource,
                 name: name,
