@@ -32,7 +32,10 @@ functions:
       - http:
           path: /project/workflow/new
           method: put     
-          cors : true  
+          cors : true
+          request:
+            schemas:
+              application/json: ${file(models\add_workflow.json)}  
 
   allresources:
     handler: getallresources.handler
@@ -130,6 +133,9 @@ functions:
         path: /project/team/new
         method: put
         cors: true
+        request:
+            schemas:
+              application/json: ${file(models/addTeamToProject.json)}
         
   delete_usecase:
     handler: project/delete_usecase.handler
@@ -159,6 +165,9 @@ functions:
         path: /Project
         method: post
         cors: true
+        request:
+            schemas:
+              application/json: ${file(models/addProject.json)}
   #addusecase
   addusecase:
     handler: project/addusecase.handler
@@ -168,6 +177,9 @@ functions:
           path: /project/usecase/new
           method: post
           cors: true
+          request:
+            schemas:
+              application/json: ${file(models\add_usecase.json)}
   # stages
   getAllWorkflows:
     handler: project/getAllWorkflows.handler
@@ -194,7 +206,10 @@ functions:
         path: /project/{usecase_id}/stage
         method: put
         cors: true        
-  
+        request:
+            schemas:
+              application/json: ${file(models/addStage.json)}
+
   getTaskDetails:
     handler: task/getTaskDetails.handler
     role: ${env:LAMBDA_ROLE}
