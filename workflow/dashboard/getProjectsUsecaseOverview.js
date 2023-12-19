@@ -21,8 +21,7 @@ exports.handler = async (event, context, callback) => {
 		password: dbConfig.password,
 	});
 
-	const projectId = event.queryStringParameters && event.queryStringParameters.project_id
-	console.log(projectId)
+	const projectId = event.queryStringParameters?.project_id ?? null;
 	try {
 		await client
 			.connect()
@@ -42,37 +41,32 @@ exports.handler = async (event, context, callback) => {
 						projects_table AS p
 					LEFT JOIN
 						usecases_table AS u ON p.id = u.project_id`;
-		if(projectId !== null){
+		const queryParams = [];
+		if (projectId !== null) {
 			query += `
 					WHERE
-						p.id = '${projectId}'`
+						p.id = $1`;
+			queryParams.push(projectId);
 		}
-			query += `
+		query += `
 					GROUP BY
 						p.id`;
-		const result = await client.query(query);
+		const result = await client.query(query, queryParams);
 
-		const usecase_overview = {};
-
-		result.rows.forEach((row) => {
-            const projectId = row.project_id;
-            const projectName = row.project_name;
-            const usecaseCount = row.usecase_count;
-            const completed = row.completed;
-
-            usecase_overview[projectId] = {
-				project_id: projectId,
-				project_name: projectName,
-				completed: completed,
-				incomplete: usecaseCount-completed,
-			};
-		});
+		const usecaseOverview = result.rows.map(
+			({ project_id, project_name, usecase_count, completed }) => ({
+				project_id,
+				project_name,
+				completed,
+				incomplete: usecase_count - completed,
+			})
+		);
 		return {
 			statusCode: 200,
 			headers: {
 				"Access-Control-Allow-Origin": "*",
 			},
-			body: JSON.stringify(Object.values(usecase_overview)),
+			body: JSON.stringify(Object.values(usecaseOverview)),
 		};
 	} catch (e) {
 		return {
@@ -82,7 +76,7 @@ exports.handler = async (event, context, callback) => {
 			},
 			body: JSON.stringify({ error: e.message || "An error occurred" }),
 		};
-	}finally{
-         client.end()
-    }
+	} finally {
+		client.end();
+	}
 };
