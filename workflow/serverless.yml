@@ -197,7 +197,10 @@ functions:
         path: /project/{usecase_id}/stage
         method: put
         cors: true        
-  
+        request:
+            schemas:
+              application/json: ${file(models/addStage.json)}
+
   getTaskDetails:
     handler: task/getTaskDetails.handler
     role: ${env:LAMBDA_ROLE}
