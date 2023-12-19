@@ -177,6 +177,9 @@ functions:
           path: /project/usecase/new
           method: post
           cors: true
+          request:
+            schemas:
+              application/json: ${file(models\add_usecase.json)}
   # stages
   getAllWorkflows:
     handler: project/getAllWorkflows.handler
