@@ -162,6 +162,9 @@ functions:
         path: /Project
         method: post
         cors: true
+        request:
+            schemas:
+              application/json: ${file(models/addProject.json)}
   #addusecase
   addusecase:
     handler: project/addusecase.handler
