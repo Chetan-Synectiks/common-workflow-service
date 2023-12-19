@@ -25,6 +25,7 @@
         }
       }
     },
-    "required": ["project_id", "team_name", "created_by_id", "created_time", "roles"]
+    "required": ["project_id", "team_name", "created_by_id", "created_time", "roles"],
+    "additionalProperties": false
   }
   
