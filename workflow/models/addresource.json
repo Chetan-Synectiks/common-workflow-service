@@ -2,7 +2,7 @@
 	"$schema": "http://json-schema.org/draft-07/schema#",
 	"type": "object",
 	"properties": {
-	  "name": {
+	  "resource_name": {
 		"type": "string"
 	  },
 	  "email": {
@@ -11,7 +11,7 @@
 	  "role": {
 		"type": "string"
 	  },
-	  "image": {
+	  "project": {
 		"type": "string"
 	  },
 	  "description": {
@@ -19,10 +19,10 @@
 	  }
 	},
 	"required": [
-	  "name",
+	  "resource_name",
 	  "email",
 	  "role",
-	  "image",
+	  "project",
 	  "description"
 	],
     "additionalProperties": false

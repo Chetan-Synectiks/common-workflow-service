@@ -14,18 +14,28 @@ exports.handler = async (event) => {
         password: dbConfig.password
     });
     const body = JSON.parse(event.body);
-    try {
-        await client
-        .connect()
-        .then(() => {
-            console.log("Connected to the database");
-        })
-        .catch((err) => {
-            console.log("Error connecting to the database. Error :" + err);
-        });
+    const { resource_name, email, role, project, description } = body;
 
-        await client.query(`INSERT INTO resources_table (resource) VALUES ($1)`,[body]);
-       
+    try {
+        await client.connect();
+        const resource = {
+                name: resource_name,
+                email:email,
+                role:role,
+                image: '', 
+                project:project,
+                description:description,
+                current_task: {
+                    task_id: '',
+                    task_name: '' 
+                }
+        };
+
+        await client.query(`
+            INSERT INTO resources_table (resource)
+            VALUES ($1)
+        `, [ JSON.stringify(resource)]);
+
         return {
             statusCode: 200,
             headers: {
