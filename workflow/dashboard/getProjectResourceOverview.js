@@ -35,7 +35,7 @@ exports.handler = async (event) => {
 					SELECT 
 						p.id AS project_id,
 						(p.project->>'name') AS project_name,
-						(p.project->>'project_manager_id') as project_manager_id,
+						(p.project->>'project_manager_id') as manager_id,
 						(p.project->'teams'->jsonb_object_keys(project->'teams')->'roles') as team,
 						(
 							select 
@@ -54,54 +54,74 @@ exports.handler = async (event) => {
 								t.assignee_id = (p.project->>'project_manager_id')::uuid
 						)
 					FROM projects_table AS p`;
-		const result = await client.query(query);
-		const resourceQuery = `
+		let queryParams = [];
+		if(status != null){
+			query += `
+					WHERE 
+						(p.project->>'status' = $1)`
+			queryParams.push(status)
+		}
+		const result = await client.query(query, queryParams);
+		const response = await Promise.all(
+			result.rows.map(
+				async ({
+					project_id,
+					project_name,
+					manager_id,
+					team,
+					project_manager_details,
+					total_tasks,
+				}) => {
+					const resourceIds = Array.from(
+						new Set(Object.values(team).flat())
+					);
+					const resourceQuery = `
 					SELECT
-						resource->>'name' as name,
+						id as resource_id,
+						resource->>'name' as resource_name,
 						resource->>'image' as image_url,
 						resource->>'email' as email
 					FROM
 					 resources_table 
 					WHERE 
-						id IN ($1)`;
-						// ${resourceIds.map((id, index) => `$${index + 1}`).join(', ')})
-		const projMap = new Map();
-		result.rows.map( async ({
-				project_id,
-				project_name,
-				project_manager_id,
-				team,
-				project_manager_details,
-				total_tasks,
-			}) => {
-				const resourceIds = Array.from(new Set(Object.values(team).flat()))	
-				const ress = await client.query(resourceQuery,resourceIds)
-				ress.rows.map((row) => console.log(row))
-				const mapObj = {
-					project_id,
-					project_name,
-					project_manager_id,
-					project_manager_name: project_manager_details.name,
-					project_manager_image: project_manager_details?.image || "",
-					current_task:
-						project_manager_details?.current_task?.task_name || "",
-					created_date:
-						project_manager_details?.current_task?.created_date ||
-						"",
-					due_date:
-						project_manager_details?.current_task?.due_date || "",
-					total_tasks,
-				};
-				projMap.set(project_id, mapObj);
-			}
+						id IN (${resourceIds.map((id) => `'${id}'`).join(", ")})`;
+					const ress = await client.query(resourceQuery);
+					const resources = ress.rows.map(
+						({ resource_id, resource_name, image_url, email }) => ({
+							resource_id,
+							resource_name,
+							image_url,
+							email,
+						})
+					);
+					return {
+						project_id,
+						project_name,
+						manager_id,
+						manager_name: project_manager_details.name,
+						manager_image_url:
+							project_manager_details?.image || "",
+						current_task:
+							project_manager_details?.current_task?.task_name ||
+							"",
+						created_date:
+							project_manager_details?.current_task
+								?.created_date || "",
+						due_date:
+							project_manager_details?.current_task?.due_date ||
+							"",
+						total_tasks,
+						project_resources: resources,
+					};
+				}
+			)
 		);
-		console.log(projMap);
 		return {
 			statusCode: 200,
 			headers: {
 				"Access-Control-Allow-Origin": "*",
 			},
-			body: JSON.stringify(projMap.values),
+			body: JSON.stringify(response),
 		};
 	} catch (e) {
 		await client.end();
