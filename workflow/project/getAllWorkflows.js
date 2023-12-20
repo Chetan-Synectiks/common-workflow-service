@@ -20,7 +20,20 @@ exports.handler = async (event) => {
 		user: dbConfig.engine,
 		password: dbConfig.password,
 	});
+    
+	const projectId = event.queryStringParameters?.project_id ?? null;
 
+		if (projectId == null) {
+			return {
+				statusCode: 400,
+				headers: {
+					"Access-Control-Allow-Origin": "*",
+				},
+				body: JSON.stringify({
+					message: "The 'project_id' query parameter is required and must have a non-empty value.",
+				}),
+			};
+		}
 	try {
 		await client
 			.connect()
@@ -31,7 +44,6 @@ exports.handler = async (event) => {
 				console.log("Error connecting to the database. Error :" + err);
 			});
 
-		const projectId = event.queryStringParameters.project_id;
 
 		const result = await client.query(
 			`
