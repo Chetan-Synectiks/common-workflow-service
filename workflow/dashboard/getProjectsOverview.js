@@ -73,7 +73,7 @@ exports.handler = async (event) => {
 				status,
 				due_date,
 				total_usecases,
-				completed_tasks_per: (total_tasks !== 0) ? (tasks_completed / total_tasks) * 100 : 0
+				completed_tasks_per: (total_tasks != 0) ? (tasks_completed / total_tasks) * 100 : 0
 			})
 		);
 		return {

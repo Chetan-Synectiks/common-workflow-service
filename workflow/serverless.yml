@@ -24,6 +24,15 @@ functions:
         path: /projects_usecase_overview
         method: get
         cors: true
+        
+  getProjectResourceOverview:
+    handler: dashboard/getProjectResourceOverview.handler 
+    role: ${env:LAMBDA_ROLE}
+    events:
+    - http:
+        path: /projects_resource_overview
+        method: get
+        cors: true
 
   addWorkflowToProject:
     handler: project/addWorkflowToProject.handler
@@ -35,7 +44,7 @@ functions:
           cors : true
           request:
             schemas:
-              application/json: ${file(models\add_workflow.json)}  
+              application/json: ${file(models/add_workflow.json)}  
 
   allresources:
     handler: getallresources.handler
@@ -179,7 +188,7 @@ functions:
           cors: true
           request:
             schemas:
-              application/json: ${file(models\add_usecase.json)}
+              application/json: ${file(models/add_usecase.json)}
   # stages
   getAllWorkflows:
     handler: project/getAllWorkflows.handler
