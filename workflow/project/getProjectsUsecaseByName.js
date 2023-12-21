@@ -5,9 +5,9 @@ const {
 } = require("@aws-sdk/client-secrets-manager");
 
 exports.handler = async (event) => {
-	const name = event.queryStringParameters?.name ?? null;
+	const name = event.pathParameters?.name ?? null;
 	const projectId = event.queryStringParameters?.project_id ?? null;
-	if (projectId == null) {
+	if (projectId == null || projectId === '') {
 		return {
 			statusCode: 400,
 			headers: {
