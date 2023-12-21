@@ -6,7 +6,7 @@ const {
 
 exports.handler = async (event) => {
 	const usecaseId = event.queryStringParameters?.usecase_id ?? null;
-	if (usecaseId == null || usecaseId === '') {
+	if (usecaseId == null || usecaseId === "") {
 		return {
 			statusCode: 400,
 			headers: {
@@ -49,60 +49,117 @@ exports.handler = async (event) => {
 				}),
 			};
 		});
-	try {
-	let query = `
-                select 
-                    jsonb_array_elements(u.usecase->'workflow') as stages
-                from
-                    usecases_table as u
-                where 
-                    u.id = 'ceeb4cdd-f150-4cb8-87b2-33a4df326fa0'
-                `;
-        // const result = await client.query(query);
-        // const map = new Map();
-        // const obj = result.rows.map(
-        //     ({stages}) => {
-        //         const stageName = Object.keys(stages)[0]
-        //         const { assigne_id, description } = stages[stageName];
-        //         const stageDetails = {
-        //             name : stageName,
-        //             assigne_id :assigne_id || '',
-        //             description :description || ''
-        //         }
-        //         return stageDetails
-        //     }
-        // );
-
-        const res1 = await client.query(`
+	let stagesQuery = `
                     select 
                         u.usecase->'workflow' as workflow
                     from
                         usecases_table as u
                     where 
-                        u.id = 'ceeb4cdd-f150-4cb8-87b2-33a4df326fa0'`);
-            const ob = res1.rows.map(({ workflow }) => {
-                return Object.keys(workflow).map(index => {
-                     const de = []
-                    const stageName = Object.keys(workflow[index]).forEach(name => {
-                        console.log(name)
-                        const { assigne_id, description } = workflow[index][name];
-                        const d = {
-                            name,
-                            assigne_id: assigne_id || '',
-                            description: description || ''
-                        };
-                        de.push(d)
-                    });
-                    console.log(de)
-                    return de
-                });
-            });
+                        u.id = $1`;
+	let tasksQuery = `
+                    select 
+                        t.id AS task_id,
+                        t.task->>'name' AS task_name,
+                        t.assignee_id AS assigned_to,
+                        t.task->>'start_date' AS start_date,
+                        t.task->>'end_date' AS end_date,
+                        t.task->'comments' AS t_comments
+                    from  
+                        tasks_table AS t
+                    join 
+                        usecases_table ON t.usecase_id = usecases_table.id
+                    where 
+                        usecases_table.id = $1
+                    and
+                        t.stage = $2`;
+	let tasksQuery2 = `
+                    select 
+                        t.id AS task_id,
+                        t.task->>'name' AS task_name,
+                        t.assignee_id AS assigned_to,
+                        t.task->>'start_date' AS start_date,
+                        t.task->>'end_date' AS end_date,
+                        t.task->'comments' AS t_comments,
+                        t.stage as stage
+                    from  
+                        tasks_table AS t
+                    join 
+                        usecases_table ON t.usecase_id = usecases_table.id
+                    where 
+                        usecases_table.id = $1`;
+	try {
+		const stageResult = await client.query(stagesQuery, [usecaseId]);
+		const taskResult = await client.query(tasksQuery2, [usecaseId]);
+		const { workflow } = stageResult.rows[0];
+		const stagesArray = Object.keys(workflow).flatMap((index) => {
+			const de = [];
+			Object.keys(workflow[index]).forEach((name) => {
+				const { assigne_id, description } = workflow[index][name];
+				const d = {
+					name,
+					assigne_id: assigne_id || "",
+					description: description || "",
+				};
+				de.push(d);
+			});
+			return de;
+		});
+		const taskArray = taskResult.rows.map(
+			({
+				task_id,
+				task_name,
+				assigned_to,
+				start_date,
+				end_date,
+				t_comments,
+                stage
+			}) => ({
+				task_id,
+				task_name,
+				assigned_to: assigned_to || "",
+				start_date,
+				end_date,
+				comments: t_comments,
+                stage
+			})
+		);
+		stagesArray.map((stage) => {
+            const tasks = taskArray.filter((task) => task.stage == stage.name)
+            stage.tasks = tasks
+        });
+		// const ob = await Promise.all(
+		//     Object.keys(workflow).flatMap(async (index) => {
+		//       const de = await Promise.all(
+		//         Object.keys(workflow[index]).map(async (name) => {
+		//           const taskResult = await client.query(tasksQuery,[usecaseId, name]);
+		//           const tasks = taskResult.rows.map(
+		//             ({ task_id, task_name, assigned_to, start_date, end_date, t_comments }) => ({
+		//               task_id,
+		//               task_name,
+		//               assigned_to: assigned_to || '',
+		//               start_date,
+		//               end_date,
+		//               comments : t_comments,
+		//             })
+		//           );
+		//           const { assignee_id, description } = workflow[index][name];
+		//           return {
+		//             name,
+		//             assignee_id: assignee_id || "",
+		//             description: description || "",
+		//             tasks,
+		//           };
+		//         })
+		//       );
+		//       return de;
+		//     })
+		//   );
 		return {
 			statusCode: 200,
 			headers: {
 				"Access-Control-Allow-Origin": "*",
 			},
-			body: JSON.stringify(ob),
+			body: JSON.stringify(stagesArray),
 		};
 	} catch (e) {
 		await client.end();
