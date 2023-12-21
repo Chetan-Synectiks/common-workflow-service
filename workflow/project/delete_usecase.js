@@ -3,7 +3,7 @@ const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client
 
 exports.handler = async (event) => {
     const usecase_id = event.queryStringParameters?.usecase_id ?? null;
-	if ( usecase_id== null ) {
+	if ( usecase_id == null || usecase_id == '') {
         return {
             statusCode: 400,
             headers: {

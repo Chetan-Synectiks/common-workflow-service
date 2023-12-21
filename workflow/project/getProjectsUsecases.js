@@ -3,7 +3,7 @@ const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client
 
 exports.handler = async (event) => {
     const project_id = event.queryStringParameters?.project_id ?? null;
-	if ( project_id== null ) {
+	if ( project_id == null || project_id == '' ) {
         return {
             statusCode: 400,
             headers: {

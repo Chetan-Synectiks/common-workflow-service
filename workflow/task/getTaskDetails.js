@@ -6,7 +6,7 @@ const {
 
 exports.handler = async (event) => {
 	const resource_id = event.queryStringParameters?.resource_id ?? null;
-	if ( resource_id== null ) {
+	if ( resource_id == null || resource_id == '') {
         return {
             statusCode: 400,
             headers: {
