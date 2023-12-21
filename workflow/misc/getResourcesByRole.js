@@ -1,103 +1,109 @@
-const { Client } = require('pg');
-const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
+const { Client } = require("pg");
+const {
+	SecretsManagerClient,
+	GetSecretValueCommand,
+} = require("@aws-sdk/client-secrets-manager");
+
 exports.handler = async (event) => {
+	const role = event.queryStringParameters?.role ?? null;
+	const name = event.queryStringParameters?.name ?? null;
+	if (role == null || role === '') {
+		return {
+			statuscode: 400,
+			headers: {
+				"Access-Control-Allow-Origin": "*",
+			},
+			body: JSON.stringify({
+				message: "Resource role is missing",
+			}),
+		};
+	}
+	if (name == null || name === '') {
+		return {
+			statusCode: 200,
+			headers: {
+				"Access-Control-Allow-Origin": "*",
+			},
+			body: JSON.stringify([]),
+		};
+	}
+	const secretsManagerClient = new SecretsManagerClient({
+		region: "us-east-1",
+	});
+	const configuration = await secretsManagerClient.send(
+		new GetSecretValueCommand({ SecretId: "serverless/lambda/credintials" })
+	);
+	const dbConfig = JSON.parse(configuration.SecretString);
 
-    const secretsManagerClient = new SecretsManagerClient({ region: 'us-east-1' });
-    const configuration = await secretsManagerClient.send(new GetSecretValueCommand({ SecretId: 'serverless/lambda/credintials' }));
-    const dbConfig = JSON.parse(configuration.SecretString);
-
-    const client = new Client({
-        host: dbConfig.host,
-        port: dbConfig.port,
-        database: 'workflow',
-        user: dbConfig.engine,
-        password: dbConfig.password
-    });
-
-    const project_id = event.queryStringParameters?.project_id ?? null;
-    const role = event.queryStringParameters?.role ?? null;
-
-    if (project_id == null || role == null) {
-        return {
-            statusCode: 400,
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-            },
-            body: JSON.stringify({
-                message: "The 'project_id' & 'role' query parameters are required and must have a non-empty value."
-            }),
-        };
-    }
-
-    try {
-        await client
-            .connect()
-            .then(() => {
-                console.log("Connected to the database");
-            })
-            .catch((err) => {
-                console.log("Error connecting to the database. Error :" + err);
-            });
-
-        const result = await client.query(
-            `SELECT (project->'teams'->jsonb_object_keys(project->'teams')->'roles'->$1) AS roleResources
-            FROM projects_table
-            WHERE id = $2`,
-            [role, project_id]
-        );
-        const roleResources = result.rows[0].roleresources
-        const resourceQuery = `select resource->>'name' as name,
-                                resource->>'image' as image_url,
-                                resource->>'email' as email
-                                from resources_table 
-                                where id = $1`;
-        // giving frequent timeout errors
-        // let resourceArray = [];
-        // for(const resource of roleResources){
-        //     const result =await client.query(resourceQuery,[resource]);
-        //     const name = result.rows[0].name
-        //     const image = result.rows[0].image_url
-        //     const email = result.rows[0].email
-        //     const resourceObj = {
-        //         id: resource,
-        //         name: name,
-        //         image_url: image,
-        //         email: email
-        //     };
-        //     resourceArray.push(resourceObj)
-        // }
-        const resourceArray = await Promise.all(roleResources.map((async resource => {
-            const result = await client.query(resourceQuery, [resource]);
-            const name = result.rows[0].name;
-            const image = result.rows[0].image_url;
-            const email = result.rows[0].email;
-
-            return {
-                id: resource,
-                name: name,
-                image_url: image,
-                email: email
-            };
-        })));
-        return {
-            statuscode: 200,
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-            },
-            body: JSON.stringify(resourceArray)
-
-        };
-
-    } catch (error) {
-        console.error('Error fetching resources:', error);
-        return {
-            statusCode: 500,
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-            },
-            body: JSON.stringify({ message: 'Internal Server Error' }),
-        };
-    } finally {
-        await client.end();
-    }
+	const client = new Client({
+		host: dbConfig.host,
+		port: dbConfig.port,
+		database: "workflow",
+		user: dbConfig.engine,
+		password: dbConfig.password,
+	});
+	await client
+		.connect()
+		.then(() => {
+			console.log("Connected to the database");
+		})
+		.catch((err) => {
+			console.log("Error connecting to the database. Error :" + err);
+			return {
+				statusCode: 200,
+				headers: {
+					"Access-Control-Allow-Origin": "*",
+				},
+				body: JSON.stringify({
+					message: "Internal server error : " + err.message,
+				}),
+			};
+		});
+	let queryParams = [];
+	queryParams.push(role);
+	try {
+		let query = `
+                    select 
+                        (r.id) as resource_id,
+                        (r.resource->>'name') as resource_name,
+                        (r.resource->>'image') as image_url,
+                        (r.resource->>'email') as email
+                    from 
+                        resources_table as r
+                    where 
+                        LOWER((r.resource->>'role')) = LOWER($1)`;
+		if (name != null) {
+			query += `
+                    and 
+                        LOWER(resource ->> 'name') LIKE LOWER('%' || $2 || '%')`;
+			queryParams.push(name);
+		}
+		const result = await client.query(query, queryParams);
+		const resource = result.rows.map(
+			({ resource_id, resource_name, image_url, email }) => ({
+				resource_id,
+				resource_name,
+				image_url,
+				email,
+			})
+		);
+		return {
+			statuscode: 200,
+			headers: {
+				"Access-Control-Allow-Origin": "*",
+			},
+			body: JSON.stringify(resource),
+		};
+	} catch (error) {
+		console.error("Error fetching resources:", error);
+		return {
+			statusCode: 500,
+			headers: {
+				"Access-Control-Allow-Origin": "*",
+			},
+			body: JSON.stringify({ message: "Internal Server Error" }),
+		};
+	} finally {
+		await client.end();
+	}
 };

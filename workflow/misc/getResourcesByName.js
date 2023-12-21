@@ -1,79 +1,82 @@
-const { Client } = require('pg');
-const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
+const { Client } = require("pg");
+const {
+	SecretsManagerClient,
+	GetSecretValueCommand,
+} = require("@aws-sdk/client-secrets-manager");
+
 exports.handler = async (event) => {
+	const secretsManagerClient = new SecretsManagerClient({
+		region: "us-east-1",
+	});
+	const configuration = await secretsManagerClient.send(
+		new GetSecretValueCommand({ SecretId: "serverless/lambda/credintials" })
+	);
+	const dbConfig = JSON.parse(configuration.SecretString);
 
-    const secretsManagerClient = new SecretsManagerClient({ region: 'us-east-1' });
-    const configuration = await secretsManagerClient.send(new GetSecretValueCommand({ SecretId: 'serverless/lambda/credintials' }));
-    const dbConfig = JSON.parse(configuration.SecretString);
-
-    const client = new Client({
-        host: dbConfig.host,
-        port: dbConfig.port,
-        database: 'workflow',
-        user: dbConfig.engine,
-        password: dbConfig.password
-    });
-    params = event.queryStringParameters?.name;
-    try {
-        if (!params) {
-            return {
-                statuscode: 400,
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                },
-                body: JSON.stringify({message:"Give any value"}),
-            };
-        }
-        await client
-            .connect()
-            .then(() => {
-                console.log("Connected to the database");
-            })
-            .catch((err) => {
-                console.log("Error connecting to the database. Error :" + err);
-            });
-            let res = await client.query(`
-                SELECT * 
-                FROM resources_table 
-                WHERE LOWER(resource ->> 'name') LIKE LOWER($1||'%')`,
-             [params]);
-             const data = res.rows[0];
-             if (!data) {
-                return {
-                    statuscode: 400,
-                    headers: {
-                        'Access-Control-Allow-Origin': '*',
-                    },
-                    body: JSON.stringify({message:"No record found"}),
-                };
-            }
-            const extractedData = res.rows.map(row => ({
-            resource_id: row.id,
-            name: row.resource.name,
-            imageurl: row.resource.image ? row.resource.image : null
-        }));
-
-        return {
-            statuscode: 200,
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-            },
-            body: JSON.stringify(extractedData)
-
-        };
-
-    }
-    catch (error) {
-        console.error("error", error)
-        return {
-            statuscode: 500,
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-            },
-            body: JSON.stringify({message:"search error"})
-        };
-    } finally {
-        await client.end();
-    }
-
+	const client = new Client({
+		host: dbConfig.host,
+		port: dbConfig.port,
+		database: "workflow",
+		user: dbConfig.engine,
+		password: dbConfig.password,
+	});
+	const name = event.queryStringParameters?.name;
+	const projectId = event.queryStringParameters?.project_id ?? null;
+    await client
+		.connect()
+		.then(() => {
+			console.log("Connected to the database");
+		})
+		.catch((err) => {
+			console.log("Error connecting to the database. Error :" + err);
+			return {
+				statusCode: 200,
+				headers: {
+					"Access-Control-Allow-Origin": "*",
+				},
+				body: JSON.stringify({
+					message: "Internal server error : " + err.message,
+				}),
+			};
+		});
+	try {
+		let result = await client.query(
+			`
+                SELECT
+                    (r.id) as resource_id,
+                    (r.resource->>'name') as resource_name,
+                    (r.resource->>'image') as image_url,
+                    (r.resource->>'email') as email
+                from 
+                    resources_table as r
+                WHERE LOWER(r.resource->> 'name') LIKE LOWER('%' || $1 || '%')`,
+			[name]
+		);
+		const resource = result.rows.map(
+			({ resource_id, resource_name, image_url, email }) => ({
+				resource_id,
+				resource_name,
+				image_url,
+				email,
+			})
+		);
+		return {
+			statuscode: 200,
+			headers: {
+				"Access-Control-Allow-Origin": "*",
+			},
+			body: JSON.stringify(resource),
+		};
+	} catch (error) {
+		console.error("error", error);
+		return {
+			statuscode: 500,
+			headers: {
+				"Access-Control-Allow-Origin": "*",
+			},
+			body: JSON.stringify({ message: "Internal server error" }),
+		};
+	} finally {
+		await client.end();
+	}
 };
