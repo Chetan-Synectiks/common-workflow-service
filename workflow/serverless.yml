@@ -138,7 +138,7 @@ functions:
     role: ${env:LAMBDA_ROLE}
     events:
       - http:
-          path: /project/team/new
+          path: /project/team
           method: put
           cors: true
           request:
@@ -195,6 +195,14 @@ functions:
     events:
       - http:
           path: /project/usecase/details
+          method: get
+          cors: true
+  getProjectTeam:
+    handler: project/getProjectTeam.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+      - http:
+          path: /project/team
           method: get
           cors: true
             

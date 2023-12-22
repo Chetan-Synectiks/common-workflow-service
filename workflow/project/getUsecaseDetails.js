@@ -56,22 +56,6 @@ exports.handler = async (event) => {
                         usecases_table as u
                     where 
                         u.id = $1`;
-	let tasksQuery = `
-                    select 
-                        t.id AS task_id,
-                        t.task->>'name' AS task_name,
-                        t.assignee_id AS assigned_to,
-                        t.task->>'start_date' AS start_date,
-                        t.task->>'end_date' AS end_date,
-                        t.task->'comments' AS t_comments
-                    from  
-                        tasks_table AS t
-                    join 
-                        usecases_table ON t.usecase_id = usecases_table.id
-                    where 
-                        usecases_table.id = $1
-                    and
-                        t.stage = $2`;
 	let tasksQuery2 = `
                     select 
                         t.id AS task_id,
@@ -124,36 +108,23 @@ exports.handler = async (event) => {
 			})
 		);
 		stagesArray.map((stage) => {
-            const tasks = taskArray.filter((task) => task.stage == stage.name)
+            const tasks = taskArray
+            .filter((task) => task.stage == stage.name)
+            .map(
+                ({task_id,
+                    task_name,
+                    assigned_to,
+                    start_date,
+                    end_date,
+                    comments}) => ({task_id,
+                        task_name,
+                        assigned_to,
+                        start_date,
+                        end_date,
+                        comments})
+            )
             stage.tasks = tasks
-        });
-		// const ob = await Promise.all(
-		//     Object.keys(workflow).flatMap(async (index) => {
-		//       const de = await Promise.all(
-		//         Object.keys(workflow[index]).map(async (name) => {
-		//           const taskResult = await client.query(tasksQuery,[usecaseId, name]);
-		//           const tasks = taskResult.rows.map(
-		//             ({ task_id, task_name, assigned_to, start_date, end_date, t_comments }) => ({
-		//               task_id,
-		//               task_name,
-		//               assigned_to: assigned_to || '',
-		//               start_date,
-		//               end_date,
-		//               comments : t_comments,
-		//             })
-		//           );
-		//           const { assignee_id, description } = workflow[index][name];
-		//           return {
-		//             name,
-		//             assignee_id: assignee_id || "",
-		//             description: description || "",
-		//             tasks,
-		//           };
-		//         })
-		//       );
-		//       return de;
-		//     })
-		//   );
+        });	
 		return {
 			statusCode: 200,
 			headers: {
