@@ -9,7 +9,7 @@ exports.handler = async (event) => {
 	const name = event.queryStringParameters?.name ?? null;
 	if (role == null || role === '') {
 		return {
-			statuscode: 400,
+			statusCode: 400,
 			headers: {
 				"Access-Control-Allow-Origin": "*",
 			},
@@ -90,7 +90,7 @@ exports.handler = async (event) => {
 		return {
 			statuscode: 200,
 			headers: {
-				"Access-Control-Allow-Origin": "*",
+				"Access-Control-Allow-Origin": "*"
 			},
 			body: JSON.stringify(resource),
 		};
