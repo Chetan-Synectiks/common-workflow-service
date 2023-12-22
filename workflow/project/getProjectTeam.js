@@ -49,14 +49,40 @@ exports.handler = async (event) => {
 				}),
 			};
 		});
+
+	let query = `
+                select 
+                    p.project->'team'->'roles' as roles 
+                from  
+                projects_table as p
+                where p.id = '68031315-fd7e-48ab-8b9c-66b9dfbdf444'`;
 	try {
-		
+		const result = await client.query(query);
+		const roles = result.rows[0].roles;
+		const ress = await Promise.all( roles.map(async (role) => {
+			const resourceIds = Object.values(role).flat();
+			const resourceQuery = `
+					select
+						id as resource_id,
+						resource->>'name' as resource_name,
+						resource->>'image' as image_url,
+						resource->>'email' as email
+					from
+					 resources_table 
+					where 
+						id IN (${resourceIds.map((id) => `'${id}'`).join(", ")})`;
+			const ress = await client.query(resourceQuery);
+			const roleName = Object.keys(role).at(0)
+			return resource = {
+				[roleName] : ress.rows
+			}
+		}));
 		return {
 			statusCode: 200,
 			headers: {
 				"Access-Control-Allow-Origin": "*",
 			},
-			body: JSON.stringify(stagesArray),
+			body: JSON.stringify(ress),
 		};
 	} catch (e) {
 		await client.end();
