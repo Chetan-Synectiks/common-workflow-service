@@ -88,7 +88,7 @@ exports.handler = async (event) => {
 			})
 		);
 		return {
-			statuscode: 200,
+			statusCode: 200,
 			headers: {
 				"Access-Control-Allow-Origin": "*"
 			},
