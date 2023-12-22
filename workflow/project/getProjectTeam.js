@@ -85,7 +85,6 @@ exports.handler = async (event) => {
 			body: JSON.stringify(ress),
 		};
 	} catch (e) {
-		await client.end();
 		return {
 			statusCode: 400,
 			headers: {

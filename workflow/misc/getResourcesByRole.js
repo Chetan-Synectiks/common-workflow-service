@@ -90,18 +90,17 @@ exports.handler = async (event) => {
 		return {
 			statusCode: 200,
 			headers: {
-				"Access-Control-Allow-Origin": "*"
-			},
-			body: JSON.stringify(resource),
-		};
-	} catch (error) {
-		console.error("Error fetching resources:", error);
-		return {
-			statusCode: 500,
-			headers: {
 				"Access-Control-Allow-Origin": "*",
 			},
-			body: JSON.stringify({ message: "Internal Server Error" }),
+			body: JSON.stringify(resource)
+		};
+	} catch (error) {
+		return {
+			statusCode: 500,
+			body: JSON.stringify({
+				message: "Internal Server Error",
+				error: error.message,
+			}),
 		};
 	} finally {
 		await client.end();
