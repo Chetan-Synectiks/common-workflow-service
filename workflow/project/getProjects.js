@@ -64,13 +64,13 @@ exports.handler = async (event) => {
 				roles,
 				total_usecases,
 			}) => {
-				let res = arr.map((e) => Object.values(e)).flat();
+				let res = roles?.map((e) => Object.values(e)).flat();
 				return {
 					project_id,
 					proejct_name,
 					project_icon_url,
 					status,
-					total_resources: new Set(res.flat()).size,
+					total_resources: new Set(res?.flat()).size,
 					total_usecases: parseInt(total_usecases),
 				};
 			}
