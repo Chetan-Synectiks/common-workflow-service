@@ -18,15 +18,15 @@ exports.handler = async (event) => {
 			}),
 		};
 	}
-	if (name == null || name === '') {
-		return {
-			statusCode: 200,
-			headers: {
-				"Access-Control-Allow-Origin": "*",
-			},
-			body: JSON.stringify([]),
-		};
-	}
+	// if (name == null || name === '') {
+	// 	return {
+	// 		statusCode: 200,
+	// 		headers: {
+	// 			"Access-Control-Allow-Origin": "*",
+	// 		},
+	// 		body: JSON.stringify([]),
+	// 	};
+	// }
 	const secretsManagerClient = new SecretsManagerClient({
 		region: "us-east-1",
 	});

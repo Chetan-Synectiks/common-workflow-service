@@ -38,7 +38,7 @@ exports.handler = async (event) => {
                         p.project->>'name' as proejct_name,
                         p.project->>'project_icon_url' as project_icon_url,
                         p.project->>'status' as status,
-                        (p.project->'teams'->jsonb_object_keys(project->'teams')->'roles') as team,
+                        p.project->'team'->'roles' as roles,
                         COUNT(u.id) as total_usecases
                     from 
                         projects_table as p
@@ -61,16 +61,19 @@ exports.handler = async (event) => {
 				proejct_name,
 				project_icon_url,
 				status,
-				team,
+				roles,
 				total_usecases,
-			}) => ({
-				project_id,
-				proejct_name,
-				project_icon_url,
-				status,
-				total_resources: new Set(Object.values(team).flat()).size,
-				total_usecases: parseInt(total_usecases),
-			})
+			}) => {
+				let res = arr.map((e) => Object.values(e)).flat();
+				return {
+					project_id,
+					proejct_name,
+					project_icon_url,
+					status,
+					total_resources: new Set(res.flat()).size,
+					total_usecases: parseInt(total_usecases),
+				};
+			}
 		);
 		return {
 			statusCode: 200,
