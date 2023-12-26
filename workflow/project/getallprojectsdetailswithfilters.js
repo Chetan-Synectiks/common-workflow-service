@@ -44,7 +44,7 @@ GROUP BY
 
 client.end();
 return{
-     "statuscode":200,
+     statusCode:200,
      "body":JSON.stringify(projectsDetails)
 
 } 
@@ -55,11 +55,11 @@ catch (e) {
     client.end();
     
     return {
-        "statusCode": 400,
-        "headers": {
+        statusCode: 400,
+        headers: {
             "Access-Control-Allow-Origin":"*"
         },
-       "msg":"error"
+       msg:"error"
     };
 
 }

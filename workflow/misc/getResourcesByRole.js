@@ -9,7 +9,7 @@ exports.handler = async (event) => {
 	const name = event.queryStringParameters?.name ?? null;
 	if (role == null || role === '') {
 		return {
-			statuscode: 400,
+			statusCode: 400,
 			headers: {
 				"Access-Control-Allow-Origin": "*",
 			},
@@ -18,15 +18,15 @@ exports.handler = async (event) => {
 			}),
 		};
 	}
-	if (name == null || name === '') {
-		return {
-			statusCode: 200,
-			headers: {
-				"Access-Control-Allow-Origin": "*",
-			},
-			body: JSON.stringify([]),
-		};
-	}
+	// if (name == null || name === '') {
+	// 	return {
+	// 		statusCode: 200,
+	// 		headers: {
+	// 			"Access-Control-Allow-Origin": "*",
+	// 		},
+	// 		body: JSON.stringify([]),
+	// 	};
+	// }
 	const secretsManagerClient = new SecretsManagerClient({
 		region: "us-east-1",
 	});
@@ -88,20 +88,19 @@ exports.handler = async (event) => {
 			})
 		);
 		return {
-			statuscode: 200,
+			statusCode: 200,
 			headers: {
 				"Access-Control-Allow-Origin": "*",
 			},
-			body: JSON.stringify(resource),
+			body: JSON.stringify(resource)
 		};
 	} catch (error) {
-		console.error("Error fetching resources:", error);
 		return {
 			statusCode: 500,
-			headers: {
-				"Access-Control-Allow-Origin": "*",
-			},
-			body: JSON.stringify({ message: "Internal Server Error" }),
+			body: JSON.stringify({
+				message: "Internal Server Error",
+				error: error.message,
+			}),
 		};
 	} finally {
 		await client.end();

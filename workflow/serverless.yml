@@ -50,17 +50,17 @@ functions:
     handler: getallresources.handler
     role: ${env:LAMBDA_ROLE}
     events:
-    - http:
-        path: /allresource
-        method: get
+      - http:
+          path: /allresource
+          method: get
 
   allresourcesbyfilter:
     handler: getallresourcebyfilter.handler
     role: ${env:LAMBDA_ROLE}
     events:
-    - http:
-        path: /allresourcebyfilter
-        method: get
+      - http:
+          path: /allresourcebyfilter
+          method: get
 
   getOrgProjectsOverview:
     handler: dashboard/getOrgProjectsOverview.handler
@@ -75,10 +75,9 @@ functions:
     handler: project/getProjects.handler 
     role: ${env:LAMBDA_ROLE}
     events:
-    - http:
-        path: /project
-        method: get
-        cors: true
+      - http:
+          path: /project
+          method: get
 
   getResources:
     handler: resource/getResources.handler
@@ -102,102 +101,119 @@ functions:
     handler: dashboard/getResourcesTasksStatus.handler
     role: ${env:LAMBDA_ROLE}
     events:
-    - http:
-        path: /resources_task_status
-        method: get
-        cors: true
+      - http:
+          path: /resources_task_status
+          method: get
+          cors: true
 
   getProjectsUsecases:
     handler: project/getProjectsUsecases.handler
     role: ${env:LAMBDA_ROLE}
     events:
-    - http:
-        path:  /project/usecase/all
-        method: get
-        cors: true 
+      - http:
+          path:  /project/usecase
+          method: get
+          cors: true 
 
   getProjectsUsecaseByName:
     handler: project/getProjectsUsecaseByName.handler
     role: ${env:LAMBDA_ROLE}
     events:
-    - http:
-        path: /project/usecase/{name}
-        method: get
-        cors: true 
+      - http:
+          path: /project/usecase/{name}
+          method: get
+          cors: true 
 
   usecase_search:
     handler: usecase/usecase_search.handler
     role: ${env:LAMBDA_ROLE}
     events:
-    - http:
-        path: /searchusecase
-        method: get
-        cors: true 
+      - http:
+          path: /searchusecase
+          method: get
+          cors: true 
 
   addTeamToProject:
     handler: project/addTeamToProject.handler
     role: ${env:LAMBDA_ROLE}
     events:
-    - http:
-        path: /project/team/new
-        method: put
-        cors: true
-        request:
-            schemas:
-              application/json: ${file(models/addTeamToProject.json)}
+      - http:
+          path: /project/team
+          method: put
+          cors: true
+          # request:
+          #     schemas:
+          #       application/json: ${file(models/addTeamToProject.json)}
         
   delete_usecase:
     handler: project/delete_usecase.handler
     role: ${env:LAMBDA_ROLE}
     events:
-    - http:
-        path: /project/usecase/delete
-        method: delete
-        cors: true
+      - http:
+          path: /project/usecase/delete
+          method: delete
+          cors: true
 
 ##searchbargetresourcebyname
   getResourcesByName:
     handler: misc/getResourcesByName.handler
     role: ${env:LAMBDA_ROLE}
     events:
-    - http:
-        path: /get_resource_by_name
-        method: get
-        cors: true
+      - http:
+          path: /get_resource_by_name
+          method: get
+          cors: true
   
   # addProject
   addProject:
     handler: project/addProject.handler
     role: ${env:LAMBDA_ROLE}
     events:
-    - http:
-        path: /Project
-        method: post
-        cors: true
-        request:
-            schemas:
-              application/json: ${file(models/addProject.json)}
+      - http:
+          path: /project
+          method: post
+          cors: true
+          request:
+              schemas:
+                application/json: ${file(models/addProject.json)}
   #addusecase
   addusecase:
     handler: project/addusecase.handler
     role: ${env:LAMBDA_ROLE}
     events:
       - http:
-          path: /project/usecase/new
+          path: /project/usecase
           method: post
           cors: true
           request:
             schemas:
               application/json: ${file(models/add_usecase.json)}
-  # stages
+
+  getUsecaseDetails:
+    handler: project/getUsecaseDetails.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+      - http:
+          path: /project/usecase/details
+          method: get
+          cors: true
+  getProjectTeam:
+    handler: project/getProjectTeam.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+      - http:
+          path: /project/team
+          method: get
+          cors: true
+            
   getAllWorkflows:
     handler: project/getAllWorkflows.handler
     role: ${env:LAMBDA_ROLE}
     events:
-    - http:
-        path: /project/workflow/all
-        method: get
-        cors: true
+      - http:
+          path: /project/workflow/all
+          method: get
+          cors: true
   #assignStage
   assignStage:
     handler: project/assignStage.handler
@@ -215,22 +231,22 @@ functions:
     handler: /project/addStage.handler
     role: ${env:LAMBDA_ROLE}
     events:
-    - http:
-        path: /project/{usecase_id}/stage
-        method: put
-        cors: true        
-        request:
-            schemas:
-              application/json: ${file(models/addStage.json)}
+      - http:
+          path: /project/{usecase_id}/stage
+          method: put
+          cors: true        
+          request:
+              schemas:
+                application/json: ${file(models/addStage.json)}
 
   getTaskDetails:
     handler: task/getTaskDetails.handler
     role: ${env:LAMBDA_ROLE}
     events:
-    - http:
-        path: /task/details
-        method: get
-        cors: true 
+      - http:
+          path: /task/details
+          method: get
+          cors: true 
 
   startTask:
     handler: task/startTask.handler
