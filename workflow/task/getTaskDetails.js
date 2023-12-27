@@ -5,6 +5,18 @@ const {
 } = require("@aws-sdk/client-secrets-manager");
 
 exports.handler = async (event) => {
+	const resource_id = event.queryStringParameters?.resource_id ?? null;
+	if ( resource_id == null || resource_id == '') {
+        return {
+            statusCode: 400,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+            },
+            body: JSON.stringify({
+                message: "The 'resource_id' query parameters are required and must have a non-empty value."
+            }),
+        };
+    }
 	const secretsManagerClient = new SecretsManagerClient({
 		region: "us-east-1",
 	});
@@ -31,10 +43,6 @@ exports.handler = async (event) => {
 				console.log("Error connecting to the database. Error :" + err);
 			});
 
-			const resource_id = event.queryStringParameters?.resource_id?? null; // Optional chaining for queryStringParameters
-			if (!resource_id) {
-				throw new Error('Missing or invalid resource_id parameter');
-			}
 		const query = `
                     SELECT * 
                     FROM tasks_table 
