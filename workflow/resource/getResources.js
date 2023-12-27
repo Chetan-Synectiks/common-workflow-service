@@ -30,30 +30,22 @@ exports.handler = async (event) => {
         let projectsQuery = 'SELECT * FROM projects_table';
 
         if (projectFilter) {
-            projectsQuery += ` WHERE id = '${projectFilter}'`;
+            projectsQuery = `SELECT * FROM projects_table WHERE id = '${projectFilter}'`;
         }
 
         const resourcesResult = await client.query(resourcesQuery);
         const projectsResult = await client.query(projectsQuery);
 
-        const outputData = processResourcesData(resourcesResult.rows, projectsResult.rows);
-
-        //console.log(outputData);
+        const outputData = processResourcesData(resourcesResult.rows, projectsResult.rows, projectFilter);
 
         return {
             statusCode: 200,
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-            },
             body: JSON.stringify(outputData),
         };
     } catch (error) {
         console.error('Error executing query:', error);
         return {
             statusCode: 500,
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-            },
             body: JSON.stringify({ message: 'Internal Server Error' }),
         };
     } finally {
@@ -61,32 +53,50 @@ exports.handler = async (event) => {
     }
 };
 
-function processResourcesData(resources, projects) {
+function processResourcesData(resources, projects, projectFilter) {
     const outputData = [];
 
-    // Iterate over each resource
     for (const resource of resources) {
         const resourceId = resource.id;
         const resourceName = resource.resource.name;
+        const resourceRole = resource.resource.role;
         const resourceImgUrl = resource.resource.image;
         const resourceEmail = resource.resource.email;
 
-        // Retrieve all projects
         const resourceProjects = projects
+            .filter(project =>
+                project.project.team.roles.some(role =>
+                    Object.values(role).flat().includes(resourceId)
+                )
+            )
             .map(project => ({
                 project_id: project.id,
                 project_name: project.project.name,
-                project_img_url: '', // Add logic to retrieve project image URL if available
+                project_img_url: project.project.project_icon_url,
             }));
 
-        // Add the resource to the outputData array with all projects
-        outputData.push({
-            resource_id: resourceId,
-            resource_name: resourceName,
-            resource_img_url: resourceImgUrl,
-            resource_email: resourceEmail,
-            projects: resourceProjects,
-        });
+        if (projectFilter) {
+            const filteredProjects = resourceProjects.filter(project => project.project_id === projectFilter);
+            if (filteredProjects.length > 0) {
+                outputData.push({
+                    resource_id: resourceId,
+                    resource_name: resourceName,
+                    role: resourceRole,
+                    resource_img_url: resourceImgUrl,
+                    resource_email: resourceEmail,
+                    projects: filteredProjects,
+                });
+            }
+        } else {
+            outputData.push({
+                resource_id: resourceId,
+                resource_name: resourceName,
+                role: resourceRole,
+                resource_img_url: resourceImgUrl,
+                resource_email: resourceEmail,
+                projects: resourceProjects,
+            });
+        }
     }
 
     return outputData;
