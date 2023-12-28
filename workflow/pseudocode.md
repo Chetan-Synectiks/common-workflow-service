@@ -40,6 +40,7 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [delete project](#delete-project)
 - [delete stage from usecase](#delete-stage-from-usecase)
 - [add resource](#add-resource)
+- [Get a list of resources (list view)](#get-a-list-of-resources-list-view)
 
 ### Common Logic For For All APIs
 
@@ -1012,4 +1013,40 @@ UPDATE usecases_table SET usecase = $1 WHERE id = $2', [existingData.usecase, us
           INSERT INTO resources_table (resource) VALUES ($1::jsonb)
 
 
+```
+
+# Get a list of resources (list view)
+
+Method: GET
+
+1. Define SQL queries to fetch data from 'resources_table', 'projects_table', and 'tasks_table'.
+
+2. Execute the queries and store the results in resourcesResult, projectsResult, and tasksResult.
+
+3. Extract 'project_id' from the request query parameters (event.queryStringParameters).
+
+4. Process and transform the data:
+   - Map over each resource in resourcesResult.rows.
+   - For each resource, filter tasks related to that resource from tasksResult.
+   - Find details of the current task for the resource.
+   - Extract assigned_date and due_date from the current task details.
+   - Filter and map projects related to the resource from projectsResult.
+   - Include the resource in the response only if it has projects or if no project_id is provided.
+
+5. Create the final response object:
+   - Set the response statusCode to 200.
+   - Set the response body to JSON.stringify(responseData).
+
+6. If an error occurs during execution, catch the error:
+   - Log the error message.
+   - Create an error response with statusCode 500 and a message indicating an internal server error.
+
+7. In the finally block, close the PostgreSQL database connection using await client.end().
+
+8. Return the response object.
+
+```SQL
+SELECT * FROM resources_table
+SELECT * FROM projects_table
+SELECT * FROM tasks_table
 ```
