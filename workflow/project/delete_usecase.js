@@ -2,6 +2,18 @@ const { Client } = require('pg');
 const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
 
 exports.handler = async (event) => {
+    const usecase_id = event.queryStringParameters?.usecase_id ?? null;
+	if ( usecase_id == null || usecase_id == '') {
+        return {
+            statusCode: 400,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+            },
+            body: JSON.stringify({
+                message: "The 'usecase_id' query parameters are required and must have a non-empty value."
+            }),
+        };
+    }
     const secretsManagerClient = new SecretsManagerClient({ region: 'us-east-1' });
     const configuration = await secretsManagerClient.send(new GetSecretValueCommand({ SecretId: 'serverless/lambda/credintials' }));
     const dbConfig = JSON.parse(configuration.SecretString);
@@ -23,14 +35,6 @@ exports.handler = async (event) => {
                 console.log("Error connecting to the database. Error :" + err);
                 throw new Error('Error connecting to the database');
             });
-
-        // Extracting and validating the usecase_id parameter
-        const usecase_id = event.queryStringParameters?.usecase_id?? null;
-
-        if (!usecase_id) {
-            // usecase_id parameter is missing
-            throw new Error('Missing usecase_id parameter');
-        }
 
         // Check for tasks existence
         const tasksExistQuery = 'SELECT COUNT(*) FROM tasks_table WHERE usecase_id = $1';
