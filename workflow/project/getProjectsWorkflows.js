@@ -43,14 +43,14 @@ exports.handler = async (event) => {
             });
 
         const projectQuery = `
-            SELECT
+        SELECT
             p.id AS project_id,
             p.project->>'name' AS project_name,
-            p.project->'updated_by_id' AS updated_by_id,
-            r.resource->>'name' AS updated_by_name,
+            p.project->'last_updated'->>'upadted_by_id' AS updated_by_id,
+            p.project->'last_updated'->>'upadted_by_name' AS updated_by_name,
+            p.project->'last_updated'->>'updated_time' AS updated_time,
             p.project->>'project_description' AS project_description
         FROM projects_table p
-        LEFT JOIN resources_table r ON (p.project->>'updated_by_id')::uuid = (r.id)::uuid
         WHERE p.id = $1
         `;
 
@@ -85,6 +85,7 @@ exports.handler = async (event) => {
             project_name: project.project_name,
             updated_by_id: project.updated_by_id,
             updated_by_name: project.updated_by_name,
+            updated_time: project.updated_time,
             project_description: project.project_description,
             workflows: workflows,
         };
