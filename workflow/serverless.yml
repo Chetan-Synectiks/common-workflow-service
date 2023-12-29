@@ -324,3 +324,12 @@ functions:
           path: /project/workflows
           method: get
           cors: true
+
+  projectsResourcesTasksStatus:
+    handler: project/projectsResourcesTasksStatus.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+      - http:
+          path: /project/resource/taskstatus
+          method: get
+          cors: true
