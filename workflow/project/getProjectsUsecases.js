@@ -1,37 +1,20 @@
-const { Client } = require('pg');
-const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
+const {connectToDatabase} = require('../db/dbConnector')
 
 exports.handler = async (event) => {
-    
-    const secretsManagerClient = new SecretsManagerClient({ region: 'us-east-1' });
-    const configuration = await secretsManagerClient.send(new GetSecretValueCommand({ SecretId: 'serverless/lambda/credintials' }));
-    const dbConfig = JSON.parse(configuration.SecretString);
-    
-    const client = new Client({
-        host: dbConfig.host,
-        port: dbConfig.port,
-        database: 'workflow',
-        user: dbConfig.engine,
-        password: dbConfig.password
-    });
-    
+    const projectId = event.queryStringParameters?.project_id?? null;
+    if (projectId == null || projectId === "") {
+		return {
+			statusCode: 400,
+			headers: {
+				"Access-Control-Allow-Origin": "*",
+			},
+			body: JSON.stringify({
+				message: "ProjectId id is required",
+			}),
+		};
+	}
+    const client = await connectToDatabase()
     try {
-
-        await client
-		.connect()
-		.then(() => {
-			console.log("Connected to the database");
-		})
-		.catch((err) => {
-			console.log("Error connecting to the database. Error :" + err);
-		});
-        const project_id = event.queryStringParameters?.project_id?? null;
-
-        // Validate the project_id parameter
-        if (!project_id) {
-            throw new Error('Missing or invalid project_id parameter');
-        }
-        // Fetch use case details and related tasks
         const useCaseDetailsResult = await client.query(`
                 SELECT
                 u.id AS usecase_id,
@@ -46,7 +29,7 @@ exports.handler = async (event) => {
             JOIN projects_table p ON u.project_id = p.id
             WHERE p.id = $1
             GROUP BY u.id
-        `, [project_id]);
+        `, [projectId]);
 
         const useCaseDetails = useCaseDetailsResult.rows.map(row => ({
             usecase_id: row.usecase_id,
@@ -57,8 +40,6 @@ exports.handler = async (event) => {
             start_date: row.usecase_startdate,
             end_date: row.usecase_enddate,
         }));
-
-        await client.end();
         return {
             statusCode: 200,
             headers: {
@@ -67,7 +48,6 @@ exports.handler = async (event) => {
             body: JSON.stringify(useCaseDetails)
         };
     } catch (e) {
-        await client.end();
         return {
             statusCode: 400,
             headers: {

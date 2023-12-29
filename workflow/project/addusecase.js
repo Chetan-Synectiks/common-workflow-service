@@ -16,40 +16,43 @@ exports.handler = async (event) => {
 
     const requestBody = JSON.parse(event.body);
     const { project_id, created_by_id, usecase_name, assigned_to_id, description, workflow_name } = requestBody;
-
+    await client
+		.connect()
+		.then(() => {
+			console.log("Connected to the database");
+		})
+		.catch((err) => {
+			console.log("Error connecting to the database. Error :" + err);
+			return {
+				statusCode: 200,
+				headers: {
+					"Access-Control-Allow-Origin": "*",
+				},
+				body: JSON.stringify({
+					message: "Internal server error : " + err.message,
+				}),
+			};
+		});
     try {
-        await client
-            .connect()
-            .then(() => {
-                console.log("Connected to the database");
-            })
-            .catch((err) => {
-                console.log("Error connecting to the database. Error :" + err);
-            });
-
         const projectQuery = `
             SELECT project->'workflows'->$1 AS workflow
             FROM projects_table
             WHERE id = $2;
         `;
+        const workflowResult = await client.query(projectQuery, [workflow_name, project_id]);
 
-        const projectValues = [workflow_name, project_id];
-        const projectResult = await client.query(projectQuery, projectValues);
-
-        if (!projectResult.rows[0] || !projectResult.rows[0].workflow || !projectResult.rows[0].workflow.stages) {
+        if (workflowResult.rowCount == 0) {
             return {
                 statusCode: 400,
                 headers: {
                     'Access-Control-Allow-Origin': '*',
                 },
                 body: JSON.stringify({
-                    message: 'Bad Request - Invalid project data or missing workflow stages'
+                    message: "Workflow with provided name does not exist"
                 }),
             };
         }
-
-        const workflowDetails = projectResult.rows[0].workflow.stages;
-
+        const workflowDetails = workflowResult.rows[0].workflow.stages;
         await client.query('BEGIN');
 
         const usecaseInsertQuery = `
@@ -57,11 +60,9 @@ exports.handler = async (event) => {
           VALUES ($1, $2)
           RETURNING id;
         `;
-
         const Workflow = [];
         for (const stage of workflowDetails) {
             const stageName = Object.keys(stage)[0];
-
             const checklists = Array.isArray(stage[stageName].checklists) ? stage[stageName].checklists : [];
 
             const workflowStage = {
@@ -77,7 +78,7 @@ exports.handler = async (event) => {
 
             Workflow.push(workflowStage);
         }
-
+        console.log(Workflow)
         const usecaseValues = [
             project_id,
             {
@@ -119,7 +120,7 @@ exports.handler = async (event) => {
                         resource_end_date: "",
                         task_assigned_date: "",
                         assigned_by_id: "",
-                        status: "",
+                        status: "unassgined",
                         comments: [],
                     },
                 ];

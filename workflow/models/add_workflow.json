@@ -11,10 +11,6 @@
         "created_by_id": {
             "type": "string"
         },
-        "created_time": {
-            "type": "string",
-            "format": "date"
-        },
         "stages": {
             "type": "array",
             "items": {
@@ -48,7 +44,6 @@
         "project_id",
         "workflow_name",
         "created_by_id",
-        "created_time",
         "stages"
     ]
 }

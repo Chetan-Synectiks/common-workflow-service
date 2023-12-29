@@ -34,17 +34,14 @@ functions:
         method: get
         cors: true
 
-  addWorkflowToProject:
-    handler: project/addWorkflowToProject.handler
+  addWorkflow:
+    handler: project/addWorkflow.handler
     role: ${env:LAMBDA_ROLE}
     events:
       - http:
-          path: /project/workflow/new
-          method: put     
+          path: /workflow
+          method: post     
           cors : true
-          request:
-            schemas:
-              application/json: ${file(models/add_workflow.json)}  
 
   allresources:
     handler: getallresources.handler
@@ -213,7 +210,7 @@ functions:
       - http:
           path: /project/workflow/all
           method: get
-          cors: true
+          cors: true       
   #assignStage
   assignStage:
     handler: project/assignStage.handler
