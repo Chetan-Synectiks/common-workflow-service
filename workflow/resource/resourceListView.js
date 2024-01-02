@@ -1,82 +1,81 @@
-const { Client } = require('pg');
-const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
+const { connectToDatabase } = require("../db/dbConnector");
 exports.handler = async (event) => {
     const projectId = event.queryStringParameters && event.queryStringParameters.project_id;
 
-    const secretsManagerClient = new SecretsManagerClient({ region: 'us-east-1' });
-    const configuration = await secretsManagerClient.send(new GetSecretValueCommand({ SecretId: 'serverless/lambda/credintials' }));
-    const dbConfig = JSON.parse(configuration.SecretString);
-
-    const client = new Client({
-        host: dbConfig.host,
-        port: dbConfig.port,
-        database: 'workflow',
-        user: dbConfig.engine,
-        password: dbConfig.password
-    });
-
     try {
-        await client
-            .connect()
-            .then(() => {
-                console.log("Connected to the database");
-            })
-            .catch((err) => {
-                console.log("Error connecting to the database. Error :" + err);
-            });
+        const client = await connectToDatabase();
 
-        const resourcesQuery = 'SELECT * FROM resources_table';
-        const projectsQuery = 'SELECT * FROM projects_table';
-        const tasksQuery = 'SELECT * FROM tasks_table';
+        const resourcesQuery = `
+            SELECT
+                r.id AS resource_id,
+                r.resource->>'name' AS resource_name,
+                r.resource->>'role' AS role,
+                r.resource->>'image' AS resource_img_url,
+                r.resource->>'email' AS resource_email,
+                COUNT(t.id) AS total_tasks
+            FROM
+                resources_table r
+                LEFT JOIN tasks_table t ON r.id = t.assignee_id
+            GROUP BY
+                r.id
+            HAVING
+                COUNT(t.id) > 0; -- Only include resources with tasks
+        `;
 
-        const resourcesResult = await client.query(resourcesQuery);
-        const projectsResult = await client.query(projectsQuery);
-        const tasksResult = await client.query(tasksQuery);
+        let projectsQuery = `
+            SELECT DISTINCT
+                p.id AS project_id,
+                p.project->>'name' AS project_name,
+                p.project->>'project_icon_url' AS project_img_url,
+                t.assignee_id AS resource_id
+            FROM
+                projects_table p
+                JOIN usecases_table u ON p.id = u.project_id
+                JOIN tasks_table t ON u.id = t.usecase_id
+        `;
 
-        const responseData = resourcesResult.rows.map((resource) => {
-            const resourceTasks = tasksResult.rows.filter((task) => task.assignee_id === resource.id);
+        const queryParams = [];
 
-            const currentTask = resource.resource.current_task;
-            const currentTaskDetails = resourceTasks.find(task => task.id === currentTask.task_id);
+        if (projectId) {
+            projectsQuery += `
+                WHERE
+                p.id = $1`;
+            queryParams.push(projectId);
+        }
 
-            const assigned_date = currentTaskDetails ? currentTaskDetails.task.task_assigned_date : null;
-            const due_date = currentTaskDetails ? currentTaskDetails.task.end_date : null;
+        const tasksResult = await client.query(resourcesQuery);
+        const projectsResult = await client.query(projectsQuery, queryParams);
+
+        const resourcesResult = tasksResult.rows.map((resource) => {
 
             const resourceProjects = projectsResult.rows
-                .filter((project) => {
-                    const team = project.project.team;
-                    const roles = team.roles.flatMap((role) => Object.values(role)[0]);
-
-                    const matchRoles = roles.includes(resource.id);
-                    const matchProjectId = !projectId || project.id === projectId;
-
-                    return matchRoles && matchProjectId;
-                })
+                .filter((project) => project.resource_id === resource.resource_id)
                 .map((project) => ({
-                    project_id: project.id,
-                    project_name: project.project.name,
-                    project_img_url: project.project.project_icon_url,
+                    project_id: project.project_id,
+                    project_name: project.project_name,
+                    project_img_url: project.project_img_url,
                 }));
 
             const includeResource = resourceProjects.length > 0 || !projectId;
 
             return includeResource ? {
-                resource_id: resource.id,
-                resource_name: resource.resource.name,
-                total_tasks: resourceTasks.length,
+                resource_id: resource.resource_id,
+                resource_name: resource.resource_name,
+                total_tasks: parseInt(resource.total_tasks) || 0,
                 total_projects: resourceProjects.length,
-                role: resource.resource.role,
-                resource_img_url: resource.resource.image,
-                resource_email: resource.resource.email,
+                role: resource.role,
+                resource_img_url: resource.resource_img_url,
+                resource_email: resource.resource_email,
                 projects: resourceProjects,
-                assigned_date,
-                due_date,
             } : null;
         }).filter(Boolean);
 
         const response = {
             statusCode: 200,
-            body: JSON.stringify(responseData),
+            headers: {
+                "Access-Control-Allow-Origin": "*",
+            },
+            body: JSON.stringify(resourcesResult),
         };
 
         return response;
@@ -84,6 +83,9 @@ exports.handler = async (event) => {
         console.error('Error executing query', err);
         return {
             statusCode: 500,
+            headers: {
+                "Access-Control-Allow-Origin": "*",
+            },
             body: JSON.stringify({ message: 'Internal Server Error' }),
         };
     } finally {

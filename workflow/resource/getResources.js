@@ -1,51 +1,57 @@
-const { Client } = require('pg');
-const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
+const { connectToDatabase } = require("../db/dbConnector");
 exports.handler = async (event) => {
-
-    const secretsManagerClient = new SecretsManagerClient({ region: 'us-east-1' });
-    const configuration = await secretsManagerClient.send(new GetSecretValueCommand({ SecretId: 'serverless/lambda/credintials' }));
-    const dbConfig = JSON.parse(configuration.SecretString);
-
-    const client = new Client({
-        host: dbConfig.host,
-        port: dbConfig.port,
-        database: 'workflow',
-        user: dbConfig.engine,
-        password: dbConfig.password
-    });
-
+    const projectFilter = event.queryStringParameters && event.queryStringParameters.project_id;
     try {
-        await client
-            .connect()
-            .then(() => {
-                console.log("Connected to the database");
-            })
-            .catch((err) => {
-                console.log("Error connecting to the database. Error :" + err);
-            });
+        const client = await connectToDatabase();
 
-        const projectFilter = event.queryStringParameters && event.queryStringParameters.project_id;
+        const queryParams = [];
 
-        const resourcesQuery = 'SELECT * FROM resources_table';
-        let projectsQuery = 'SELECT * FROM projects_table';
+        const resourcesQuery = `
+            SELECT 
+                id, 
+                resource->>'name' AS name, 
+                resource->>'role' AS role, 
+                resource->>'image' AS image, 
+                resource->>'email' AS email 
+            FROM 
+                resources_table;`;
+
+        let projectsQuery = `
+        SELECT
+            id,
+            project->>'name' AS name,
+            project->>'project_icon_url' AS project_icon_url,
+            project->>'team' AS team
+        FROM
+            projects_table
+      `;
 
         if (projectFilter) {
-            projectsQuery = `SELECT * FROM projects_table WHERE id = '${projectFilter}'`;
+            projectsQuery += `
+                WHERE
+                    id = $1`;
+            queryParams.push(projectFilter);
         }
 
         const resourcesResult = await client.query(resourcesQuery);
-        const projectsResult = await client.query(projectsQuery);
+        const projectsResult = await client.query(projectsQuery, queryParams);
 
         const outputData = processResourcesData(resourcesResult.rows, projectsResult.rows, projectFilter);
 
         return {
             statusCode: 200,
+            headers: {
+                "Access-Control-Allow-Origin": "*",
+            },
             body: JSON.stringify(outputData),
         };
     } catch (error) {
         console.error('Error executing query:', error);
         return {
             statusCode: 500,
+            headers: {
+                "Access-Control-Allow-Origin": "*",
+            },
             body: JSON.stringify({ message: 'Internal Server Error' }),
         };
     } finally {
@@ -58,21 +64,22 @@ function processResourcesData(resources, projects, projectFilter) {
 
     for (const resource of resources) {
         const resourceId = resource.id;
-        const resourceName = resource.resource.name;
-        const resourceRole = resource.resource.role;
-        const resourceImgUrl = resource.resource.image;
-        const resourceEmail = resource.resource.email;
+        const resourceName = resource.name;
+        const resourceRole = resource.role;
+        const resourceImgUrl = resource.image;
+        const resourceEmail = resource.email;
 
         const resourceProjects = projects
-            .filter(project =>
-                project.project.team.roles.some(role =>
+            .filter(project => {
+                const team = JSON.parse(project.team);
+                return team.roles.some(role =>
                     Object.values(role).flat().includes(resourceId)
-                )
-            )
+                );
+            })
             .map(project => ({
                 project_id: project.id,
-                project_name: project.project.name,
-                project_img_url: project.project.project_icon_url,
+                project_name: project.name,
+                project_img_url: project.project_icon_url,
             }));
 
         if (projectFilter) {
