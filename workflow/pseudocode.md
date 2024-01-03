@@ -40,6 +40,7 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [delete project](#delete-project)
 - [delete stage from usecase](#delete-stage-from-usecase)
 - [add resource](#add-resource)
+- [Get a list of resources (list view)](#get-a-list-of-resources-list-view)
 
 ### Common Logic For For All APIs
 
@@ -349,48 +350,32 @@ project.id, project.project
 
 # Get a list of resources
 
-Retrieves a list of all resources or of a particular proejctand get resource details -> resource_id, resource_name, resource_img_url, role, list of projects and email.
-
-> Note: Filter by project_id (Optional)
-
 Method: GET
 
-Extract query parameters from the event.
+1. Define SQL queries to fetch data from 'resources_table' and 'projects_table'.
+   - `const resourcesQuery = 'SELECT * FROM resources_table';`
+   - `let projectsQuery = 'SELECT * FROM projects_table';`
+   - If 'project_id' is provided, modify `projectsQuery` to filter by project_id.
 
-- Initialize a variable project_id and assign it the value of the 'project_id' parameter from the data.
+2. Process the data using the processResourcesData function:
+   - Pass 'resourcesResult.rows', 'projectsResult.rows', and 'project_id' to processResourcesData.
+   - Receive processed data in outputData.
 
-- Check if project_id exists:
-    - If true:
-        - Execute a SELECT query to retrieve resources associated with the specified project_id.
-        - Iterate through each resource record and retrieve project details for each associated project.
-        - Assemble the response object for each resource, including resource details and associated project details.
-    - If false:
-        - Execute a SELECT query to retrieve all resources.
-        - Iterate through each resource record and retrieve project details for each associated project.
-        - Assemble the response object for each resource, including resource details and associated project details.
-> This Api may or may not need pagation support
+
+3. Define a function called processResourcesData:
+   - Takes 'resources', 'projects', and 'projectFilter' as parameters.
+   - Initialize an empty array called outputData.
+   - Iterate over each resource in 'resources'.
+   - Extract relevant information about the resource.
+   - Filter and map projects related to the resource.
+   - If 'projectFilter' is applied, filter projects based on 'project_id'.
+   - Add resource details to 'outputData'.
+   - Return 'outputData'.
 
 ```SQL
---- without filter ---
-    --- to retrive data from resource_table ---
-        select * from resource_table;
-
-    --- to retrive data from project table ---
-        select id, project_table.project->>'name' as project_name, 
-        project_table.project->>'project_img_url' as project_img_url 
-        from project_table 
-        where id = 1;
-
-
---- with filter by project_id ---
-    --- to retrive data from resource_table ---
-        select * from resource_table
-        where resource_table.resource->'projects' @> $1::jsonb;
-    --- to retrive data from project table ---
-        select id, project_table.project->>'name' as project_name, 
-        project_table.project->>'project_img_url' as project_img_url 
-        from project_table 
-        where id = 1;
+SELECT * FROM resources_table
+SELECT * FROM projects_table
+SELECT * FROM projects_table WHERE id = '${projectFilter}'
 ```
 
 # Get all usecases with details
@@ -1028,4 +1013,40 @@ UPDATE usecases_table SET usecase = $1 WHERE id = $2', [existingData.usecase, us
           INSERT INTO resources_table (resource) VALUES ($1::jsonb)
 
 
+```
+
+# Get a list of resources (list view)
+
+Method: GET
+
+1. Define SQL queries to fetch data from 'resources_table', 'projects_table', and 'tasks_table'.
+
+2. Execute the queries and store the results in resourcesResult, projectsResult, and tasksResult.
+
+3. Extract 'project_id' from the request query parameters (event.queryStringParameters).
+
+4. Process and transform the data:
+   - Map over each resource in resourcesResult.rows.
+   - For each resource, filter tasks related to that resource from tasksResult.
+   - Find details of the current task for the resource.
+   - Extract assigned_date and due_date from the current task details.
+   - Filter and map projects related to the resource from projectsResult.
+   - Include the resource in the response only if it has projects or if no project_id is provided.
+
+5. Create the final response object:
+   - Set the response statusCode to 200.
+   - Set the response body to JSON.stringify(responseData).
+
+6. If an error occurs during execution, catch the error:
+   - Log the error message.
+   - Create an error response with statusCode 500 and a message indicating an internal server error.
+
+7. In the finally block, close the PostgreSQL database connection using await client.end().
+
+8. Return the response object.
+
+```SQL
+SELECT * FROM resources_table
+SELECT * FROM projects_table
+SELECT * FROM tasks_table
 ```
