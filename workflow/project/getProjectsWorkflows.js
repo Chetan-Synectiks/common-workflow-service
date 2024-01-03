@@ -29,7 +29,7 @@ exports.handler = async (event) => {
         const project = projectResult.rows[0];
 
         const usecasesQuery = `
-            SELECT
+        SELECT
             u.workflow_id,
             w.name AS workflow_name,
             COUNT(DISTINCT u.id) AS total_usecases,
@@ -59,8 +59,6 @@ exports.handler = async (event) => {
             workflows: workflows,
         };
 
-        await client.end();
-
         return {
             statusCode: 200,
             headers: {
@@ -77,8 +75,11 @@ exports.handler = async (event) => {
             },
             body: JSON.stringify({ error: 'Internal Server Error' }),
         };
+    }finally{
+        await client.end();
     }
 };
+
 function calculatePercentage(total, completed) {
     return total === 0 ? 0 : (completed / total) * 100;
 }
