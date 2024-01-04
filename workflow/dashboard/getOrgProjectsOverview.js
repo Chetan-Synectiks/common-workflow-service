@@ -31,24 +31,20 @@ const client = await connectToDatabase();
         projectByStatusResult.rows.forEach((row) => {
             const status = row.status;
             const count = row.count;
-	            projects_by_status[status] = count;
+	            projects_by_status[status] = parseInt(count);
         });
-
-        console.log(projects_by_status);
-        
         const percentage_completed = Math.round((projects_by_status.completed/total_projects)*100);
-
 		return {
 			statusCode: 200,
 			headers: {
 				"Access-Control-Allow-Origin": "*",
 			},
 			body: JSON.stringify({
-				total_projects : total_projects,
-                total_tasks: total_tasks,
-                percentage_completed: percentage_completed,
+				total_projects : parseInt(total_projects),
+                total_tasks: parseInt(total_tasks),
+                percentage_completed: isNaN(percentage_completed) ? 0 : percentage_completed,
                 completed: projects_by_status.completed || 0,
-                in_progress: projects_by_status.inprogress|| 0,
+                in_progress: projects_by_status.inprogress || 0,
                 unassigned: projects_by_status.unassigned || 0
 			}),
 		};
