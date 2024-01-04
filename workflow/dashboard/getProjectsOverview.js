@@ -1,53 +1,32 @@
-const { Client } = require("pg");
-const {
-	SecretsManagerClient,
-	GetSecretValueCommand,
-} = require("@aws-sdk/client-secrets-manager");
+const { connectToDatabase } = require("../db/dbConnector");
 exports.handler = async (event) => {
-	const secretsManagerClient = new SecretsManagerClient({
-		region: "us-east-1",
-	});
-	const configuration = await secretsManagerClient.send(
-		new GetSecretValueCommand({ SecretId: "serverless/lambda/credintials" })
-	);
-	const dbConfig = JSON.parse(configuration.SecretString);
-
-	const client = new Client({
-		host: dbConfig.host,
-		port: dbConfig.port,
-		database: "workflow",
-		user: dbConfig.engine,
-		password: dbConfig.password,
-	});
-
+	const status = event.queryStringParameters?.project_status ?? null;
+	if (!status) {
+		return {
+			statuscode: 400,
+			headers: {
+				'Access-Control-Allow-Origin': '*',
+			},
+			body: JSON.stringify({message:"Give status of project "}),
+		};
+	}
+	const client = await connectToDatabase();
 	try {
-		await client
-			.connect()
-			.then(() => {
-				console.log("Connected to the database");
-			})
-			.catch((err) => {
-				console.log("Error connecting to the database. Error :" + err);
-			});
-
-		const status = event.queryStringParameters?.project_status ?? null;
-
 		let query = `
-                    select 
-                        p.id as project_id,
-                        (p.project->>'name') as project_name,
-                        (p.project->>'status') as status,
-                        (p.project->>'end_date') as due_date,
-                        COUNT(distinct u.id) as total_usecases,
-                        COUNT(t.id) as total_tasks,
-                        COUNT(t.id) FILTER (WHERE t.task->>'status' = 'completed') as tasks_completed
-                        from projects_table as p 
-                    left join
-                        usecases_table as u on p.id = u.project_id 
-                    left join
-                        tasks_table as t on u.id = t.usecase_id and p.id = t.project_id
-                    `;
-        const queryParams = []
+					SELECT 
+					p.id AS project_id,
+					(p.project->>'name') AS project_name,
+					(p.project->>'status') AS status,
+					(p.project->>'end_date') AS due_date,
+					COUNT(DISTINCT u.id) AS total_usecases,
+					COUNT(DISTINCT CASE WHEN u.usecase->>'status' = 'completed' THEN u.id END) AS completed_usecases,
+					COUNT(DISTINCT t.id) AS total_tasks,
+					COUNT(t.id) FILTER (WHERE t.task->>'status' = 'completed') as tasks_completed,
+					COUNT(DISTINCT CASE WHEN t.task->>'status' = 'completed' THEN t.id END) AS completed_tasks
+				FROM projects_table AS p 
+				LEFT JOIN usecases_table AS u ON p.id = u.project_id 
+				LEFT JOIN tasks_table AS t ON u.id = t.usecase_id AND p.id = t.project_id`;
+         const queryParams = []
 		if (status !== null) {
 			query += `
                     where
@@ -65,15 +44,17 @@ exports.handler = async (event) => {
 				status,
 				due_date,
 				total_usecases,
+                completed_usecases,
 				total_tasks,
 				tasks_completed,
 			}) => ({
 				project_id,
 				project_name,
 				status,
+                total_usecases,
+                completed_usecases,
 				due_date,
-				total_usecases,
-				completed_tasks_per: (total_tasks != 0) ? Math.round((tasks_completed / total_tasks) * 100) : 0
+				completed_tasks_percentage: (total_tasks != 0) ? Math.round((tasks_completed / total_tasks) * 100) : 0
 			})
 		);
 		return {
