@@ -10,8 +10,8 @@ exports.handler = async (event) => {
 			body: JSON.stringify({message:"Give status of project "}),
 		};
 	}
+	const client = await connectToDatabase();
 	try {
-		const client = await connectToDatabase();
 		let query = `
 					SELECT 
 					p.id AS project_id,
