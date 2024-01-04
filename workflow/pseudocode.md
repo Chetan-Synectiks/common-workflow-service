@@ -41,6 +41,7 @@ Welcome to the documentation for the upcoming APIs that will power our workflow 
 - [delete stage from usecase](#delete-stage-from-usecase)
 - [add resource](#add-resource)
 - [Get a list of resources (list view)](#get-a-list-of-resources-list-view)
+- [get projects overview](#get-projects-overview)
 
 ### Common Logic For For All APIs
 
@@ -1049,4 +1050,23 @@ Method: GET
 SELECT * FROM resources_table
 SELECT * FROM projects_table
 SELECT * FROM tasks_table
+```
+
+# get-projects-overview
+
+```SQL
+
+          SELECT 
+                    p.id AS project_id,
+                    (p.project->>'name') AS project_name,
+                    (p.project->>'status') AS status,
+                    (p.project->>'end_date') AS due_date,
+                    COUNT(DISTINCT u.id) AS total_usecases,
+                    COUNT(DISTINCT CASE WHEN u.usecase->>'status' = 'completed' THEN u.id END) AS completed_usecases,
+                    COUNT(DISTINCT t.id) AS total_tasks,
+                    COUNT(t.id) FILTER (WHERE t.task->>'status' = 'completed') as tasks_completed,
+                    COUNT(DISTINCT CASE WHEN t.task->>'status' = 'completed' THEN t.id END) AS completed_tasks
+                  FROM projects_table AS p 
+                  LEFT JOIN usecases_table AS u ON p.id = u.project_id 
+                  LEFT JOIN tasks_table AS t ON u.id = t.usecase_id AND p.id = t.project_id
 ```
