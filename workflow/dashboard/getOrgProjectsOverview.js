@@ -1,63 +1,28 @@
-const { Client } = require("pg");
-const {
-	SecretsManagerClient,
-	GetSecretValueCommand,
-} = require("@aws-sdk/client-secrets-manager");
-
-exports.handler = async (event) => {
-	const secretsManagerClient = new SecretsManagerClient({
-		region: "us-east-1",
-	});
-	const configuration = await secretsManagerClient.send(
-		new GetSecretValueCommand({ SecretId: "serverless/lambda/credintials" })
-	);
-	const dbConfig = JSON.parse(configuration.SecretString);
-
-	const client = new Client({
-		host: dbConfig.host,
-		port: dbConfig.port,
-		database: "workflow",
-		user: dbConfig.engine,
-		password: dbConfig.password,
-	});
+const { connectToDatabase } = require("../db/dbConnector");
+exports.handler = async (event, context, callback) => {
+const client = await connectToDatabase();
 	try {
-		await client
-			.connect()
-			.then(() => {
-				console.log("Connected to the database");
-			})
-			.catch((err) => {
-				console.log("Error connecting to the database. Error :" + err);
-			});
+		const projectByStatusQuery = `
+            SELECT
+                COUNT(DISTINCT projects_table.id) AS total_projects,
+                COUNT(DISTINCT tasks_table.id) AS total_tasks,
+                COUNT(DISTINCT CASE WHEN projects_table.project->>'status' = 'completed' THEN projects_table.id END) AS completed,
+                COUNT(DISTINCT CASE WHEN projects_table.project->>'status' = 'inprogress' THEN projects_table.id END) AS in_progress,
+                COUNT(DISTINCT CASE WHEN projects_table.project->>'status' = 'unassigned' THEN projects_table.id END) AS unassigned
+            FROM projects_table
+            LEFT JOIN tasks_table ON projects_table.id = tasks_table.project_id
+        `;
 
-		const total_projects_result = await client.query(`SELECT
-                                                        COUNT(*) AS total_projects
-                                                        FROM projects_table`);
-		const total_projects = total_projects_result.rows[0].total_projects;
-        const total_tasks_result = await client.query(`
-                                                SELECT
-                                                    COUNT(tasks.id) AS task_count
-                                                FROM
-                                                    projects_table AS projects
-                                                LEFT JOIN
-                                                    tasks_table AS tasks ON projects.id = tasks.project_id`);
-        const total_tasks = total_tasks_result.rows[0].task_count;
-		const projectByStatusQuery = `select 
-                                      count(*) as count,
-                                      (project->>'status') as status
-                                      from projects_table
-                                      GROUP BY
-                                      project->>'status'`;
+        const projectByStatusResult = await client.query(projectByStatusQuery);
 
-		const projectByStatusResult = await client.query(projectByStatusQuery);
-		const projects_by_status = {};
-		projectByStatusResult.rows.forEach((row) => {
-			const status = row.status;
-			const count = row.count;
-			projects_by_status[status] = count;
-		});
-        console.log(projects_by_status)
-        const percentage_completed = Math.round((projects_by_status.completed/total_projects)*100);
+        const total_projects = projectByStatusResult.rows[0].total_projects;
+        const total_tasks = projectByStatusResult.rows[0].total_tasks;
+        const completed = projectByStatusResult.rows[0].completed;
+        const in_progress = projectByStatusResult.rows[0].in_progress;
+        const unassigned = projectByStatusResult.rows[0].unassigned;
+
+        const percentage_completed = Math.round((completed/total_projects)*100);
+
 		return {
 			statusCode: 200,
 			headers: {
