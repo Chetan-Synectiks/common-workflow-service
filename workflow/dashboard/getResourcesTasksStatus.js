@@ -1,9 +1,9 @@
 const { connectToDatabase } = require("../db/dbConnector");
-const client = await connectToDatabase();
 exports.handler = async (event) => {
   const resourceId = event.queryStringParameters?.resource_id ?? null;
   const fromDate = event.queryStringParameters?.from_date ?? null;
   const toDate = event.queryStringParameters?.to_date ?? null;
+  const client = await connectToDatabase();
   try {
     let query = `SELECT
                         r.id AS resource_id,
