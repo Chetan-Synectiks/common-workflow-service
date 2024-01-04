@@ -2,26 +2,41 @@ const { connectToDatabase } = require("../db/dbConnector");
 exports.handler = async (event, context, callback) => {
 const client = await connectToDatabase();
 	try {
-		const projectByStatusQuery = `
+		const total_projects_result = await client.query(`
             SELECT
-                COUNT(DISTINCT projects_table.id) AS total_projects,
-                COUNT(DISTINCT tasks_table.id) AS total_tasks,
-                COUNT(DISTINCT CASE WHEN projects_table.project->>'status' = 'completed' THEN projects_table.id END) AS completed,
-                COUNT(DISTINCT CASE WHEN projects_table.project->>'status' = 'inprogress' THEN projects_table.id END) AS in_progress,
-                COUNT(DISTINCT CASE WHEN projects_table.project->>'status' = 'unassigned' THEN projects_table.id END) AS unassigned
-            FROM projects_table
-            LEFT JOIN tasks_table ON projects_table.id = tasks_table.project_id
-        `;
+                COUNT(*) AS total_projects
+            FROM
+                projects_table
+        `);
+        const total_projects = total_projects_result.rows[0].total_projects;
+
+        const total_tasks_result = await client.query(`
+            SELECT
+                COUNT(DISTINCT id) AS task_count
+            FROM
+                tasks_table
+        `);
+        const total_tasks = total_tasks_result.rows[0].task_count;
+
+        const projectByStatusQuery = `SELECT 
+                                        COUNT(*) AS count,
+                                        (project->>'status') AS status
+                                    FROM
+                                        projects_table
+                                    GROUP BY
+                                        project->>'status'`;
 
         const projectByStatusResult = await client.query(projectByStatusQuery);
+        const projects_by_status = {};
+        projectByStatusResult.rows.forEach((row) => {
+            const status = row.status;
+            const count = row.count;
+	            projects_by_status[status] = count;
+        });
 
-        const total_projects = projectByStatusResult.rows[0].total_projects;
-        const total_tasks = projectByStatusResult.rows[0].total_tasks;
-        const completed = projectByStatusResult.rows[0].completed;
-        const in_progress = projectByStatusResult.rows[0].in_progress;
-        const unassigned = projectByStatusResult.rows[0].unassigned;
-
-        const percentage_completed = Math.round((completed/total_projects)*100);
+        console.log(projects_by_status);
+        
+        const percentage_completed = Math.round((projects_by_status.completed/total_projects)*100);
 
 		return {
 			statusCode: 200,
