@@ -16,7 +16,7 @@ exports.handler = async (event) => {
                     LEFT JOIN
                         tasks_table AS t ON r.id = t.assignee_id`;
     const queryParams = [];
-    if (fromDate !== null && toDate !== null) {
+    if (fromDate != null && toDate != null) {
       queryParams.push(fromDate);
       queryParams.push(toDate);
     } else {
@@ -24,10 +24,10 @@ exports.handler = async (event) => {
       queryParams.push(dates.thirtyDaysAgo);
       queryParams.push(dates.currentDate);
     }
-    if (resourceId !== null) {
+    if (resourceId != null) {
       query += `
                     WHERE
-                        r.id = $3`;
+                        r.id = $3::uuid`;
       queryParams.push(resourceId);
     }
     query += `
@@ -42,9 +42,9 @@ exports.handler = async (event) => {
       ({ resource_id, resource_name, completed, inprogress, pending }) => ({
         resource_id,
         resource_name,
-        completed_tasks: completed,
-        inprogress_tasks: inprogress,
-        pending_tasks: pending,
+        completed_tasks: parseInt(completed),
+        inprogress_tasks: parseInt(inprogress),
+        pending_tasks: parseInt(pending),
       })
     );
     return {

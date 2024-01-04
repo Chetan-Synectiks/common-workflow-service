@@ -10,11 +10,8 @@ exports.handler = async (event) => {
             body: JSON.stringify({ error: 'Missing project_id parameter' }),
         };
     }
-
+    const client = await connectToDatabase();
     try {
-
-        const client = await connectToDatabase();
-
         const projectQuery = `
         SELECT
             p.id AS project_id,
