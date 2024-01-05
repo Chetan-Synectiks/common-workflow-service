@@ -1,6 +1,6 @@
 const { connectToDatabase } = require("../db/dbConnector");
 exports.handler = async (event, context, callback) => {
-const client = await connectToDatabase();
+    const client = await connectToDatabase();
 	try {
 		const total_projects_result = await client.query(`
             SELECT
