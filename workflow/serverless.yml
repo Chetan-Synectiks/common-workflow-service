@@ -330,3 +330,12 @@ functions:
           path: /project/resource/taskstatus
           method: get
           cors: true
+
+  completeTask:
+    handler: project/completeTask.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+      - http:
+          path: /project/task/complete
+          method: put
+          cors: true
