@@ -182,9 +182,6 @@ functions:
           path: /project/usecase
           method: post
           cors: true
-          request:
-            schemas:
-              application/json: ${file(models/add_usecase.json)}
 
   getUsecaseDetails:
     handler: project/getUsecaseDetails.handler

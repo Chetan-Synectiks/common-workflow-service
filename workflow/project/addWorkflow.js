@@ -4,7 +4,7 @@ const { SFNClient, CreateStateMachineCommand } = require("@aws-sdk/client-sfn");
 exports.handler = async (event) => {
 	const client = await connectToDatabase();
 	const requestBody = JSON.parse(event.body);
-	const { name, created_by_id, stages } = requestBody;
+	const { name, created_by_id, project_id, stages } = requestBody;
 	const metaData = {
 		created_by_id: created_by_id,
 		updated_by_id: created_by_id,
@@ -25,12 +25,14 @@ exports.handler = async (event) => {
 		metaData.created_time = commandResponse.creationDate;
 		let query = `
 					insert into workflows_table
-					(name, arn, metadata) values ($1, $2, $3::jsonb)
+					(name, arn, metadata, project_id) values ($1, $2, $3::jsonb, $4)
 					returning *`;
+
 		const result = await client.query(query, [
 			name,
 			commandResponse.stateMachineArn,
 			metaData,
+			project_id,
 		]);
 		return {
 			statusCode: 200,
@@ -90,6 +92,7 @@ const generateStateMachine1 = (stages) => {
 							Payload: {
 								[`executionArn.$`]: "$$.Execution.Id",
 								[`token.$`]: "$$.Task.Token",
+								[`stateName.$`]: "$$.State.Name",
 							},
 						},
 						End: true,
@@ -142,9 +145,9 @@ const generateStateMachine2 = (stages) => {
 			Type: "Task",
 			Resource:
 				"arn:aws:lambda:us-east-1:657907747545:function:workflow-process-lambda:$LATEST",
-			OutputPath: "$.Payload",
 			Parameters: {
-				[`Payload.$`]: "$",
+				[`payload.$`]: "$",
+				[`stateName.$`]: "$$.State.Name",
 			},
 			Retry: [
 				{
@@ -160,6 +163,7 @@ const generateStateMachine2 = (stages) => {
 				},
 			],
 			Next: nextStageName,
+			ResultPath: "$",
 		};
 
 		const tasks = stages[i][currentStageName].tasks;
@@ -177,6 +181,8 @@ const generateStateMachine2 = (stages) => {
 							Payload: {
 								[`executionArn.$`]: "$$.Execution.Id",
 								[`token.$`]: "$$.Task.Token",
+								[`taskName.$`]: "$$.State.Name",
+								[`payload.$`]: "$",
 							},
 						},
 						End: true,
