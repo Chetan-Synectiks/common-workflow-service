@@ -43,12 +43,16 @@ exports.handler = async (event) => {
 
       taskGroups[stageName].push(row.task);
     });
-    const usecaseStages = result.rows[0].usecase.stages;
-    usecaseStages.forEach((stage) => {
+    const usecase_stages = result.rows[0].usecase.stages;
+    usecase_stages.forEach((stage) => {
       const stageName = Object.keys(stage)[0];
 
       if (taskGroups.hasOwnProperty(stageName)) {
         stage[stageName].tasks = taskGroups[stageName];
+        delete stage[stageName].assignee_id;
+        delete stage[stageName].description;
+        delete stage[stageName].updated_by_id;
+        delete stage[stageName].assigned_by_id;
       }
     });
     const total_tasks = result.rows.length;
@@ -71,7 +75,7 @@ exports.handler = async (event) => {
         creation_date: output.usecase.creation_date,
         status: output.usecase.status,
         current_stage: output.usecase.current_stage,
-        stages: usecaseStages,
+        stages: usecase_stages,
       },
     };
     return {
