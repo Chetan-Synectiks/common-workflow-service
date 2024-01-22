@@ -30,7 +30,7 @@ exports.handler = async (event, context, callback) => {
 			({ project_id, project_name, usecase_count, completed }) => ({
 				project_id,
 				project_name,
-				completed,
+				completed: parseInt(completed),
 				incomplete: usecase_count - completed,
 			})
 		);

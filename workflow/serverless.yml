@@ -182,9 +182,6 @@ functions:
           path: /project/usecase
           method: post
           cors: true
-          request:
-            schemas:
-              application/json: ${file(models/add_usecase.json)}
 
   getUsecaseDetails:
     handler: project/getUsecaseDetails.handler
@@ -329,4 +326,13 @@ functions:
       - http:
           path: /project/resource/taskstatus
           method: get
+          cors: true
+
+  completeTask:
+    handler: project/completeTask.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+      - http:
+          path: /project/task/complete
+          method: put
           cors: true

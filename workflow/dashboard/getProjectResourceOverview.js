@@ -86,7 +86,7 @@ exports.handler = async (event) => {
 						current_task: manager_current_task?.task_name || "",
 						created_date: manager_current_task?.created_date || "",
 						due_date: manager_current_task?.due_date || "",
-						total_tasks,
+						total_tasks : parseInt(total_tasks),
 						project_resources: resources != undefined ? resources : null ,
 					};
 				}
