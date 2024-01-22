@@ -27,22 +27,25 @@ exports.handler = async (event) => {
         const client = await connectToDatabase();
 
         let query = `
-        SELECT
-            usecases_table.id AS usecase_id,
-            usecases_table.usecase->>'name' AS usecase_name,
-            usecases_table.usecase->>'current_stage' AS current_stage,
-            usecases_table.assignee_id AS usecase_assigned_id,
-            COUNT(DISTINCT tasks_table.assignee_id) AS total_resources,
-            usecases_table.usecase->>'start_date' AS start_date,
-            usecases_table.usecase->>'end_date' AS end_date
-        FROM
-            usecases_table
-        LEFT JOIN
-            tasks_table ON usecases_table.id = tasks_table.usecase_id
-        WHERE
-            usecases_table.project_id = $1
-        AND usecases_table.workflow_id = $2
-    `;
+            SELECT
+                usecases_table.id AS usecase_id,
+                usecases_table.usecase->>'name' AS usecase_name,
+                usecases_table.usecase->>'current_stage' AS current_stage,
+                usecases_table.assignee_id AS usecase_assigned_id,
+                resources_table.resource->>'name' AS assignee_name,
+                COUNT(DISTINCT tasks_table.assignee_id) AS total_resources,
+                usecases_table.usecase->>'start_date' AS start_date,
+                usecases_table.usecase->>'end_date' AS end_date
+            FROM
+                usecases_table
+            LEFT JOIN
+                tasks_table ON usecases_table.id = tasks_table.usecase_id
+            LEFT JOIN
+                resources_table ON usecases_table.assignee_id = resources_table.id
+            WHERE
+                usecases_table.project_id = $1
+                AND usecases_table.workflow_id = $2
+        `;
 
         const params = [project_id, workflow_id];
 
@@ -51,7 +54,7 @@ exports.handler = async (event) => {
             params.push(usecase_name);
         }
 
-        query += ' GROUP BY usecases_table.id, usecases_table.usecase';
+        query += `GROUP BY usecases_table.id, usecases_table.usecase, resources_table.resource`;
 
         const result = await client.query(query, params);
 
@@ -59,7 +62,8 @@ exports.handler = async (event) => {
             usecase_id: row.usecase_id,
             usecase_name: row.usecase_name,
             current_stage: row.current_stage,
-            usecase_assigned_id: row.usecase_assigned_id,
+            assignee_id: row.usecase_assigned_id,
+            assignee_name: row.assignee_name,
             total_resources: parseInt(row.total_resources) || 0,
             start_date: row.start_date,
             end_date: row.end_date
