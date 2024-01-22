@@ -40,8 +40,8 @@ exports.handler = async (event) => {
       if (!taskGroups[stageName]) {
         taskGroups[stageName] = [];
       }
-
-      taskGroups[stageName].push(row.task);
+      const taskWithId = { ...row.task, id: row.id };
+      taskGroups[stageName].push(taskWithId);
     });
     const usecase_stages = result.rows[0].usecase.stages;
     usecase_stages.forEach((stage) => {
