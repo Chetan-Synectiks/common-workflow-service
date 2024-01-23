@@ -10,9 +10,8 @@ exports.handler = async (event) => {
       body: JSON.stringify({ error: "Missing usecase_id parameter" }),
     };
   }
-
+  const client = await connectToDatabase();
   try {
-    const client = await connectToDatabase();
     const query = `
         SELECT
                 u.*,
