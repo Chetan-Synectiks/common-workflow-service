@@ -27,6 +27,7 @@ exports.handler = async (event) => {
 		console.log("details of resource",resourcedetails.image_url);
 														
         const useCaseResult = await client.query(`SELECT u.workflow_id AS workflow_id,
+		                                            u.usecase AS usecase,
 													t.id AS task_id,
 													(t.task->>'name') AS task_name,
 													(t.task->>'status') AS task_status
@@ -35,11 +36,15 @@ exports.handler = async (event) => {
 													WHERE u.id = $1`, [useCaseId]);
 		
 	    let resultObject = { workflow_id: "", taskarray: [] };
-
+		const existingData = useCaseResult.rows[0].usecase;
+		const updatedWorkflow = existingData.updated_by = {
+				id: updated_by_id,
+				name: resourcedetails.name,
+				image_url:resourcedetails.image_url 
+		}
 		if (useCaseResult.rows.length > 0) {
 			resultObject.workflow_id = useCaseResult.rows[0].workflow_id;
 		}
-
 		const taskArray = useCaseResult.rows.map(row => ({
 			task_id: row.task_id,
 			task_name: row.task_name,
@@ -47,7 +52,9 @@ exports.handler = async (event) => {
 		}));
 
 		console.log("Workflow ID:", resultObject.workflow_id);
-		console.log("Task Array:", taskArray);																			
+		console.log("Task Array:", taskArray);		
+		console.log("details",existingData);																
+
         const stateMachineResult = await client.query('SELECT arn FROM workflows_table WHERE id = $1', [resultObject.workflow_id]);
         const stateMachineArn = stateMachineResult.rows[0].arn;
 		console.log("stateMachineArn",stateMachineArn);
@@ -73,6 +80,7 @@ exports.handler = async (event) => {
 				usecase_id : useCaseId,
 				project_id: useCaseId,
 				taskArray: taskArray,
+
 			}),
         };
         const startExecutionCommand = new StartExecutionCommand(startExecutionParams);
@@ -82,27 +90,9 @@ exports.handler = async (event) => {
         console.log("State machine created or updated:", update);
 		await client.query (`update usecases_table set arn = $1 where id = $2`,[startExecutionResult.executionArn,useCaseId]);
 		let queryString = `
-							UPDATE usecases_table
-							SET
-								usecase = jsonb_set(
-									jsonb_set(
-										jsonb_set(
-											usecase,
-											'{updated_by,id}',
-											$1::jsonb,true
-										),
-										'{updated_by,name}',
-										$2::jsonb,true
-									),
-									'{updated_by,image_url}',
-									$3::jsonb,true
-								)
-							WHERE id = $4
-						`;
+							UPDATE usecases_table SET usecase = jsonb_set(usecase,'{updated_by}',$1::jsonb,true) WHERE id = $2 `;
 						await client.query(queryString, [
-							JSON.stringify(updated_by_id),
-							JSON.stringify(resourcedetails.name),
-							JSON.stringify(resourcedetails.image_url),
+							updatedWorkflow,
 							useCaseId
 						]);
         return {
