@@ -345,3 +345,12 @@ functions:
           path: /usecase
           method: get
           cors: true
+
+  getUsecase :
+    handler: usecase/getUsecase.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+      - http:
+          path: /usecase/{id}
+          method: get
+          cors: true

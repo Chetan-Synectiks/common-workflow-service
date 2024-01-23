@@ -49,10 +49,8 @@ exports.handler = async (event) => {
 
       if (taskGroups.hasOwnProperty(stageName)) {
         stage[stageName].tasks = taskGroups[stageName];
-        delete stage[stageName].assignee_id;
-        delete stage[stageName].description;
-        delete stage[stageName].updated_by_id;
-        delete stage[stageName].assigned_by_id;
+      } else {
+        stage[stageName].tasks = [];
       }
     });
     const total_tasks = result.rows.length;
