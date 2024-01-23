@@ -57,8 +57,6 @@ exports.handler = async (event) => {
     const output = result.rows[0];
     const response = {
       usecase_id: output.usecase_id,
-      project_id: output.project_id,
-      workflow_id: output.workflow_id,
       assignee_id: output.assignee_id,
       assignee_name: output.resource.name,
       role: output.resource.role,
