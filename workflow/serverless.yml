@@ -354,3 +354,12 @@ functions:
           path: /usecase/{id}
           method: get
           cors: true
+
+  updateUsecase :
+    handler: usecase/updateUsecase.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+      - http:
+          path: /usecase/{id}
+          method: put
+          cors: true        
