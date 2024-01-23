@@ -3,7 +3,7 @@ const { SFNClient, StopExecutionCommand } = require("@aws-sdk/client-sfn");
 const sfnClient = new SFNClient();
 const { connectToDatabase } = require("../db/dbConnector");
 exports.handler = async (event) => {
-  const usecase_id = event.pathParameters?.usecase_id;
+  const usecase_id = event.pathParameters?.id;
   if (!usecase_id) {
     return {
       statusCode: 400,
