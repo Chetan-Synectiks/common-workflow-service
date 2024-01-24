@@ -3,7 +3,7 @@ const { SFNClient, StopExecutionCommand } = require("@aws-sdk/client-sfn");
 const sfnClient = new SFNClient();
 const { connectToDatabase } = require("../db/dbConnector");
 exports.handler = async (event) => {
-  const usecase_id = event.pathParameters?.id;
+  const usecase_id = event.pathParameters?.id ?? null;
   if (!usecase_id) {
     return {
       statusCode: 400,
@@ -14,20 +14,43 @@ exports.handler = async (event) => {
     };
   }
   const client = await connectToDatabase();
-
+  const stopdate = new Date().toISOString();
+  const stop_date = JSON.stringify(stopdate);
+  const getarnQuery = `SELECT arn FROM usecases_table WHERE id = $1`;
+  const updateStatusQuery = `
+          UPDATE usecases_table
+          SET usecase = jsonb_set(
+            usecase,
+            '{status}',
+            '"Stop"',
+            true
+          ) || jsonb_set(
+            usecase,
+            '{stop_date}',
+            $2::jsonb,
+            true
+          )
+          WHERE id = $1
+        `;
+  await client.query("BEGIN");
   try {
-    const query = `SELECT arn FROM usecases_table WHERE id = $1`;
-    const result = await client.query(query, [usecase_id]);
+    const result = await client.query(getarnQuery, [usecase_id]);
     executionArn = result.rows[0].arn;
     const input = {
       executionArn: executionArn,
     };
     const command = new StopExecutionCommand(input);
-    const response = await sfnClient.send(command);
-    const updateStatus =
-      "UPDATE usecases_table SET usecase = jsonb_set(usecase, '{\"status\"}', ' \"Stop\"') WHERE id = $1";
-    await client.query(updateStatus, [usecase_id]);
-
+    const updateResult = await client.query(updateStatusQuery, [
+      usecase_id,
+      stop_date,
+    ]);
+    if (updateResult.rowCount > 0) {
+      const response = await sfnClient.send(command);
+      if (response.$metadata.httpStatusCode !== 200) {
+        await client.query("ROLLBACK");
+      }
+    }
+    await client.query("COMMIT");
     return {
       statusCode: 200,
       body: JSON.stringify("usecase data updated successfully"),
