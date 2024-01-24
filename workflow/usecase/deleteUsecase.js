@@ -46,7 +46,7 @@ exports.handler = async (event) => {
     ]);
     if (updateResult.rowCount > 0) {
       const response = await sfnClient.send(command);
-      if (response.$metadata.httpStatusCode !== 200) {
+      if (response.statusCode !== 200) {
         await client.query("ROLLBACK");
       }
     }
