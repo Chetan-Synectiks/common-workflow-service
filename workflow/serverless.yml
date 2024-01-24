@@ -142,12 +142,12 @@ functions:
           #     schemas:
           #       application/json: ${file(models/addTeamToProject.json)}
         
-  delete_usecase:
-    handler: project/delete_usecase.handler
+  deleteUsecase:
+    handler: usecase/deleteUsecase.handler
     role: ${env:LAMBDA_ROLE}
     events:
       - http:
-          path: /project/usecase/delete
+          path: usecase/{id}
           method: delete
           cors: true
 
