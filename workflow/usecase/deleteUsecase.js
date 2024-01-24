@@ -1,6 +1,4 @@
 const { SFNClient, StopExecutionCommand } = require("@aws-sdk/client-sfn");
-
-const sfnClient = new SFNClient();
 const { connectToDatabase } = require("../db/dbConnector");
 exports.handler = async (event) => {
   const usecase_id = event.pathParameters?.id ?? null;
@@ -16,6 +14,7 @@ exports.handler = async (event) => {
   const client = await connectToDatabase();
   const stopdate = new Date().toISOString();
   const stop_date = JSON.stringify(stopdate);
+  const sfnClient = new SFNClient({ region: "us-east-1" });
   const getarnQuery = `SELECT arn FROM usecases_table WHERE id = $1`;
   const updateStatusQuery = `
           UPDATE usecases_table
