@@ -362,4 +362,13 @@ functions:
       - http:
           path: /usecase/{id}
           method: put
+          cors: true
+
+  updateWorkflow:
+    handler: workflow/updateWorkflow.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+      - http:
+          path: /workflow/{id}
+          method: put
           cors: true        
