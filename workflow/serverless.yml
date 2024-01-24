@@ -364,11 +364,11 @@ functions:
           method: put
           cors: true        
 
-  getAllWorkflows :
+  getAllWorkflow:
     handler: workflow/getAllWorkflow.handler
     role: ${env:LAMBDA_ROLE}
     events:
       - http:
           path: /workflow
-          method: post     
+          method: get     
           cors : true        

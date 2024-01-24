@@ -1,6 +1,6 @@
 
 const { connectToDatabase } = require("../db/dbConnector");
-exports.handler = async (event, context, callback) => {
+exports.handler = async (event) => {
     const project_id = event.queryStringParameters?.project_id;
 
     if (!project_id) {
