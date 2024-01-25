@@ -1,7 +1,7 @@
 const { connectToDatabase } = require("../db/dbConnector");
 const {generateStateMachine2} = require("../workflow/generateStateMachine")
 const { SFNClient, UpdateStateMachineCommand , StartExecutionCommand} = require('@aws-sdk/client-sfn');
-// const Math = require('math');
+const Math = require('math');
 exports.handler = async (event) => {
     const requestBody = JSON.parse(event.body);
     const { name, updated_by_id, stages } = requestBody;
