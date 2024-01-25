@@ -390,3 +390,13 @@ functions:
           path: /workflow/{id}
           method: put
           cors: true
+
+
+getTask:
+    handler: task/getTask.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+      - http:
+          path: /task/{id}
+          method: get
+          cors: true
