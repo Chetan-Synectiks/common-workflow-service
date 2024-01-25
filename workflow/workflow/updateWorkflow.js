@@ -2,8 +2,6 @@ const { connectToDatabase } = require("../db/dbConnector");
 const { SFNClient, UpdateStateMachineCommand } = require("@aws-sdk/client-sfn");
 const { generateStateMachine2 } = require("./generateStateMachine")
 exports.handler = async (event) => {
-    const client = await connectToDatabase();
-
     const id = event.pathParameters?.id;
     if (!id) {
         return {
@@ -11,13 +9,13 @@ exports.handler = async (event) => {
             headers: {
                 "Access-Control-Allow-Origin": "*",
             },
-            body: JSON.stringify({ error: 'Missing id path parameter' }),
+            body: JSON.stringify({ error: 'Missing workflow id path parameter' }),
         };
     }
     const requestBody = JSON.parse(event.body);
     const { updated_by_id, stages } = requestBody;
     const sfnClient = new SFNClient({ region: "us-east-1" });
-
+    const client = await connectToDatabase();
     try {
         const workflowData = await client.query(
             `select arn, metadata from workflows_table where id = $1`,
