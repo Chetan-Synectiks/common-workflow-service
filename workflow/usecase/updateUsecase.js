@@ -1,9 +1,8 @@
 const { connectToDatabase } = require("../db/dbConnector");
-const {generateStateMachine2} = require("./generateStateMachine")
+const {generateStateMachine2} = require("../workflow/generateStateMachine")
 const { SFNClient, UpdateStateMachineCommand , StartExecutionCommand} = require('@aws-sdk/client-sfn');
-const Math = require('math');
+// const Math = require('math');
 exports.handler = async (event) => {
-    const client = await connectToDatabase();
     const requestBody = JSON.parse(event.body);
     const { name, updated_by_id, stages } = requestBody;
     const useCaseId = event.pathParameters?.id;
@@ -16,6 +15,7 @@ exports.handler = async (event) => {
             body: JSON.stringify({ error: 'Missing useCaseId parameter' }),
         };
     }
+    const client = await connectToDatabase();
     try{
         const sfnClient = new SFNClient({ region: 'us-east-1' });
 		const details = await client.query(` SELECT (r.resource -> 'name') as name,
@@ -37,7 +37,7 @@ exports.handler = async (event) => {
 		
 	    let resultObject = { workflow_id: "", taskarray: [] };
 		const existingData = useCaseResult.rows[0].usecase;
-		const updatedWorkflow = existingData.updated_by = {
+		existingData.updated_by = {
 				id: updated_by_id,
 				name: resourcedetails.name,
 				image_url:resourcedetails.image_url 
@@ -59,22 +59,25 @@ exports.handler = async (event) => {
         const stateMachineArn = stateMachineResult.rows[0].arn;
 		console.log("stateMachineArn",stateMachineArn);
 
-        const newVersion = Math.floor(Math.random() * 100) + 1;
+        // const newVersion = Math.floor(Math.random() * 100) + 1;
         const stateMachineDefinition = generateStateMachine2(stages);
         const input = {
             stateMachineArn: stateMachineArn,
             definition: JSON.stringify(stateMachineDefinition),
             roleArn: "arn:aws:iam::657907747545:role/backendstepfunc-Role",
             publish: true,
-            versionDescription: `version-${newVersion}`,
+            // versionDescription: `version-${newVersion}`,
+            versionDescription: "new version",
         };
 
         const update = await sfnClient.send(
             new UpdateStateMachineCommand(input)
         );
+        const newName = (name === existingData) ? `${name.slice(0, -1)}${parseInt(name.slice(-1)) + 1}` : name
+        existingData.name = newName
 		const startExecutionParams = {
             stateMachineArn: update.stateMachineVersionArn,
-			name:name,
+			name:newName,
 			input: JSON.stringify({
 				flag: "Update",
 				usecase_id : useCaseId,
@@ -90,9 +93,9 @@ exports.handler = async (event) => {
         console.log("State machine created or updated:", update);
 		await client.query (`update usecases_table set arn = $1 where id = $2`,[startExecutionResult.executionArn,useCaseId]);
 		let queryString = `
-							UPDATE usecases_table SET usecase = jsonb_set(usecase,'{updated_by}',$1::jsonb,true) WHERE id = $2 `;
+							UPDATE usecases_table SET usecase = $1 WHERE id = $2 `;
 						await client.query(queryString, [
-							updatedWorkflow,
+							existingData,
 							useCaseId
 						]);
         return {
@@ -107,7 +110,11 @@ exports.handler = async (event) => {
         console.error("Error:", error);
         return {
             statusCode: 500,
-            body: JSON.stringify('Internal Server Error'),
+            body: JSON.stringify(
+                {message :"Internal Server Error",
+                error : error.message
+            }
+                ),
         };
     } finally {
         await client.end();

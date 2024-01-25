@@ -42,7 +42,7 @@ exports.handler = async (event) => {
 			const executionArn = response.executionArn;
 			const creationDate = response.startDate;
 			const usecase = {
-				name: usecase_name,
+				name: usecase_name+`-1`,
 				creation_date: creationDate,
 				created_by_id: created_by_id,
 				assigned_to_id: assigned_to_id,

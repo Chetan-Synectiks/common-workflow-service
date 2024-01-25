@@ -175,7 +175,7 @@ functions:
                 application/json: ${file(models/addProject.json)}
   #addusecase
   addusecase:
-    handler: project/addusecase.handler
+    handler: usecase/addusecase.handler
     role: ${env:LAMBDA_ROLE}
     events:
       - http:
@@ -329,7 +329,7 @@ functions:
           cors: true
 
   completeTask:
-    handler: project/completeTask.handler
+    handler: task/completeTask.handler
     role: ${env:LAMBDA_ROLE}
     events:
       - http:
