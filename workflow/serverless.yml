@@ -362,7 +362,7 @@ functions:
       - http:
           path: /usecase/{id}
           method: put
-          cors: true        
+          cors: true
 
   getAllWorkflow:
     handler: workflow/getAllWorkflow.handler
@@ -371,7 +371,7 @@ functions:
       - http:
           path: /workflow
           method: get     
-          cors : true  
+          cors: true  
 
   deleteWorkflow:
     handler: workflow/deleteWorkflow.handler
@@ -380,4 +380,13 @@ functions:
       - http:
           path: /workflow/{id}
           method: delete     
-          cors : true      
+          cors : true
+
+  updateWorkflow:
+    handler: workflow/updateWorkflow.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+      - http:
+          path: /workflow/{id}
+          method: put
+          cors: true
