@@ -391,6 +391,15 @@ functions:
           method: put
           cors: true
 
+  addMetadocs:
+    handler: metadocs/addMetadocs.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+      - http:
+          path: /metadocs
+          method: post
+          cors: true
+
 
 getTask:
     handler: task/getTask.handler
