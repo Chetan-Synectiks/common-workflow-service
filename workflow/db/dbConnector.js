@@ -1,5 +1,8 @@
 const { Client } = require("pg");
-
+const {
+	SecretsManagerClient,
+	GetSecretValueCommand,
+} = require("@aws-sdk/client-secrets-manager");
 
 async function connectToDatabase() {
 	try {
