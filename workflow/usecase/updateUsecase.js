@@ -15,7 +15,7 @@ exports.handler = async (event) => {
             body: JSON.stringify({ error: 'Missing useCaseId parameter' }),
         };
     }
-    const client = await connectToDatabase();
+	const client = await connectToDatabase();
     try{
         const sfnClient = new SFNClient({ region: 'us-east-1' });
 		const details = await client.query(` SELECT (r.resource -> 'name') as name,
@@ -25,7 +25,7 @@ exports.handler = async (event) => {
 		resourcedetails = details.rows[0];
 		console.log("details of resource",resourcedetails.name);
 		console.log("details of resource",resourcedetails.image_url);
-														
+        
         const useCaseResult = await client.query(`SELECT u.workflow_id AS workflow_id,
 		                                            u.usecase AS usecase,
 													t.id AS task_id,
@@ -37,11 +37,12 @@ exports.handler = async (event) => {
 		
 	    let resultObject = { workflow_id: "", taskarray: [] };
 		const existingData = useCaseResult.rows[0].usecase;
-		existingData.updated_by = {
+		 existingData.updated_by = {
 				id: updated_by_id,
 				name: resourcedetails.name,
 				image_url:resourcedetails.image_url 
 		}
+		console.log("existingdata",existingData);
 		if (useCaseResult.rows.length > 0) {
 			resultObject.workflow_id = useCaseResult.rows[0].workflow_id;
 		}
@@ -53,7 +54,7 @@ exports.handler = async (event) => {
 
 		console.log("Workflow ID:", resultObject.workflow_id);
 		console.log("Task Array:", taskArray);		
-		console.log("details",existingData);																
+		// console.log("details",existingData);																
 
         const stateMachineResult = await client.query('SELECT arn FROM workflows_table WHERE id = $1', [resultObject.workflow_id]);
         const stateMachineArn = stateMachineResult.rows[0].arn;
@@ -73,31 +74,35 @@ exports.handler = async (event) => {
         const update = await sfnClient.send(
             new UpdateStateMachineCommand(input)
         );
-        const newName = (name === existingData) ? `${name.slice(0, -1)}${parseInt(name.slice(-1)) + 1}` : name
-        existingData.name = newName
+		console.log("statemachineinput",input);
+		let existingname = existingData.name;
+        let name1 = name;
+		const newname = name1 == existingname
+						? existingname.replace(/\d+$/, match => parseInt(match) + 1)
+						: name1;
+
+		console.log("newName",existingname);
+		console.log("name",name);
+		console.log("newname",newname);
+		
 		const startExecutionParams = {
             stateMachineArn: update.stateMachineVersionArn,
-			name:newName,
+			name:newname,
 			input: JSON.stringify({
 				flag: "Update",
 				usecase_id : useCaseId,
 				project_id: useCaseId,
-				taskArray: taskArray,
-
+				taskArray: taskArray
 			}),
         };
+	
         const startExecutionCommand = new StartExecutionCommand(startExecutionParams);
         const startExecutionResult = await sfnClient.send(startExecutionCommand);
+	
 		console.log("New execution started with execution ARN:", startExecutionResult.executionArn);
 
         console.log("State machine created or updated:", update);
-		await client.query (`update usecases_table set arn = $1 where id = $2`,[startExecutionResult.executionArn,useCaseId]);
-		let queryString = `
-							UPDATE usecases_table SET usecase = $1 WHERE id = $2 `;
-						await client.query(queryString, [
-							existingData,
-							useCaseId
-						]);
+		await client.query (`update usecases_table set arn = $1 ,usecase = $2 where id = $3`,[startExecutionResult.executionArn,existingData,useCaseId]);
         return {
             statusCode: 200,
             headers: {
