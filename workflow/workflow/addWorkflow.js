@@ -7,13 +7,14 @@ exports.handler = async (event) => {
 	const requestBody = JSON.parse(event.body);
 	const { name, created_by_id, project_id, stages } = requestBody;
 	const metaData = {
+		status : "inprogress",
+		//change created and updated by id according to db schema -TO DO-
 		created_by_id: created_by_id,
 		updated_by_id: created_by_id,
 		stages: stages,
 	};
 	const sfnClient = new SFNClient({ region: "us-east-1" });
 	const newStateMachine = generateStateMachine2(stages);
-	// console.log(JSON.stringify(newStateMachine))
 	const input = {
 		name: name,
 		definition: JSON.stringify(newStateMachine),

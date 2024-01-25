@@ -142,12 +142,12 @@ functions:
           #     schemas:
           #       application/json: ${file(models/addTeamToProject.json)}
         
-  delete_usecase:
-    handler: project/delete_usecase.handler
+  deleteUsecase:
+    handler: usecase/deleteUsecase.handler
     role: ${env:LAMBDA_ROLE}
     events:
       - http:
-          path: /project/usecase/delete
+          path: usecase/{id}
           method: delete
           cors: true
 
@@ -175,7 +175,7 @@ functions:
                 application/json: ${file(models/addProject.json)}
   #addusecase
   addusecase:
-    handler: project/addusecase.handler
+    handler: usecase/addusecase.handler
     role: ${env:LAMBDA_ROLE}
     events:
       - http:
@@ -329,7 +329,7 @@ functions:
           cors: true
 
   completeTask:
-    handler: project/completeTask.handler
+    handler: task/completeTask.handler
     role: ${env:LAMBDA_ROLE}
     events:
       - http:
@@ -364,6 +364,24 @@ functions:
           method: put
           cors: true
 
+  getAllWorkflow:
+    handler: workflow/getAllWorkflow.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+      - http:
+          path: /workflow
+          method: get     
+          cors: true  
+
+  deleteWorkflow:
+    handler: workflow/deleteWorkflow.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+      - http:
+          path: /workflow/{id}
+          method: delete     
+          cors : true
+
   updateWorkflow:
     handler: workflow/updateWorkflow.handler
     role: ${env:LAMBDA_ROLE}
@@ -371,4 +389,4 @@ functions:
       - http:
           path: /workflow/{id}
           method: put
-          cors: true        
+          cors: true

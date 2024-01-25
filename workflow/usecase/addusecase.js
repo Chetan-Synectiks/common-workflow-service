@@ -17,10 +17,6 @@ exports.handler = async (event) => {
     const usecase_id = uuid()
 	//Check for unqiness of usecase name here if required-- TO DO --
 	const stepFunctionClient = new SFNClient({ region: "us-east-1" });
-    const stepFunctionPayload  = {
-        usecase_id : usecase_id,
-        project_id: project_id
-    }
 	const input = {
 		stateMachineArn: "",
 		name: usecase_name,
@@ -46,7 +42,7 @@ exports.handler = async (event) => {
 			const executionArn = response.executionArn;
 			const creationDate = response.startDate;
 			const usecase = {
-				name: usecase_name,
+				name: usecase_name+`-1`,
 				creation_date: creationDate,
 				created_by_id: created_by_id,
 				assigned_to_id: assigned_to_id,

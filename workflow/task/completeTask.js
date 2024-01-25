@@ -28,10 +28,13 @@ exports.handler = async (event) => {
 					FROM 
 						tasks_table 
 					WHERE
-						id = $1`;
+						id = $1::uuid`;
 	await client.query('BEGIN');
 	try {
+		console.log(getTokenQuery)
+		console.log(task_id)
 		const tokenResult = await client.query(getTokenQuery,[task_id]);
+		console.log( tokenResult.rows)
 		const { token} = tokenResult.rows[0];
         const stepFunctionClient = new SFNClient({region : "us-east-1"});
 		const input = {
