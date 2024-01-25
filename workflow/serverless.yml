@@ -371,4 +371,13 @@ functions:
       - http:
           path: /workflow
           method: get     
-          cors : true        
+          cors : true  
+
+  deleteWorkflow:
+    handler: workflow/deleteWorkflow.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+      - http:
+          path: /workflow/{id}
+          method: delete     
+          cors : true      
