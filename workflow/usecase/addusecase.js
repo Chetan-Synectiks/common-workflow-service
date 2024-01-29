@@ -19,7 +19,7 @@ exports.handler = async (event) => {
 	const stepFunctionClient = new SFNClient({ region: "us-east-1" });
 	const input = {
 		stateMachineArn: "",
-		name: usecase_name,
+		name: usecase_name+`-1`,
 		input: JSON.stringify({
 			flag: "new",
             usecase_id : usecase_id,
