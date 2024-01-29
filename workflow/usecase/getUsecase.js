@@ -75,12 +75,18 @@ exports.handler = async (event) => {
     };
     return {
       statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
       body: JSON.stringify(response),
     };
   } catch (error) {
     console.error("Error executing query", error);
     return {
       statusCode: 500,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
       body: JSON.stringify({ error: "Internal Server Error" }),
     };
   } finally {

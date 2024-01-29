@@ -400,3 +400,12 @@ getTask:
           path: /task/{id}
           method: get
           cors: true
+
+  addComment:
+    handler: task/addComment.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+      - http:
+          path: /task/{id}
+          method: put
+          cors: true
