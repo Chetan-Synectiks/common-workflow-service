@@ -11,8 +11,7 @@ exports.handler = async (event) => {
         };
     }
     const client = await connectToDatabase();
-    const requestBody = JSON.parse(event.body);
-    const { id, comment } = requestBody;
+    const { id, comment } = JSON.parse(event.body);
     const resourceQuery = `select id,(r.resource -> 'name') as name,
                             r.resource -> 'image') as image_url
                           from resources_table as r
@@ -35,7 +34,7 @@ exports.handler = async (event) => {
         return {
             statusCode: 200,
             headers: {
-              "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Origin": "*",
             },
             body: JSON.stringify("comment added"),
         };
@@ -44,7 +43,7 @@ exports.handler = async (event) => {
         return {
             statusCode: 500,
             headers: {
-              "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Origin": "*",
             },
             body: JSON.stringify({ error: "Internal Server Error" }),
         };
