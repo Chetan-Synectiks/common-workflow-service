@@ -242,15 +242,6 @@ functions:
           method: get
           cors: true 
 
-  # startTask:
-  #   handler: task/startTask.handler
-  #   role: ${env:LAMBDA_ROLE}
-  #   events:
-  #     - http:
-  #         path: /task/{task_id}/start
-  #         method: put
-  #         cors: true
-
   getResourcesByRole:
     handler: misc/getResourcesByRole.handler
     role: ${env:LAMBDA_ROLE}
@@ -333,7 +324,7 @@ functions:
     role: ${env:LAMBDA_ROLE}
     events:
       - http:
-          path: /project/task/complete
+          path: /task/complete
           method: put
           cors: true
 
