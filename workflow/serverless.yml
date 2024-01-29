@@ -121,15 +121,6 @@ functions:
           method: get
           cors: true 
 
-  usecase_search:
-    handler: usecase/usecase_search.handler
-    role: ${env:LAMBDA_ROLE}
-    events:
-      - http:
-          path: /searchusecase
-          method: get
-          cors: true 
-
   addTeamToProject:
     handler: project/addTeamToProject.handler
     role: ${env:LAMBDA_ROLE}
@@ -220,18 +211,6 @@ functions:
           request:
             schemas:
               application/json: ${file(models/assignUsecase.json)}
-
-  addStage:
-    handler: project/addStage.handler
-    role: ${env:LAMBDA_ROLE}
-    events:
-      - http:
-          path: /project/{usecase_id}/stage
-          method: put
-          cors: true        
-          request:
-              schemas:
-                application/json: ${file(models/addStage.json)}
 
   getTaskDetails:
     handler: task/getTaskDetails.handler
