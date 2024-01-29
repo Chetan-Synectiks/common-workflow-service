@@ -40,12 +40,18 @@ exports.handler = async (event) => {
     await client.query("COMMIT");
     return {
       statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
       body: JSON.stringify("workflow sent for deletion and updated workflow status success"),
     };
   } catch (error) {
     console.error("Error executing query", error);
     return {
       statusCode: 500,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
       body: JSON.stringify({ error: "Internal Server Error" }),
     };
   } finally {
