@@ -392,7 +392,7 @@ functions:
           cors: true
 
 
-getTask:
+  getTask:
     handler: task/getTask.handler
     role: ${env:LAMBDA_ROLE}
     events:

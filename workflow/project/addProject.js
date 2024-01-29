@@ -15,7 +15,8 @@ exports.handler = async (event) => {
         password: dbConfig.password
     });
 
-    const requestBody = JSON.parse(event.body);
+    const body = JSON.parse(event.body);
+    const { project_name, project_description, department, start_date , end_date,image_url } = body;
 
     try {
         await client
@@ -26,16 +27,35 @@ exports.handler = async (event) => {
         .catch((err) => {
             console.log("Error connecting to the database. Error :" + err);
         });
-
-        if (!requestBody.status) {
-            requestBody.status = 'unassigned';
-        }
+       
+        const project = {
+            "name": project_name,
+            "status": "completed",
+            "project_manager": {
+                "id" : "manager_id",
+                "name" : "name",
+                "image_url" : "url"
+            },
+            "project_description": project_description,
+            "department": department,
+            "project_icon_url": image_url,
+            "current_stage": "",
+            "start_date": start_date,
+            "end_date": end_date,
+            "budget": 250000,
+            "updated_by": {
+                "id" : "id",
+                "name" : "name",
+                "image_url" : "url",
+                "time" : "time_stamp"
+            }
+        };
 
         const result = await client.query(
             `INSERT INTO projects_table (project)
-             VALUES ($1::jsonb) RETURNING id as project_id,
-            (project->>\'name\')::text as project_name`,
-            [requestBody]  
+             VALUES  ($1) RETURNING id as project_id,
+             (project->>\'name\')::text as project_name `,
+             [ JSON.stringify(project)]  
         );
         
 
