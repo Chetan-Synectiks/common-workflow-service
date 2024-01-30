@@ -161,9 +161,9 @@ functions:
           path: /project
           method: post
           cors: true
-          request:
-              schemas:
-                application/json: ${file(models/addProject.json)}
+          # request:
+          #     schemas:
+          #       application/json: ${file(models/addProject.json)}
   #addusecase
   addusecase:
     handler: usecase/addusecase.handler
@@ -208,9 +208,9 @@ functions:
           path: /project/usecase/assign_stage
           method: put
           cors: true
-          request:
-            schemas:
-              application/json: ${file(models/assignUsecase.json)}
+          # request:
+          #   schemas:
+          #     application/json: ${file(models/assignUsecase.json)}
 
   getTaskDetails:
     handler: task/getTaskDetails.handler
@@ -238,9 +238,9 @@ functions:
           path: /project/usecase/assign_task
           method: put
           cors: true
-          request:
-            schemas:
-              application/json: ${file(models/assignTask.json)}
+          # request:
+          #   schemas:
+          #     application/json: ${file(models/assignTask.json)}
 
   deleteProject:
     handler: delete/deleteProject.handler
@@ -267,9 +267,9 @@ functions:
           path: /resource
           method: post
           cors: true           
-          request:
-            schemas:
-              application/json: ${file(models/addresource.json)}
+          # request:
+          #   schemas:
+          #     application/json: ${file(models/addresource.json)}
 
   getResourcesListView:
     handler: resource/getResourcesListView.handler
