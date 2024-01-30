@@ -1,7 +1,7 @@
 const { connectToDatabase } = require("../db/dbConnector");
 
 exports.handler = async (event) => {
-	const projectId = event.queryStringParameters?.project_id ?? null;
+	const projectId = event.pathParameters?.id ?? null;
 	if (projectId == null || projectId === "") {
 		return {
 			statusCode: 400,
@@ -9,7 +9,7 @@ exports.handler = async (event) => {
 				"Access-Control-Allow-Origin": "*",
 			},
 			body: JSON.stringify({
-				message: "ProjectId id is required",
+				message: "Project Id id is required",
 			}),
 		};
 	}
@@ -56,7 +56,8 @@ exports.handler = async (event) => {
 				"Access-Control-Allow-Origin": "*",
 			},
 			body: JSON.stringify({
-				error: e.message || "Internal server error",
+				message : e.message,
+				error : e
 			}),
 		};
 	}

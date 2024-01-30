@@ -1,6 +1,6 @@
 const { connectToDatabase } = require("../db/dbConnector");
 exports.handler = async (event) => {
-    const project_id = event.queryStringParameters?.project_id;
+    const project_id = event.pathParameters?.id;
     if (!project_id) {
         return {
             statusCode: 400,

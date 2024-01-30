@@ -126,7 +126,7 @@ functions:
     role: ${env:LAMBDA_ROLE}
     events:
       - http:
-          path: /project/team
+          path: /project/{id}/team
           method: put
           cors: true
           # request:
@@ -187,7 +187,7 @@ functions:
     role: ${env:LAMBDA_ROLE}
     events:
       - http:
-          path: /project/team
+          path: /project/{id}/team
           method: get
           cors: true
             
@@ -280,12 +280,12 @@ functions:
           method: get
           cors: true
 
-  getProjectsWorkflows:
-    handler: project/getProjectsWorkflows.handler
+  getProject:
+    handler: project/getProject.handler
     role: ${env:LAMBDA_ROLE}
     events:
       - http:
-          path: /project/workflows
+          path: /project/{id}
           method: get
           cors: true
 
@@ -334,12 +334,12 @@ functions:
           method: put
           cors: true
 
-  getAllWorkflow:
-    handler: workflow/getAllWorkflow.handler
+  getWorkflow:
+    handler: project/getWorkflow.handler
     role: ${env:LAMBDA_ROLE}
     events:
       - http:
-          path: /workflow
+          path: /project/{id}/workflow
           method: get     
           cors: true  
 
