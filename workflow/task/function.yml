@@ -1,0 +1,16 @@
+completeTask:
+    handler: task/completeTask.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+        - http:
+              path: /task/complete
+              method: put
+              cors: true
+addComment:
+    handler: task/addComment.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+        - http:
+              path: /task/{id}/comment
+              method: put
+              cors: true

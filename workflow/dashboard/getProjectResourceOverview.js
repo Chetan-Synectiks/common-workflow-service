@@ -24,7 +24,7 @@ exports.handler = async (event) => {
 							from 
 								tasks_table as t
 							where 
-								t.assignee_id = (p.project->'project_manager'->>'name')::uuid
+								t.assignee_id = (p.project->'project_manager'->>'id')::uuid
 						)
 					FROM projects_table AS p`;
 		let queryParams = [];
@@ -100,14 +100,14 @@ exports.handler = async (event) => {
 			body: JSON.stringify(response),
 		};
 	} catch (e) {
-		console.log(e);
 		return {
 			statusCode: 500,
 			headers: {
 				"Access-Control-Allow-Origin": "*",
 			},
 			body: JSON.stringify({
-				error: e.message || "An error occurred",
+				message: e.message,
+				error : e
 			}),
 		};
 	} finally {

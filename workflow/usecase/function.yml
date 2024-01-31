@@ -1,0 +1,52 @@
+getUsecase:
+    handler: usecase/getUsecase.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+        - http:
+              path: /usecase/{id}
+              method: get
+              cors: true
+
+updateUsecase:
+    handler: usecase/updateUsecase.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+        - http:
+              path: /usecase/{id}
+              method: put
+              cors: true
+
+deleteUsecase:
+    handler: usecase/deleteUsecase.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+        - http:
+              path: usecase/{id}
+              method: delete
+              cors: true
+              
+getUsecases:
+    handler: usecase/getUsecases.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+        - http:
+              path: /usecase
+              method: get
+              cors: true
+addusecase:
+    handler: usecase/addusecase.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+        - http:
+              path: /usecase
+              method: post
+              cors: true
+
+
+
+
+
+
+
+
+
