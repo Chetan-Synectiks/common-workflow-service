@@ -11,7 +11,6 @@ exports.handler = async (event) => {
 		end_date: end_date,
 		image_url: image_url,
 	};
-	console.log("new project", newProject);
 	const ProjectSchema = z.object({
 		name: z
 			.string()

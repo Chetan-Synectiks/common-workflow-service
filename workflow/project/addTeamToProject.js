@@ -1,15 +1,54 @@
 const { connectToDatabase } = require("../db/dbConnector");
-
+const { z } = require("zod");
 exports.handler = async (event) => {
+	const project_id = event.pathParameters?.id ?? null;
+	const projectIdSchema = z.string().uuid({message : "Invalid project id"})
+	const isUuid = projectIdSchema.safeParse(project_id)
+	if(!isUuid.success){
+		return {
+			statusCode: 400,
+			headers: {
+				"Access-Control-Allow-Origin": "*",
+			},
+			body: JSON.stringify({
+				error: isUuid.error.issues[0].message
+			}),
+		};
+	}
 	const requestBody = JSON.parse(event.body);
-		const { project_id, team_name, created_by_id, roles } = requestBody;
+		const { team_name, created_by_id, roles } = requestBody;
+		const TeamSchema = z.object({
+			name : z
+			.string()
+			.min(3, {
+				message: "Team name must be atleast 3 charachters long",
+			}),
+			created_by_id: z.string().uuid({
+				message: "Invalid created by id",
+			}),
+			created_time :  z.string().datetime(),
+			roles : z.array(z.record(z.string(), z.array(z.string().uuid())))
+		})
 
 		const team = {
-			team_name: team_name,
+			name: team_name,
 			created_by_id: created_by_id,
-			created_time: new Date(),
+			created_time: new Date().toISOString(),
 			roles: roles,
 		};
+		const result = TeamSchema.safeParse(team);
+		if (!result.success) {
+			return {
+				statusCode: 400,
+				headers: {
+					"Access-Control-Allow-Origin": "*",
+				},
+				body: JSON.stringify({
+					error: result.error.formErrors.fieldErrors,
+				}),
+			};
+		}
+		console.log(JSON.stringify(team))
 	const client = await connectToDatabase();
 	const query = `
                 update projects_table
