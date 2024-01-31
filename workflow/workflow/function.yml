@@ -16,15 +16,6 @@ deleteWorkflow:
               method: delete
               cors: true
 
-getAllWorkflows:
-    handler: workflow/getAllWorkflows.handler
-    role: ${env:LAMBDA_ROLE}
-    events:
-        - http:
-              path: /workflow/{project_id}
-              method: get
-              cors: true
-
 addWorkflow:
     handler: workflow/addWorkflow.handler
     role: ${env:LAMBDA_ROLE}

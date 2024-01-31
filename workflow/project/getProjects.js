@@ -1,37 +1,26 @@
-const { Client } = require("pg");
-const {
-	SecretsManagerClient,
-	GetSecretValueCommand,
-} = require("@aws-sdk/client-secrets-manager");
+const { connectToDatabase } = require("../db/dbConnector");
+const { z } = require("zod");
 
 exports.handler = async (event) => {
-	const secretsManagerClient = new SecretsManagerClient({
-		region: "us-east-1",
-	});
-	const configuration = await secretsManagerClient.send(
-		new GetSecretValueCommand({ SecretId: "serverless/lambda/credintials" })
-	);
-	const dbConfig = JSON.parse(configuration.SecretString);
-	const client = new Client({
-		host: dbConfig.host,
-		port: dbConfig.port,
-		database: "workflow",
-		user: dbConfig.engine,
-		password: dbConfig.password,
-	});
-
+	const status = event.queryStringParameters?.status ?? null;
+	const validStatusValues = ["unassigned", "comlpeted", "inprogress"]
+	const statusSchema = z.string().refine((value) => validStatusValues.includes(value), {
+		message: "Invalid status value",
+	  }); 
+	const isValidStatus = statusSchema.safeParse(status)
+	if(!isValidStatus.success){
+		return {
+			statusCode: 400,
+			headers: {
+				"Access-Control-Allow-Origin": "*",
+			},
+			body: JSON.stringify({
+				error: isValidStatus.error.issues[0].message
+			}),
+		};
+	}
+    const client = await connectToDatabase();
 	try {
-		await client
-			.connect()
-			.then(() => {
-				console.log("Connected to the database");
-			})
-			.catch((err) => {
-				console.log("Error connecting to the database. Error :" + err);
-			});
-
-		const status = event.queryStringParameters?.status ?? null;
-
 		let query = `
                     select 
                         p.id as project_id,
@@ -66,9 +55,9 @@ exports.handler = async (event) => {
 			}) => {
 				let res = roles?.map((e) => Object.values(e)).flat();
 				return {
-					project_id,
-					proejct_name,
-					project_icon_url,
+					id: project_id,
+					name: proejct_name,
+					icon_url: project_icon_url,
 					status,
 					total_resources: new Set(res?.flat()).size,
 					total_usecases: parseInt(total_usecases),

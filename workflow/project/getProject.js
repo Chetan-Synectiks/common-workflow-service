@@ -1,15 +1,21 @@
 const { connectToDatabase } = require("../db/dbConnector");
+const { z } = require("zod");
+
 exports.handler = async (event) => {
     const project_id = event.pathParameters?.id;
-    if (!project_id) {
-        return {
-            statusCode: 400,
-            headers: {
-                "Access-Control-Allow-Origin": "*",
-            },
-            body: JSON.stringify({ error: 'Missing project_id parameter' }),
-        };
-    }
+    const projectIdSchema = z.string().uuid({message : "Invalid project id"})
+    const isUuid = projectIdSchema.safeParse(project_id)
+	if(!isUuid.success){
+		return {
+			statusCode: 400,
+			headers: {
+				"Access-Control-Allow-Origin": "*",
+			},
+			body: JSON.stringify({
+				error: isUuid.error.issues[0].message
+			}),
+		};
+	}
     const client = await connectToDatabase();
     try {
         const projectQuery = `
@@ -19,12 +25,9 @@ exports.handler = async (event) => {
             p.project->'last_updated' AS last_updated,
             p.project->>'project_description' AS project_description
         FROM projects_table p
-        WHERE p.id = $1
-        `;
-
+        WHERE p.id = $1`;
         const projectResult = await client.query(projectQuery, [project_id]);
         const project = projectResult.rows[0];
-
         const usecasesQuery = `
         SELECT
             u.workflow_id,
@@ -41,17 +44,17 @@ exports.handler = async (event) => {
 
         const usecasesResult = await client.query(usecasesQuery, [project_id]);
         const workflows = usecasesResult.rows.map(row => ({
-            workflow_id: row.workflow_id,
-            workflow_name: row.workflow_name,
+            id: row.workflow_id,
+            name: row.workflow_name,
             total_usecases: row.total_usecases,
             task_completed: calculatePercentage(row.total_tasks, row.task_completed),
         }));
 
         const response = {
-            project_id: project.project_id,
-            project_name: project.project_name,
-            last_updated: project.last_updated,
-            project_description: project.project_description,
+            id: project.project_id,
+            name: project.project_name,
+            last_updated: project.last_updated || {},
+            description: project.project_description,
             workflows: workflows,
         };
 
