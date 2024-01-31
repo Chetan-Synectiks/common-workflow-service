@@ -1,20 +1,22 @@
-
 const { connectToDatabase } = require("../db/dbConnector");
+const { z } = require("zod");
+
 exports.handler = async (event) => {
-    const project_id = event.queryStringParameters?.project_id;
-
-    if (!project_id) {
-        return {
-            statusCode: 400,
-            headers: {
-                "Access-Control-Allow-Origin": "*",
-            },
-            body: JSON.stringify({ error: 'Missing project_id parameter' }),
-        };
-    }
-
+    const project_id =event.pathParameters?.id ?? null;
+    const projectIdSchema = z.string().uuid({message : "Invalid project id"})
+    const isUuid = projectIdSchema.safeParse(project_id)
+	if(!isUuid.success){
+		return {
+			statusCode: 400,
+			headers: {
+				"Access-Control-Allow-Origin": "*",
+			},
+			body: JSON.stringify({
+				error: isUuid.error.issues[0].message
+			}),
+		};
+	}
     const client = await connectToDatabase();
-
     try {
 
         const usecasesQuery = `

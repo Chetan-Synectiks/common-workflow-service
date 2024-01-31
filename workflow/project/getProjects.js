@@ -4,9 +4,9 @@ const { z } = require("zod");
 exports.handler = async (event) => {
 	const status = event.queryStringParameters?.status ?? null;
 	const validStatusValues = ["unassigned", "comlpeted", "inprogress"]
-	const statusSchema = z.string().refine((value) => validStatusValues.includes(value), {
+	const statusSchema = z.string().nullable().refine((value) => value === null || validStatusValues.includes(value), {
 		message: "Invalid status value",
-	  }); 
+	}); 
 	const isValidStatus = statusSchema.safeParse(status)
 	if(!isValidStatus.success){
 		return {

@@ -1,20 +1,22 @@
 const { connectToDatabase } = require("../db/dbConnector");
+const { z } = require("zod");
 
 exports.handler = async (event) => {
 	const projectId = event.pathParameters?.id ?? null;
-	if (projectId == null || projectId === "") {
+	const projectIdSchema = z.string().uuid({message : "Invalid project id"})
+    const isUuid = projectIdSchema.safeParse(projectId)
+	if(!isUuid.success){
 		return {
 			statusCode: 400,
 			headers: {
 				"Access-Control-Allow-Origin": "*",
 			},
 			body: JSON.stringify({
-				message: "Project Id id is required",
+				error: isUuid.error.issues[0].message
 			}),
 		};
 	}
 	const client = await connectToDatabase();
-
 	let query = `
                 select 
                     p.project->'team'->'roles' as roles 
