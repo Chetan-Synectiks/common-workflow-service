@@ -43,7 +43,7 @@ exports.handler = async (event) => {
 			status: "unassigned",
 			description: newProject.description,
 			department: newProject.department,
-			icon_url: newProject.image_url,
+			image_url: newProject.image_url,
 			current_stage: "",
 			start_date: newProject.start_date,
 			end_date: newProject.end_date,

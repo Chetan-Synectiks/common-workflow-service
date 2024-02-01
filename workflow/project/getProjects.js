@@ -31,7 +31,7 @@ exports.handler = async (event) => {
                     select 
                         p.id as project_id,
                         p.project->>'name' as proejct_name,
-                        p.project->>'project_icon_url' as project_icon_url,
+                        p.project->>'image_url' as project_icon_url,
                         p.project->>'status' as status,
                         p.project->'team'->'roles' as roles,
                         COUNT(u.id) as total_usecases
@@ -63,7 +63,7 @@ exports.handler = async (event) => {
 				return {
 					id: project_id,
 					name: proejct_name,
-					icon_url: project_icon_url,
+					image_url: project_icon_url,
 					status,
 					total_resources: new Set(res?.flat()).size,
 					total_usecases: parseInt(total_usecases),
