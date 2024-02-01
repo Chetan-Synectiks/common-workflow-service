@@ -6,7 +6,7 @@ const { z } = require("zod");
 exports.handler = async (event) => {
 	const id = event.pathParameters?.id;
 	const { updated_by_id, stages } = JSON.parse(event.body);
-	const IdSchema = z.string().uuid({ message: "Invalid id" });
+    const IdSchema = z.string().uuid({ message: "Invalid id" });
     const isUuid = IdSchema.safeParse(id);
     const isUuid1 = IdSchema.safeParse(updated_by_id);
     if (
@@ -28,27 +28,22 @@ exports.handler = async (event) => {
         };
     }
 	const StageSchema = z.object(
-		{
-			tasks: z.array(z.string()),
-			checklist: z.array(z.string()),
-		},
-		{ message: "Invalid request body" }
-	);
-	const MetaDataSchema = z.object({
-		status: z.string(),
-		created_by: z.string().uuid({ message: "Invalid resource id" }),
-		updated_by: z.string().uuid({ message: "Invalid resource id" }),
-		stages: z.array(z.record(z.string(), StageSchema)),
-	});
-    const parseResult = MetaDataSchema.safeParse(stages);
-	if (!parseResult.success) {
+        {
+            tasks: z.array(z.string()),
+            checklist: z.array(z.string()),
+        },
+        { message: "Invalid request body" }
+    );
+    const MetaDataSchema = z.array(z.record(z.string(), StageSchema))
+	const metadataresult = MetaDataSchema.safeParse(stages)
+		if (!metadataresult.success) {
 		return {
 			statusCode: 400,
 			headers: {
 				"Access-Control-Allow-Origin": "*",
 			},
 			body: JSON.stringify({
-				error: parseResult.error.formErrors.fieldErrors,
+				error: metadataresult.error.formErrors.fieldErrors,
 			}),
 		};
 	}

@@ -8,20 +8,28 @@ const {
 } = require("@aws-sdk/client-sfn");
 exports.handler = async (event) => {
     const useCaseId = event.pathParameters?.id;
-    const usecaseIdSchema = z.string().uuid({ message: "Invalid usecase id" });
-    const isUuid = usecaseIdSchema.safeParse(useCaseId);
-    if (!isUuid.success) {
+    const { name, updated_by_id, stages } = JSON.parse(event.body);
+    const IdSchema = z.string().uuid({ message: "Invalid id" });
+    const isUuid = IdSchema.safeParse(useCaseId);
+    const isUuid1 = IdSchema.safeParse(updated_by_id);
+    if (
+        !isUuid.success ||
+        !isUuid1.success ||
+        (!isUuid.success && !isUuid1.success)
+    ) {
+        const error =
+            (isUuid.success ? "" : isUuid.error.issues[0].message) +
+            (isUuid1.success ? "" : isUuid1.error.issues[0].message);
         return {
             statusCode: 400,
             headers: {
                 "Access-Control-Allow-Origin": "*",
             },
             body: JSON.stringify({
-                error: isUuid.error.issues[0].message,
+                error: error,
             }),
         };
     }
-    const { name, updated_by_id, stages } = JSON.parse(event.body);
     const StageSchema = z.object(
         {
             tasks: z.array(z.string()),
@@ -31,19 +39,16 @@ exports.handler = async (event) => {
     );
     const updateUsecase = {
         name: name,
-        updated_by_id: updated_by_id,
         stages: stages,
     };
     const UpdateSchema = z.object({
-        updated_by_id: z.string().uuid({
-            message: "Invalid updated by id",
-        }),
         name: z.string().min(3, {
             message: "usecase name should be atleast 3 characters long",
         }),
         stages: z.array(z.record(z.string(), StageSchema)),
     });
     const shemaresult = UpdateSchema.safeParse(updateUsecase);
+    console.log(shemaresult);
     if (!shemaresult.success) {
         return {
             statusCode: 400,
