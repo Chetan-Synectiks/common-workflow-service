@@ -13,7 +13,7 @@ exports.handler = async (event) => {
     const client = await connectToDatabase();
     const { id, comment } = JSON.parse(event.body);
     const resourceQuery = `select id,(r.resource -> 'name') as name,
-                            r.resource -> 'image') as image_url
+                            (r.resource -> 'image') as image_url
                           from resources_table as r
                           where id = $1`;
     const updatequery =

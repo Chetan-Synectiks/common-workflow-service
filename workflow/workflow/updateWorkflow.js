@@ -7,21 +7,26 @@ exports.handler = async (event) => {
 	const id = event.pathParameters?.id;
 	const { updated_by_id, stages } = JSON.parse(event.body);
 	const IdSchema = z.string().uuid({ message: "Invalid id" });
-	const isUuid = IdSchema.safeParse(id);
-	const isUuid1 = IdSchema.safeParse(id);
-	if (!isUuid.success && !isUuid.success) {
-		const error =
-			isUuid.error.issues[0].message || isUuid1.error.issues[0].message;
-		return {
-			statusCode: 400,
-			headers: {
-				"Access-Control-Allow-Origin": "*",
-			},
-			body: JSON.stringify({
-				error: error,
-			}),
-		};
-	}
+    const isUuid = IdSchema.safeParse(id);
+    const isUuid1 = IdSchema.safeParse(updated_by_id);
+    if (
+        !isUuid.success ||
+        !isUuid1.success ||
+        (!isUuid.success && !isUuid1.success)
+    ) {
+        const error =
+            (isUuid.success ? "" : isUuid.error.issues[0].message) +
+            (isUuid1.success ? "" : isUuid1.error.issues[0].message);
+        return {
+            statusCode: 400,
+            headers: {
+                "Access-Control-Allow-Origin": "*",
+            },
+            body: JSON.stringify({
+                error: error,
+            }),
+        };
+    }
 	const StageSchema = z.object(
 		{
 			tasks: z.array(z.string()),
