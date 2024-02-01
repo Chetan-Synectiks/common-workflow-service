@@ -21,7 +21,6 @@ exports.handler = async (event) => {
 	const StageSchema = z.object(
 		{
 			tasks: z.array(z.string()),
-			tasks: z.array(z.string()),
 			checklist: z.array(z.string()),
 		},
 		{ message: "Invalid request body" }
