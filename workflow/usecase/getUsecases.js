@@ -1,31 +1,31 @@
 const { connectToDatabase } = require("../db/dbConnector");
+const { z } = require("zod");
 exports.handler = async (event) => {
     const project_id = event.queryStringParameters?.project_id;
-    if (!project_id) {
-        return {
-            statusCode: 400,
-            headers: {
-                "Access-Control-Allow-Origin": "*",
-            },
-            body: JSON.stringify({ error: 'Missing project_id parameter' }),
-        };
-    }
-
     const workflow_id = event.queryStringParameters?.workflow_id;
-    if (!workflow_id) {
+    const IdSchema = z.string().uuid({ message: "Invalid id" });
+    const isUuid = IdSchema.safeParse(project_id);
+    const isUuid1 = IdSchema.safeParse(workflow_id);
+    if (
+        !isUuid.success ||
+        !isUuid1.success ||
+        (!isUuid.success && !isUuid1.success)
+    ) {
+        const error =
+            (isUuid.success ? "" : isUuid.error.issues[0].message) +
+            (isUuid1.success ? "" : isUuid1.error.issues[0].message);
         return {
             statusCode: 400,
             headers: {
                 "Access-Control-Allow-Origin": "*",
             },
-            body: JSON.stringify({ error: 'Missing workflow_id parameter' }),
+            body: JSON.stringify({
+                error: error,
+            }),
         };
     }
-
     const client = await connectToDatabase();
-
     try {
-
         let query = `
             SELECT
                 usecases_table.id AS usecase_id,
@@ -53,7 +53,7 @@ exports.handler = async (event) => {
 
         const result = await client.query(query, params);
 
-        const usecases = result.rows.map(row => ({
+        const usecases = result.rows.map((row) => ({
             usecase_id: row.usecase_id,
             usecase_name: row.usecase_name,
             current_stage: row.current_stage,
@@ -61,7 +61,7 @@ exports.handler = async (event) => {
             assignee_name: row.assignee_name,
             total_resources: parseInt(row.total_resources) || 0,
             start_date: row.start_date,
-            end_date: row.end_date
+            end_date: row.end_date,
         }));
 
         return {
