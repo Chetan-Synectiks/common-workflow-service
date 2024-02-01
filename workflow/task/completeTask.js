@@ -20,7 +20,7 @@ exports.handler = async (event) => {
 					set task = jsonb_set(
 						task,
 						'{status}',
-						'"compelted"')
+						'"completed"')
 					where id = $1`;
 	const getTokenQuery = `
 					SELECT 
@@ -60,6 +60,7 @@ exports.handler = async (event) => {
 			}),
 		};
 	} catch (error) {
+		await client.query('ROLLBACK');
 		return {
 			statusCode: 500,
 			headers: {

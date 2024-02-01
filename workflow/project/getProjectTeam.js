@@ -25,6 +25,15 @@ exports.handler = async (event) => {
                 where p.id = $1::uuid`;
 	try {
 		const result = await client.query(query,[projectId]);
+		if(result.rowCount === 0){
+			return {
+				statusCode: 200,
+				headers: {
+					"Access-Control-Allow-Origin": "*",
+				},
+				body: JSON.stringify([]),
+			};
+		}
 		const roles = result.rows[0].roles;
 		const ress = await Promise.all( roles.map(async (role) => {
 			const resourceIds = Object.values(role).flat();
