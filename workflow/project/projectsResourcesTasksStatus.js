@@ -1,83 +1,67 @@
 const { connectToDatabase } = require("../db/dbConnector");
+const { z } = require("zod");
 exports.handler = async (event) => {
-    const projectId = event.queryStringParameters?.project_id;
-    if (!projectId) {
+    const projectId = event.queryStringParameters?.project_id ?? null;
+    const projectIdSchema = z.string().uuid({message : "Invalid project id"})
+    const isUuid = projectIdSchema.safeParse(projectId)
+    if(!isUuid.success){
         return {
             statusCode: 400,
             headers: {
                 "Access-Control-Allow-Origin": "*",
             },
-            body: JSON.stringify({ error: 'Missing project_id parameter' }),
+            body: JSON.stringify({
+                error: isUuid.error.issues[0].message
+            }),
         };
     }
-
-    const fromDate = event.queryStringParameters?.from_date ?? null;
-    const toDate = event.queryStringParameters?.to_date ?? null;
-
+    const client = await connectToDatabase();
     try {
-        const client = await connectToDatabase();
-
-        let query = `SELECT
-                        r.id AS resource_id,
-                        (r.resource->>'name') AS resource_name,
-                        COUNT(*) FILTER (WHERE t.task->>'status' = 'completed') AS completed,
-                        COUNT(*) FILTER (WHERE t.task->>'status' = 'inprogress') AS inprogress,
-                        COUNT(*) FILTER (WHERE t.task->>'status' = 'pending') AS pending
-                        FROM
-                        resources_table AS r
-                    LEFT JOIN
-                        tasks_table AS t ON r.id = t.assignee_id`;
-        const queryParams = [];
-        if (fromDate !== null && toDate !== null) {
-            queryParams.push(fromDate);
-            queryParams.push(toDate);
-        } else {
-            const dates = getDates();
-            queryParams.push(dates.thirtyDaysAgo);
-            queryParams.push(dates.currentDate);
+        const projectQuery = `
+            SELECT project->'team'->'roles' AS roles
+            FROM projects_table
+            WHERE id = $1::uuid`;
+        const projectResult = await client.query(projectQuery, [projectId]);
+        const resourceIds = projectResult.rows.flatMap(row => {
+            const roles = row.roles || [];
+            return roles.flatMap(role => Object.values(role).flat());
+        });
+        if (resourceIds.length === 0) {
+            return {
+                statusCode: 200,
+                headers: {
+                    "Access-Control-Allow-Origin": "*",
+                },
+                body: JSON.stringify([]),
+            };
         }
-        if (projectId !== null) {
-            query += `
-                    WHERE
-                        t.project_id = $3`;
-            queryParams.push(projectId);
-        }
-        query += `
-                    AND (t.task->>'start_date') <> ''
-                    AND (t.task->>'end_date') <> ''
-                    AND (t.task->>'start_date')::date >= $1::date
-                    AND (t.task->>'end_date')::date <= $2::date
-                    GROUP BY
-                        r.id`;
-        const result = await client.query(query, queryParams);
-
-        const resourcetasks = result.rows.map(
-            ({
-                resource_id,
-                resource_name,
-                completed,
-                inprogress,
-                pending,
-            }) => ({
-                resource_id,
-                resource_name,
-                completed_tasks: completed,
-                inprogress_tasks: inprogress,
-                pending_tasks: pending,
-            })
-        );
-
+        const tasksQuery = `
+            SELECT
+                r.id AS resource_id,
+                (r.resource->>'name') AS resource_name,
+                COUNT(*) FILTER (WHERE t.task->>'status' = 'completed') AS completed,
+                COUNT(*) FILTER (WHERE t.task->>'status' = 'inprogress') AS inprogress,
+                COUNT(*) FILTER (WHERE t.task->>'status' = 'pending') AS pending
+            FROM
+                resources_table AS r
+            LEFT JOIN
+                tasks_table AS t ON r.id = t.assignee_id
+            WHERE
+                r.id = ANY($1::uuid[])
+            GROUP BY
+                r.id, r.resource->>'name'`;
+        const tasksResult = await client.query(tasksQuery, [resourceIds]);
+        const res = tasksResult.rows.map(obj => {return  obj})
         return {
             statusCode: 200,
             headers: {
                 "Access-Control-Allow-Origin": "*",
             },
-            body: JSON.stringify(Object.values(resourcetasks)),
+            body: JSON.stringify(res),
         };
     } catch (e) {
-        await client.end();
         return {
-            statusCode: 400,
+            statusCode: 500,
             headers: {
                 "Access-Control-Allow-Origin": "*",
             },
@@ -85,16 +69,7 @@ exports.handler = async (event) => {
                 error: e.message || "An error occurred",
             }),
         };
+    } finally {
+        await client.end();
     }
 };
-
-function getDates() {
-    const currentDate = new Date();
-    console.log(currentDate)
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(currentDate.getDate() - 30);
-    return {
-        currentDate: currentDate.toISOString().split("T")[0],
-        thirtyDaysAgo: thirtyDaysAgo.toISOString().split("T")[0],
-    };
-}
