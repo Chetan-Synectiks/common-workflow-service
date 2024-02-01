@@ -1,6 +1,24 @@
 const { connectToDatabase } = require("../db/dbConnector");
+const { z } = require("zod");
+
 exports.handler = async (event) => {
-	const status = event.queryStringParameters?.project_status ?? null;
+	const status = event.queryStringParameters?.status ?? null;
+	const validStatusValues = ["unassigned", "comlpeted", "inprogress"]
+	const statusSchema = z.string().nullable().refine((value) => value === null || validStatusValues.includes(value), {
+		message: "Invalid status value",
+	}); 
+	const isValidStatus = statusSchema.safeParse(status)
+	if(!isValidStatus.success){
+		return {
+			statusCode: 400,
+			headers: {
+				"Access-Control-Allow-Origin": "*",
+			},
+			body: JSON.stringify({
+				error: isValidStatus.error.issues[0].message
+			}),
+		};
+	}
 	const client = await connectToDatabase();
 	try {
 		let query = `
@@ -54,13 +72,15 @@ exports.handler = async (event) => {
 			body: JSON.stringify(projectsOverview),
 		};
 	} catch (error) {
-		console.error("Error executing query:", error);
 		return {
 			statusCode: 500,
 			headers: {
 				"Access-Control-Allow-Origin": "*",
 			},
-			body: JSON.stringify({ message: "Internal Server Error" }),
+			body: JSON.stringify({
+				message: e.message,
+				error : e
+			}),
 		};
 	} finally {
 		await client.end();
