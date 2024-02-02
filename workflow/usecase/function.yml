@@ -58,7 +58,7 @@ getUsecaseAsset:
         - http:
               path: /usecase/{id}/asset
               method: get
-              cors: true
+              cors: true 
 
 getUsecasePlanning:
     handler: usecase/getUsecasePlanning.handler
@@ -68,3 +68,12 @@ getUsecasePlanning:
               path: /usecase/{id}/planning
               method: get
               cors: true
+
+assignStage:
+    handler: usecase/assignStage.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+        - http:
+              path: /usecase/{id}/assignStage
+              method: put
+              cors: true              
