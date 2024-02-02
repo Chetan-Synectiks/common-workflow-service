@@ -157,21 +157,23 @@ exports.handler = async (event) => {
 };
 
 const generateStages = (stages) => {
-    return stages.map((stage) => {
-        const stageName = Object.keys(stage)[0];
-        const checklist = stage[stageName].checklist;
-        return {
-            [stageName]: {
-                assignee_id: "",
-                assigned_by_id: "",
-                updated_by_id: "",
-                description: "",
-                checklist: checklist.map((item, index) => ({
-                    item_id: index + 1,
-                    description: item,
-                    checked: false,
-                })),
-            },
-        };
-    });
+	return stages.map((stage) => {
+		const stageName = Object.keys(stage)[0];
+		const checklist = stage[stageName].checklist;
+		return {
+			[stageName]: {
+				assignee_id: "",
+				assigned_by_id: "",
+				updated_by_id: "",
+				description: "",
+				start_date:"",
+				end_date:"",
+				checklist: checklist.map((item, index) => ({
+					item_id: index + 1,
+					description: item,
+					checked: false,
+				})),
+			},
+		};
+	});
 };
