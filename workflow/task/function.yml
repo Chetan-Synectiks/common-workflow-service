@@ -14,3 +14,12 @@ addComment:
               path: /task/{id}/comment
               method: put
               cors: true
+
+assignTask:
+    handler: task/assignTask.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+        - http:
+              path: /task/{id}/assignTask/{resource_id}
+              method: put
+              cors: true              
