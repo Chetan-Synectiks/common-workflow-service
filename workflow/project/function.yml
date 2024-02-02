@@ -62,6 +62,6 @@ projectsResourcesTasksStatus:
     role: ${env:LAMBDA_ROLE}
     events:
         - http:
-              path: /project/resource/taskstatus
+              path: /project/{id}/team/status
               method: get
               cors: true

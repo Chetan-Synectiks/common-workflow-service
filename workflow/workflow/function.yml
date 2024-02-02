@@ -6,7 +6,7 @@ updateWorkflow:
               path: /workflow/{id}
               method: put
               cors: true
-              
+
 deleteWorkflow:
     handler: workflow/deleteWorkflow.handler
     role: ${env:LAMBDA_ROLE}
@@ -23,4 +23,13 @@ addWorkflow:
         - http:
               path: /workflow
               method: post
+              cors: true
+
+getAllWorkflows:
+    handler: workflow/getAllWorkflows.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+        - http:
+              path: /workflow
+              method: get
               cors: true

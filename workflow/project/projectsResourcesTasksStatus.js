@@ -1,7 +1,7 @@
 const { connectToDatabase } = require("../db/dbConnector");
 const { z } = require("zod");
 exports.handler = async (event) => {
-    const projectId = event.queryStringParameters?.project_id ?? null;
+    const projectId = event.pathParameters?.id ?? null;
     const projectIdSchema = z.string().uuid({message : "Invalid project id"})
     const isUuid = projectIdSchema.safeParse(projectId)
     if(!isUuid.success){
