@@ -42,6 +42,15 @@ addusecase:
               method: post
               cors: true
 
+getUsecaseAsset:
+    handler: usecase/getUsecaseAsset.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+        - http:
+              path: /usecase/{id}/asset
+              method: get
+              cors: true              
+
 
 
 
