@@ -24,7 +24,7 @@ deleteUsecase:
               path: usecase/{id}
               method: delete
               cors: true
-              
+
 getUsecases:
     handler: usecase/getUsecases.handler
     role: ${env:LAMBDA_ROLE}
@@ -42,7 +42,6 @@ addusecase:
               method: post
               cors: true
 
-
 getUsecaseForm:
     handler: usecase/getUsecaseForm.handler
     role: ${env:LAMBDA_ROLE}
@@ -50,8 +49,8 @@ getUsecaseForm:
         - http:
               path: /usecase/{id}/form
               method: get
-              cors: true           
-              
+              cors: true
+
 getUsecaseAsset:
     handler: usecase/getUsecaseAsset.handler
     role: ${env:LAMBDA_ROLE}
@@ -59,11 +58,13 @@ getUsecaseAsset:
         - http:
               path: /usecase/{id}/asset
               method: get
-              cors: true 
+              cors: true
 
-
-
-
-
-
-
+getUsecasePlanning:
+    handler: usecase/getUsecasePlanning.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+        - http:
+              path: /usecase/{id}/planning
+              method: get
+              cors: true
