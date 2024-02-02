@@ -111,6 +111,8 @@ const generateStages = (stages) => {
 				assigned_by_id: "",
 				updated_by_id: "",
 				description: "",
+				start_date:"",
+				end_date:"",
 				checklist: checklist.map((item, index) => ({
 					item_id: index + 1,
 					description: item,
