@@ -25,7 +25,9 @@ exports.handler = async (event) => {
                 where p.id = $1::uuid`;
 	try {
 		const result = await client.query(query,[projectId]);
-		if(result.rowCount === 0){
+		console.log("roles ", result.rowCount)
+		const roles = result.rows[0].roles;
+		if(roles == null){
 			return {
 				statusCode: 200,
 				headers: {
@@ -34,7 +36,6 @@ exports.handler = async (event) => {
 				body: JSON.stringify([]),
 			};
 		}
-		const roles = result.rows[0].roles;
 		const ress = await Promise.all( roles.map(async (role) => {
 			const resourceIds = Object.values(role).flat();
 			const resourceQuery = `
@@ -62,7 +63,7 @@ exports.handler = async (event) => {
 		};
 	} catch (e) {
 		return {
-			statusCode: 400,
+			statusCode: 500,
 			headers: {
 				"Access-Control-Allow-Origin": "*",
 			},

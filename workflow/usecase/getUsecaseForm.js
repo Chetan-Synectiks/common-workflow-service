@@ -56,7 +56,7 @@ exports.handler = async (event) => {
                     description: stageData.description,
                     start_date: stageData.start_date,
                     end_date: stageData.end_date,
-                    task_details: matchingTaskDetails,
+                    tasks: matchingTaskDetails,
                 },
             };
         });
