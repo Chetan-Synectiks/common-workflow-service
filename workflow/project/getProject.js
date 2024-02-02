@@ -54,7 +54,7 @@ exports.handler = async (event) => {
             id: project.project_id,
             name: project.project_name,
             last_updated: project.last_updated || {},
-            description: project.project_description,
+            description: project.project_description || "",
             workflows: workflows,
         };
 

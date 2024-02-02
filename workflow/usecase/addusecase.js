@@ -141,14 +141,14 @@ exports.handler = async (event) => {
             };
         }
     } catch (error) {
-        console.log(error);
         return {
             statusCode: 500,
             headers: {
                 "Access-Control-Allow-Origin": "*",
             },
             body: JSON.stringify({
-                message: "internal server error",
+                message: error.message,
+                error: error
             }),
         };
     } finally {

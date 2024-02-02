@@ -59,13 +59,14 @@ exports.handler = async (event) => {
         });
         const total_tasks = result.rows.length;
         const output = result.rows[0];
+        console.log("usecase :", output)
         const response = {
             usecase_id: output.usecase_id,
-            assignee_id: output.assignee_id,
-            assignee_name: output.resource.name,
-            role: output.resource.role,
-            image: output.resource.image,
-            current_task: output.resource.current_task,
+            assignee_id: output?.assignee_id || "",
+            assignee_name: output?.resource?.name || "",
+            role: output?.resource?.role || "",
+            image: output.resource?.image || "", 
+            current_task: output?.resource?.current_task || "",
             total_task: parseInt(total_tasks),
             usecase: {
                 name: output.usecase.name,
@@ -86,13 +87,16 @@ exports.handler = async (event) => {
             body: JSON.stringify(response),
         };
     } catch (error) {
-        console.error("Error executing query", error);
+        console.log(error)
         return {
             statusCode: 500,
             headers: {
                 "Access-Control-Allow-Origin": "*",
             },
-            body: JSON.stringify({ error: "Internal Server Error" }),
+            body: JSON.stringify({ 
+                error: error.message,
+                error: error
+            }),
         };
     } finally {
         await client.end();
