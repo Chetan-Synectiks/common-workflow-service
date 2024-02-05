@@ -77,3 +77,12 @@ assignStage:
               path: /usecase/{id}/assignStage
               method: put
               cors: true              
+
+updateChecklist:
+    handler: usecase/updateChecklist.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+        - http:
+              path: /usecase/{id}/checklist
+              method: put
+              cors: true                   
