@@ -1,0 +1,8 @@
+uploadMetaDoc:
+    handler: metadocs/uploadMetaDoc.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+        - http:
+              path: /doc
+              method: post
+              cors: true
