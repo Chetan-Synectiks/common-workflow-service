@@ -24,7 +24,7 @@ assignTask:
               method: put
               cors: true              
 uploadMetaDoc:
-    handler: metadocs/uploadMetaDoc.handler
+    handler: task/uploadMetaDoc.handler
     role: ${env:LAMBDA_ROLE}
     events:
         - http:
@@ -33,7 +33,7 @@ uploadMetaDoc:
               cors: true
 
 deleteMetaDoc:
-    handler: metadocs/deleteMetaDoc.handler
+    handler: task/deleteMetaDoc.handler
     role: ${env:LAMBDA_ROLE}
     events:
         - http:

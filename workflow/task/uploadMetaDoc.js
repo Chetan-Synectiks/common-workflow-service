@@ -3,12 +3,9 @@ const { z } = require("zod");
 
 exports.handler = async (event) => {
 
-    const task_id = event.queryStringParameters?.task_id;
+    const task_id = event.queryStringParameters?.id;
     const uuidSchema = z.string().uuid();
-
     const isUuid = uuidSchema.safeParse(task_id);
-    console.log(isUuid.success);
-
     if (!isUuid.success) {
         return {
             statusCode: 400,
@@ -20,26 +17,20 @@ exports.handler = async (event) => {
             }),
         };
     }
-
-    const requestBody = JSON.parse(event.body);
-    const { created_by, doc_name, doc_url } = requestBody;
-
+    const { created_by: created_by_id, doc_name, doc_url } = JSON.parse(event.body);
     const currentTimestamp = new Date().toISOString();
-
     const metadocsObj = {
-        created_by: created_by,
+        created_by: created_by_id,
         doc_name: doc_name,
         doc_url: doc_url,
         currentTimestamp: currentTimestamp
     };
-
     const metadocsSchema = z.object({
         created_by: z.string().uuid(),
         doc_name: z.string(),
         doc_url: z.string().url(),
         currentTimestamp: z.string().datetime()
     });
-
     const result = metadocsSchema.safeParse(metadocsObj);
     if (!result.success) {
         return {
@@ -52,7 +43,6 @@ exports.handler = async (event) => {
             }),
         };
     }
-
     const client = await connectToDatabase();
     try {
 
@@ -62,13 +52,12 @@ exports.handler = async (event) => {
 					returning *`;
         let queryparam = [
             task_id,
-            created_by,
+            created_by_id,
             doc_name,
             doc_url,
             currentTimestamp
         ];
         const result = await client.query(query, queryparam);
-
         return {
             statusCode: 200,
             headers: {
