@@ -30,6 +30,7 @@ exports.handler = async (event) => {
             SELECT
                 usecases_table.id AS usecase_id,
                 usecases_table.usecase->>'name' AS usecase_name,
+                usecases_table.usecase->'stages' as stages,
                 usecases_table.usecase->>'current_stage' AS current_stage,
                 usecases_table.assignee_id AS usecase_assigned_id,
                 resources_table.resource->>'name' AS assignee_name,
@@ -63,13 +64,17 @@ exports.handler = async (event) => {
             start_date: row.start_date,
             end_date: row.end_date,
         }));
-
+         const s = result.rows[0].stages.map( obj => Object.keys(obj)[0])
+         const response = {
+            stages : s,
+            usecases : usecases
+         }
         return {
             statusCode: 200,
             headers: {
                 "Access-Control-Allow-Origin": "*",
             },
-            body: JSON.stringify(usecases),
+            body: JSON.stringify(response),
         };
     } catch (e) {
         return {

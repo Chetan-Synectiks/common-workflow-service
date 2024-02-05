@@ -136,7 +136,8 @@ exports.handler = async (event) => {
                     "Access-Control-Allow-Origin": "*",
                 },
                 body: JSON.stringify({
-                    message: "internal server error",
+                    message: error.message,
+                    error: error
                 }),
             };
         }
