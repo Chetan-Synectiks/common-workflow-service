@@ -21,3 +21,4 @@ functions:
     - ${file(./dashboard/function.yml)}
     - ${file(./task/function.yml)}
     - ${file(./resource/function.yml)}
+    - ${file(./metadocs/function.yml)}

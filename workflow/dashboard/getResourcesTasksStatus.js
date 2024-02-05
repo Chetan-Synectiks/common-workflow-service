@@ -4,17 +4,7 @@ const { z } = require("zod");
 exports.handler = async (event) => {
 	const resourceId = event.queryStringParameters?.resource_id;
 	const uuidSchema = z.string().uuid().optional();
-	const resourceIdSchema = z
-		.string()
-		.optional()
-		.refine(
-			(value) => {
-				const a = uuidSchema.safeParse(value);
-				return a.success;
-			},
-			{ message: "Invalid resource id" }
-		);
-	const isUuid = resourceIdSchema.safeParse(resourceId);
+	const isUuid = uuidSchema.safeParse(resourceId);
 	console.log(isUuid.success);
 
 	if (!isUuid.success) {
