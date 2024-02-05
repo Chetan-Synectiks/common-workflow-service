@@ -46,9 +46,9 @@ const generateStateMachine2 = (stages) => {
 		const stageTasksName = `${currentStageName}-tasks`;
 		const tasksObjArray = tasks.map((task, index) => {
 			return {
-				StartAt: currentStageName + "-" + task,
+				StartAt:  task,
 				States: {
-					[currentStageName + "-" + task]: {
+					[task]: {
 						Type: "Task",
 						Resource:
 							"arn:aws:states:::lambda:invoke.waitForTaskToken",
