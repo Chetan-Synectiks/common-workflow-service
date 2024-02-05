@@ -6,3 +6,12 @@ uploadMetaDoc:
               path: /doc
               method: post
               cors: true
+
+deleteMetaDoc:
+    handler: metadocs/deleteMetaDoc.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+        - http:
+              path: /docs/{id}
+              method: delete
+              cors: true
