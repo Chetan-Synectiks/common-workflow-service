@@ -40,3 +40,12 @@ deleteMetaDoc:
               path: /task/{taskId}/docs/{docId}
               method: delete
               cors: true
+
+getTaskDocs:
+    handler: task/getTaskDocs.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+        - http:
+              path: /task/{id}/docs
+              method: get
+              cors: true
