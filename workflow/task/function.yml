@@ -23,3 +23,20 @@ assignTask:
               path: /task/{id}/assignTask/{resource_id}
               method: put
               cors: true              
+uploadMetaDoc:
+    handler: metadocs/uploadMetaDoc.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+        - http:
+              path: /task/{id}/doc
+              method: post
+              cors: true
+
+deleteMetaDoc:
+    handler: metadocs/deleteMetaDoc.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+        - http:
+              path: /task/{taskId}/docs/{docId}
+              method: delete
+              cors: true
