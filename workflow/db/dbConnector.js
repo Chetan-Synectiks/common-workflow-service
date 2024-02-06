@@ -1,4 +1,5 @@
 const { Client } = require("pg");
+require("dotenv").config();
 const {
 	SecretsManagerClient,
 	GetSecretValueCommand,
@@ -25,8 +26,20 @@ async function connectToDatabase() {
 		await client.connect();
 		return client;
 	} catch (err) {
-		console.log("error :" + err.message);
-		throw err;
+		console.log("secret manager :" + err.message);
+		try{
+			const client = new Client({
+				host: process.env.HOST,
+				port: process.env.PORT,
+				database: "workflow",
+				user: process.env.USER,
+				password: process.env.PASSOWRD,
+			});
+			await client.connect();
+			return client;
+		}catch(error){
+			console.log("database :" + error.message);
+		}
 	}
 }
 
