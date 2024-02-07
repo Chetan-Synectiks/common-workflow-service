@@ -17,7 +17,7 @@ exports.handler = async (event) => {
         }
     };
     const resourceSchema = z.object({
-        resource_name: z.string().min(3, {
+        name: z.string().min(3, {
             message: "resource name should be at least 3 characters long",
         }),
         email: z.string().email({
