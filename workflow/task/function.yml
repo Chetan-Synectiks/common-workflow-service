@@ -49,3 +49,12 @@ getTaskDocs:
               path: /task/{id}/docs
               method: get
               cors: true
+
+addReply:
+    handler: task/addReply.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+        - http:
+              path: /task/{id}/reply
+              method: put
+              cors: true
