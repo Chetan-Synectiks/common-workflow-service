@@ -17,17 +17,6 @@ exports.handler = async (event) => {
 			}),
 		};
 	}
-	if (task_id == null) {
-		return {
-			statusCode: 400,
-			headers: {
-				"Access-Control-Allow-Origin": "*",
-			},
-			body: JSON.stringify({
-				message: "task id is required",
-			}),
-		};
-	}
 	const client = await connectToDatabase();
 	const updateQuery = `
 					update tasks_table 
@@ -45,10 +34,7 @@ exports.handler = async (event) => {
 						id = $1::uuid`;
 	await client.query('BEGIN');
 	try {
-		console.log(getTokenQuery)
-		console.log(task_id)
 		const tokenResult = await client.query(getTokenQuery,[task_id]);
-		console.log( tokenResult.rows)
 		const { token} = tokenResult.rows[0];
         const stepFunctionClient = new SFNClient({region : "us-east-1"});
 		const input = {
@@ -81,8 +67,8 @@ exports.handler = async (event) => {
 				"Access-Control-Allow-Origin": "*",
 			},
 			body: JSON.stringify({
-				error: "Internal Server Error",
 				message: error.message,
+				error: error,
 			}),
 		};
 	} finally {
