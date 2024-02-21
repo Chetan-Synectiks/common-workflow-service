@@ -1,73 +1,61 @@
 const { connectToDatabase } = require("../db/dbConnector");
+const { z } = require("zod");
 
 exports.handler = async (event) => {
-	const role = event.queryStringParameters?.role ?? null;
-	const name = event.queryStringParameters?.name ?? null;
-	if (role == null || role === '') {
-		return {
-			statusCode: 400,
-			headers: {
-				"Access-Control-Allow-Origin": "*",
-			},
-			body: JSON.stringify({
-				message: "Resource role is missing",
-			}),
-		};
-	}
-	// if (name == null || name === '') {
-	// 	return {
-	// 		statusCode: 200,
-	// 		headers: {
-	// 			"Access-Control-Allow-Origin": "*",
-	// 		},
-	// 		body: JSON.stringify([]),
-	// 	};
-	// }
-	const client = await connectToDatabase();
-	let queryParams = [];
-	queryParams.push(role);
-	try {
-		let query = `
-                    select 
-                        (r.id) as resource_id,
-                        (r.resource->>'name') as resource_name,
-                        (r.resource->>'image') as image_url,
-                        (r.resource->>'email') as email
-                    from 
-                        resources_table as r
-                    where 
-                        LOWER((r.resource->>'role')) = LOWER($1)`;
-		if (name != null) {
-			query += `
-                    and 
-                        LOWER(resource ->> 'name') LIKE LOWER('%' || $2 || '%')`;
-			queryParams.push(name);
-		}
-		const result = await client.query(query, queryParams);
-		const resource = result.rows.map(
-			({ resource_id, resource_name, image_url, email }) => ({
-				resource_id,
-				resource_name,
-				image_url,
-				email,
-			})
-		);
-		return {
-			statusCode: 200,
-			headers: {
-				"Access-Control-Allow-Origin": "*",
-			},
-			body: JSON.stringify(resource)
-		};
-	} catch (error) {
-		return {
-			statusCode: 500,
-			body: JSON.stringify({
-				message: "Internal Server Error",
-				error: error.message,
-			}),
-		};
-	} finally {
-		await client.end();
-	}
+    const designationName = event.queryStringParameters?.designation ?? null;
+    const designationSchema = z.string();
+    const isDesignationValid = designationSchema.safeParse(designationName);
+    if (!isDesignationValid.success) {
+        return {
+            statusCode: 400,
+            headers: {
+                "Access-Control-Allow-Origin": "*",
+            },
+            body: JSON.stringify({
+                error: "Invalid designation name",
+            }),
+        };
+    }
+    const client = await connectToDatabase();
+    try {
+        const query = `
+            SELECT 
+                e.id AS emp_id,
+                e.first_name,
+                e.last_name,
+                e.email,
+				e.image
+            FROM 
+                employee e
+            LEFT JOIN 
+                emp_detail ed ON e.emp_detail_id = ed.id
+            LEFT JOIN 
+                emp_designation edg ON ed.designation_id = edg.id
+            WHERE 
+                edg.designation = $1;
+        `;
+
+        const result = await client.query(query, [designationName]);
+        await client.end();
+
+        return {
+            statusCode: 200,
+            headers: {
+                "Access-Control-Allow-Origin": "*",
+            },
+            body: JSON.stringify(result.rows),
+        };
+    } catch (error) {
+        console.error("Error executing query:", error);
+        return {
+            statusCode: 500,
+            headers: {
+                "Access-Control-Allow-Origin": "*",
+            },
+            body: JSON.stringify({
+                message: "Internal Server Error",
+                error: error.message,
+            }),
+        };
+    }
 };
