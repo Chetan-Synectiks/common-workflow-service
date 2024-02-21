@@ -3,7 +3,7 @@ completeTask:
     role: ${env:LAMBDA_ROLE}
     events:
         - http:
-              path: /task/complete
+              path: /task/{id}/complete
               method: put
               cors: true
 addComment:
@@ -37,7 +37,7 @@ deleteMetaDoc:
     role: ${env:LAMBDA_ROLE}
     events:
         - http:
-              path: /task/{taskId}/docs/{docId}
+              path: /task/{id}/docs/{id}
               method: delete
               cors: true
 
