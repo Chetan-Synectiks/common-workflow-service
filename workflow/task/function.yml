@@ -3,15 +3,16 @@ completeTask:
     role: ${env:LAMBDA_ROLE}
     events:
         - http:
-              path: /task/{id}/complete
+              path: /task/{taskId}/complete
               method: put
               cors: true
+
 addComment:
     handler: task/addComment.handler
     role: ${env:LAMBDA_ROLE}
     events:
         - http:
-              path: /task/{id}/comment
+              path: /task/{taskId}/comment
               method: put
               cors: true
 
@@ -20,15 +21,16 @@ assignTask:
     role: ${env:LAMBDA_ROLE}
     events:
         - http:
-              path: /task/{id}/assignTask/{resource_id}
+              path: /task/{taskId}/assign/{resourceId}
               method: put
-              cors: true              
+              cors: true
+
 uploadMetaDoc:
     handler: task/uploadMetaDoc.handler
     role: ${env:LAMBDA_ROLE}
     events:
         - http:
-              path: /task/{id}/doc
+              path: /task/{taskId}/doc
               method: post
               cors: true
 
@@ -37,7 +39,7 @@ deleteMetaDoc:
     role: ${env:LAMBDA_ROLE}
     events:
         - http:
-              path: /task/{id}/docs/{id}
+              path: /task/{taskId}/docs/{docId}
               method: delete
               cors: true
 
@@ -46,7 +48,7 @@ getTaskDocs:
     role: ${env:LAMBDA_ROLE}
     events:
         - http:
-              path: /task/{id}/docs
+              path: /task/{taskId}/docs
               method: get
               cors: true
 
@@ -55,6 +57,6 @@ addReply:
     role: ${env:LAMBDA_ROLE}
     events:
         - http:
-              path: /task/{id}/reply
+              path: /task/{taskId}/reply
               method: put
               cors: true
