@@ -24,7 +24,7 @@ exports.handler = async (event) => {
                 e.first_name,
                 e.last_name,
                 e.email,
-				e.image
+				COALESCE(e.image, '') AS image
             FROM 
                 employee e
             LEFT JOIN 
@@ -36,7 +36,6 @@ exports.handler = async (event) => {
         `;
 
         const result = await client.query(query, [designationName]);
-        await client.end();
 
         return {
             statusCode: 200,
@@ -53,9 +52,11 @@ exports.handler = async (event) => {
                 "Access-Control-Allow-Origin": "*",
             },
             body: JSON.stringify({
-                message: "Internal Server Error",
-                error: error.message,
+                message: error.message,
+                error: error,
             }),
         };
+    } finally {
+        await client.end();
     }
 };
