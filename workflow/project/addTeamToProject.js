@@ -9,6 +9,7 @@ exports.handler = async (event) => {
 			statusCode: 400,
 			headers: {
 				"Access-Control-Allow-Origin": "*",
+				"Access-Control-Allow-Credentials": true,
 			},
 			body: JSON.stringify({
 				error: isUuid.error.issues[0].message
@@ -43,6 +44,7 @@ exports.handler = async (event) => {
 				statusCode: 400,
 				headers: {
 					"Access-Control-Allow-Origin": "*",
+					"Access-Control-Allow-Credentials": true,
 				},
 				body: JSON.stringify({
 					error: result.error.formErrors.fieldErrors,
@@ -65,6 +67,10 @@ exports.handler = async (event) => {
 		const res = await client.query(query, [team, project_id]);
 		return {
 			statusCode: 200,
+			headers: {
+				"Access-Control-Allow-Origin": "*",
+				"Access-Control-Allow-Credentials": true,
+			},
 			body: JSON.stringify({
 				message: "Team added to the project",
 			}),
@@ -73,6 +79,10 @@ exports.handler = async (event) => {
 		console.error("Error updating data:", error);
 		return {
 			statusCode: 500,
+			headers: {
+				"Access-Control-Allow-Origin": "*",
+				"Access-Control-Allow-Credentials": true,
+			},
 			body: JSON.stringify({ message: "Internal Server Error" }),
 		};
 	} finally {
