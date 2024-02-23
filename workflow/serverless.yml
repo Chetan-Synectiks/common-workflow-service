@@ -13,6 +13,8 @@ provider:
     timeout: 15
     runtime: nodejs18.x
     region: us-east-1
+    cors:
+        origin: '*'
 
 functions: 
     - ${file(./project/function.yml)}
