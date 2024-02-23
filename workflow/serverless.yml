@@ -23,3 +23,9 @@ functions:
     - ${file(./dashboard/function.yml)}
     - ${file(./task/function.yml)}
     - ${file(./resource/function.yml)}
+
+custom:
+  http:
+    cors:
+      origin: '*' # Allow requests from any origin
+      methods: ['OPTIONS', 'POST', 'PUT']    
