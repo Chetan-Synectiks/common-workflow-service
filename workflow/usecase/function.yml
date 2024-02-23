@@ -14,7 +14,7 @@ updateUsecase:
         - http:
               path: /usecase/{id}
               method: put
-            #   cors: true
+              cors: true
 
 deleteUsecase:
     handler: usecase/deleteUsecase.handler
@@ -40,7 +40,7 @@ addusecase:
         - http:
               path: /usecase
               method: post
-            #   cors: true
+              cors: true
 
 getUsecaseForm:
     handler: usecase/getUsecaseForm.handler
@@ -76,7 +76,7 @@ assignStage:
         - http:
               path: /usecase/{id}/assignStage
               method: put
-            #   cors: true              
+              cors: true              
 
 updateChecklist:
     handler: usecase/updateChecklist.handler
@@ -85,4 +85,4 @@ updateChecklist:
         - http:
               path: /usecase/{id}/checklist
               method: put
-            #   cors: true                   
+              cors: true                   

@@ -5,7 +5,7 @@ addResource:
         - http:
               path: /resource
               method: post
-            #   cors: true
+              cors: true
 
 getResourcesByName:
     handler: resource/getResourcesByName.handler

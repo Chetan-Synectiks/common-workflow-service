@@ -27,7 +27,7 @@ addProject:
         - http:
               path: /project
               method: post
-            #   cors: true
+              cors: true
 
 getProjectTeam:
     handler: project/getProjectTeam.handler
@@ -45,7 +45,7 @@ addTeamToProject:
         - http:
               path: /project/{id}/team
               method: put
-            #   cors: true
+              cors: true
 
 getProjectWorkflows:
     handler: project/getProjectWorkflows.handler

@@ -27,7 +27,8 @@ exports.handler = async (event) => {
         return {
             statusCode: 400,
             headers: {
-                "Access-Control-Allow-Origin": "*",
+               "Access-Control-Allow-Origin": "*",
+				"Access-Control-Allow-Credentials": true,
             },
             body: JSON.stringify({
                 error: error,
@@ -61,7 +62,8 @@ exports.handler = async (event) => {
         return {
             statusCode: 400,
             headers: {
-                "Access-Control-Allow-Origin": "*",
+               "Access-Control-Allow-Origin": "*",
+				"Access-Control-Allow-Credentials": true,
             },
             body: JSON.stringify({
                 error: shemaresult.error.formErrors.fieldErrors,
@@ -125,7 +127,8 @@ exports.handler = async (event) => {
             return {
                 statusCode: 201,
                 headers: {
-                    "Access-Control-Allow-Origin": "*",
+                   "Access-Control-Allow-Origin": "*",
+				"Access-Control-Allow-Credentials": true,
                 },
                 body: JSON.stringify(result.rows),
             };
@@ -133,7 +136,8 @@ exports.handler = async (event) => {
             return {
                 statusCode: 500,
                 headers: {
-                    "Access-Control-Allow-Origin": "*",
+                   "Access-Control-Allow-Origin": "*",
+				"Access-Control-Allow-Credentials": true,
                 },
                 body: JSON.stringify({
                     message: error.message,
@@ -145,7 +149,8 @@ exports.handler = async (event) => {
         return {
             statusCode: 500,
             headers: {
-                "Access-Control-Allow-Origin": "*",
+               "Access-Control-Allow-Origin": "*",
+				"Access-Control-Allow-Credentials": true,
             },
             body: JSON.stringify({
                 message: error.message,

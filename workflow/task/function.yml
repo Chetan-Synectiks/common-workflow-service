@@ -5,7 +5,7 @@ completeTask:
         - http:
               path: /task/{taskId}/complete
               method: put
-            #   cors: true
+              cors: true
 
 addComment:
     handler: task/addComment.handler
@@ -14,7 +14,7 @@ addComment:
         - http:
               path: /task/{taskId}/comment
               method: put
-            #   cors: true
+              cors: true
 
 assignTask:
     handler: task/assignTask.handler
@@ -23,7 +23,7 @@ assignTask:
         - http:
               path: /task/{taskId}/assign/{resourceId}
               method: put
-            #   cors: true
+              cors: true
 
 uploadMetaDoc:
     handler: task/uploadMetaDoc.handler
@@ -32,7 +32,7 @@ uploadMetaDoc:
         - http:
               path: /task/{taskId}/doc
               method: post
-            #   cors: true
+              cors: true
 
 deleteMetaDoc:
     handler: task/deleteMetaDoc.handler
@@ -59,4 +59,4 @@ addReply:
         - http:
               path: /task/{taskId}/reply
               method: put
-            #   cors: true
+              cors: true

@@ -5,7 +5,7 @@ updateWorkflow:
         - http:
               path: /workflow/{id}
               method: put
-            #   cors: true
+              cors: true
 
 deleteWorkflow:
     handler: workflow/deleteWorkflow.handler
@@ -23,7 +23,7 @@ addWorkflow:
         - http:
               path: /workflow
               method: post
-            #   cors: true
+              cors: true
 
 getAllWorkflows:
     handler: workflow/getAllWorkflows.handler

@@ -9,7 +9,8 @@ exports.handler = async (event) => {
         return {
             statusCode: 400,
             headers: {
-                "Access-Control-Allow-Origin": "*",
+               "Access-Control-Allow-Origin": "*",
+				"Access-Control-Allow-Credentials": true,
             },
             body: JSON.stringify({
                 error: taskUuid.error.issues[0].message
@@ -23,7 +24,8 @@ exports.handler = async (event) => {
         return {
             statusCode: 400,
             headers: {
-                "Access-Control-Allow-Origin": "*",
+               "Access-Control-Allow-Origin": "*",
+				"Access-Control-Allow-Credentials": true,
             },
             body: JSON.stringify({
                 error: assignUuid.error.issues[0].message

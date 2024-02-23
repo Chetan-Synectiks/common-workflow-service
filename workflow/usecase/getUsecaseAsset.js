@@ -9,7 +9,8 @@ exports.handler = async (event) => {
         return {
             statusCode: 400,
             headers: {
-                "Access-Control-Allow-Origin": "*",
+               "Access-Control-Allow-Origin": "*",
+				"Access-Control-Allow-Credentials": true,
             },
             body: JSON.stringify({
                 error: isUuid.error.issues[0].message
@@ -46,7 +47,8 @@ exports.handler = async (event) => {
         return {
             statusCode: 200,
             headers: {
-                "Access-Control-Allow-Origin": "*",
+               "Access-Control-Allow-Origin": "*",
+				"Access-Control-Allow-Credentials": true,
             },
             body: JSON.stringify(resultArray),
         };
@@ -54,7 +56,8 @@ exports.handler = async (event) => {
         return {
             statusCode: 500,
             headers: {
-                "Access-Control-Allow-Origin": "*",
+               "Access-Control-Allow-Origin": "*",
+				"Access-Control-Allow-Credentials": true,
             },
             body: JSON.stringify({  error: e.message || "An error occurred",}),
         };

@@ -73,7 +73,8 @@ exports.handler = async (event) => {
         const response = {
             statusCode: 200,
             headers: {
-                "Access-Control-Allow-Origin": "*",
+               "Access-Control-Allow-Origin": "*",
+				"Access-Control-Allow-Credentials": true,
             },
             body: JSON.stringify(resourcesResult),
         };
@@ -84,7 +85,8 @@ exports.handler = async (event) => {
         return {
             statusCode: 500,
             headers: {
-                "Access-Control-Allow-Origin": "*",
+               "Access-Control-Allow-Origin": "*",
+				"Access-Control-Allow-Credentials": true,
             },
             body: JSON.stringify({ message: 'Internal Server Error' }),
         };
