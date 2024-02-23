@@ -33,3 +33,11 @@ getAllWorkflows:
               path: /workflow
               method: get
               cors: true
+getWorkflow:
+    handler: workflow/getWorkflow.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+        - http:
+              path: /workflow/{id}
+              method: get
+              cors: true
