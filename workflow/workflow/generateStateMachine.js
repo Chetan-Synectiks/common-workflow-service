@@ -11,7 +11,7 @@ const generateStateMachine2 = (stages) => {
 		},
 	};
 	for (let i = 0; i < stages.length; i++) {
-		const currentStageName = Object.keys(stages[i])[0];
+		const currentStageName = stages[i].name;
 		const nextStageName = currentStageName + "-tasks";
 		const stage = {
 			StartAt: currentStageName,
@@ -42,7 +42,7 @@ const generateStateMachine2 = (stages) => {
 			ResultPath: "$",
 		};
 
-		const tasks = stages[i][currentStageName].tasks;
+		const tasks = stages[i].tasks;
 		const stageTasksName = `${currentStageName}-tasks`;
 		const tasksObjArray = tasks.map((task, index) => {
 			return {
@@ -80,14 +80,14 @@ const generateStateMachine2 = (stages) => {
 const generateStateMachine1 = (stages) => {
 	const newStepFunction = {
 		Comment: "My test workflow state machine",
-		StartAt: Object.keys(stages[0])[0],
+		StartAt: stages[0].name,
 		States: {},
 	};
 	for (let i = 0; i < stages.length; i++) {
-		const currentStageName = Object.keys(stages[i])[0];
+		const currentStageName = stages[i].name		;
 		const nextStageName =
-			i < stages.length - 1 ? Object.keys(stages[i + 1])[0] : null;
-		const tasks = stages[i][currentStageName].tasks;
+			i < stages.length - 1 ? stages[i+1].name : null;
+			const tasks = stages[i].tasks;
 		const stageTasksName = `${currentStageName}-tasks`;
 		const tasksObjArray = tasks.map((task, index) => {
 			return {
@@ -133,3 +133,34 @@ const generateStateMachine1 = (stages) => {
 };
 
 module.exports = {generateStateMachine2, generateStateMachine1} ;
+
+console.log(JSON.stringify(
+	generateStateMachine1([
+		{
+		  "name": "Requirements1",
+		  "tasks": [
+			"task-1",
+			"task-2",
+			"task-3"
+		  ],
+		  "checklist": [
+			"thing 1",
+			"thing 2",
+			"thing 3"
+		  ]
+		},
+		{
+		  "name": "mock",
+		  "tasks": [
+			"task-1",
+			"task-2",
+			"task-3"
+		  ],
+		  "checklist": [
+			"thing 1",
+			"thing 2",
+			"thing 3"
+		  ]
+		}
+	  ])
+))
