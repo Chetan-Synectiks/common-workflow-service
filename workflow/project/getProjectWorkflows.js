@@ -21,16 +21,17 @@ exports.handler = async (event) => {
 
         const usecasesQuery = `
             SELECT
-                u.workflow_id,
+                w.id AS workflow_id,
                 w.name AS workflow_name,
                 COUNT(DISTINCT u.id) AS total_usecases,
                 COUNT(t.id) AS total_tasks,
-                COUNT(t.id) FILTER (WHERE (t.task ->> 'status') = 'completed') AS task_completed
-            FROM usecases_table u
-            LEFT JOIN tasks_table t ON u.id = t.usecase_id
-            LEFT JOIN workflows_table w ON u.workflow_id = w.id
+                COUNT(t.id) FILTER (WHERE (t.task ->> 'status') = 'completed') AS task_completed,
+                COUNT(DISTINCT CASE WHEN (u.usecase ->> 'status') = 'completed' THEN u.id ELSE NULL END) AS completed_usecases
+            FROM workflows_table w
+            LEFT JOIN usecases_table u ON w.id = u.workflow_id
+            LEFT JOIN tasks_table t ON u.id = t.usecase_id AND t.project_id = u.project_id
             WHERE u.project_id = $1
-            GROUP BY u.workflow_id, w.name
+            GROUP BY w.id, w.name
         `;
 
         const usecasesResult = await client.query(usecasesQuery, [project_id]);
@@ -38,7 +39,8 @@ exports.handler = async (event) => {
             workflow_id: row.workflow_id,
             workflow_name: row.workflow_name,
             total_usecases: row.total_usecases,
-            task_completed: calculatePercentage(row.total_tasks, row.task_completed),
+            task_completed: calculatePercentage(row.total_tasks, row.task_completed) || "",
+            completed_usecases: row.completed_usecases
         }));
 
         return {
