@@ -98,6 +98,7 @@ exports.handler = async (event) => {
         if (response.$metadata.httpStatusCode == 200) {
             const executionArn = response.executionArn;
             const creationDate = response.startDate;
+            console.log("name ", stages[0].name)
             const usecase = {
                 name: usecase_name + `-1`,
                 creation_date: creationDate,
@@ -107,10 +108,11 @@ exports.handler = async (event) => {
                 usecase_assignee_id: "",
                 start_date: start_date,
                 end_date: end_date,
-                current_stage: Object.keys(stages[0])[0],
+                current_stage: stages[0].name,
                 status: "inprogress",
                 stages: generateStages(stages),
             };
+            console.log("usecase", JSON.stringify(usecase))
             const usecaseInsertQuery = `
                         insert into usecases_table 
                         (id, project_id, workflow_id, arn, usecase)
@@ -164,8 +166,8 @@ exports.handler = async (event) => {
 
 const generateStages = (stages) => {
 	return stages.map((stage) => {
-		const stageName = Object.keys(stage)[0];
-		const checklist = stage[stageName].checklist;
+		const stageName = stage.name;
+		const checklist = stage.checklist;
 		return {
 			[stageName]: {
 				assignee_id: "",

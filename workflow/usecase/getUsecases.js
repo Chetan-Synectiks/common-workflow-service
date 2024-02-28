@@ -63,13 +63,13 @@ exports.handler = async (event) => {
         const params = [project_id, workflow_id];
 
         const result = await client.query(query, params);
-
+        console.log(JSON.stringify(result.rows))
         const usecases = result.rows.map((row) => ({
             usecase_id: row.usecase_id,
             usecase_name: row.usecase_name,
             current_stage: row.current_stage,
             assignee_id: row.usecase_assigned_id || "",
-            assignee_name: (row.assignee_first_name + " " + row.assignee_last_name) || "",
+            assignee_name: ((row.assignee_first_name || "") + " " + (row.assignee_last_name || "")) || "",
             total_resources: parseInt(row.total_resources) || 0,
             start_date: row.start_date,
             end_date: row.end_date,
