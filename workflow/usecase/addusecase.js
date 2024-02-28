@@ -107,7 +107,7 @@ exports.handler = async (event) => {
                 usecase_assignee_id: "",
                 start_date: start_date,
                 end_date: end_date,
-                current_stage: "",
+                current_stage: Object.keys(stages[0])[0],
                 status: "inprogress",
                 stages: generateStages(stages),
             };
