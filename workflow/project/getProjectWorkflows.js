@@ -20,27 +20,27 @@ exports.handler = async (event) => {
     try {
 
         const usecasesQuery = `
-            SELECT
-                w.id AS workflow_id,
-                w.name AS workflow_name,
-                COUNT(DISTINCT u.id) AS total_usecases,
-                COUNT(t.id) AS total_tasks,
-                COUNT(t.id) FILTER (WHERE (t.task ->> 'status') = 'completed') AS task_completed,
-                COUNT(DISTINCT CASE WHEN (u.usecase ->> 'status') = 'completed' THEN u.id ELSE NULL END) AS completed_usecases
-            FROM workflows_table w
-            LEFT JOIN usecases_table u ON w.id = u.workflow_id
-            LEFT JOIN tasks_table t ON u.id = t.usecase_id AND t.project_id = u.project_id
-            WHERE u.project_id = $1
-            GROUP BY w.id, w.name
-        `;
+                SELECT
+                     w.id,
+                     w.name AS workflow_name,
+                     COUNT(DISTINCT u.id) AS total_usecases,
+                     COUNT(u.id) FILTER (WHERE (u.usecase->> 'status') = 'completed') AS completed_usecases,
+                     COUNT(t.id) AS total_tasks,
+                     COUNT(t.id) FILTER (WHERE (t.task ->> 'status') = 'completed') AS task_completed
+                FROM workflows_table w
+                LEFT JOIN usecases_table u ON w.id = u.workflow_id
+                LEFT JOIN tasks_table t ON u.id = t.usecase_id
+                WHERE w.project_id = $1
+                GROUP BY u.workflow_id, w.name, w.id
+                 `
 
         const usecasesResult = await client.query(usecasesQuery, [project_id]);
         const workflows = usecasesResult.rows.map(row => ({
-            workflow_id: row.workflow_id,
+            workflow_id: row.id,
             workflow_name: row.workflow_name,
-            total_usecases: row.total_usecases,
-            task_completed: calculatePercentage(row.total_tasks, row.task_completed) || "",
-            completed_usecases: row.completed_usecases
+            total_usecases: parseInt(row.total_usecases) || 0,
+            task_completed: calculatePercentage(row.total_tasks, row.task_completed) || 0,
+            completed_usecases: parseInt(row.completed_usecases) || 0
         }));
 
         return {
