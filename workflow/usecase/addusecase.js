@@ -54,8 +54,8 @@ exports.handler = async (event) => {
             message: "Invalid assigned to id",
         }),
         description: z.string(),
-        start_date: z.string().datetime(),
-        end_date: z.string().datetime(),
+        start_date: z.coerce.date(),
+        end_date: z.coerce.date(),
     });
     const shemaresult = UsecaseSchema.safeParse(newUsecase);
     if (!shemaresult.success) {

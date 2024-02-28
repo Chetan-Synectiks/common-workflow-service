@@ -60,7 +60,6 @@ exports.handler = async (event) => {
 		roleArn: "arn:aws:iam::657907747545:role/backendstepfunc-Role",
 	};
 	const client = await connectToDatabase();
-	await client.query("BEGIN");
 	try {
 		const command = new CreateStateMachineCommand(input);
 		const commandResponse = await sfnClient.send(command);
@@ -77,10 +76,8 @@ exports.handler = async (event) => {
 			project_id,
 		]);
 		if (commandResponse.$metadata.httpStatusCode != 200) {
-			await client.query("ROLLBACK");
+			console.log(JSON.stringify(commandResponse))
 		}
-
-		await client.query("COMMIT");
 		return {
 			statusCode: 200,
 			headers: {
@@ -89,7 +86,6 @@ exports.handler = async (event) => {
 			body: JSON.stringify(result.rows[0]),
 		};
 	} catch (error) {
-		await client.query("ROLLBACK");
 		if (error.name == "StateMachineAlreadyExists") {
 			return {
 				statusCode: 500,
@@ -97,7 +93,8 @@ exports.handler = async (event) => {
 					"Access-Control-Allow-Origin": "*",
 				},
 				body: JSON.stringify({
-					error: "Workflow with same name already exists",
+					message: "workflow with same name already exists",
+					error: error,
 				}),
 			};
 		}
