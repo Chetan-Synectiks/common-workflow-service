@@ -34,7 +34,8 @@ exports.handler = async (event) => {
                 usecases_table.usecase->'stages' as stages,
                 usecases_table.usecase->>'current_stage' AS current_stage,
                 usecases_table.assignee_id AS usecase_assigned_id,
-                resources_table.resource->>'name' AS assignee_name,
+                employee.first_name AS assignee_first_name,
+                employee.last_name AS assignee_last_name,
                 COUNT(DISTINCT tasks_table.assignee_id) AS total_resources,
                 usecases_table.usecase->>'start_date' AS start_date,
                 usecases_table.usecase->>'end_date' AS end_date
@@ -43,12 +44,20 @@ exports.handler = async (event) => {
             LEFT JOIN
                 tasks_table ON usecases_table.id = tasks_table.usecase_id
             LEFT JOIN
-                resources_table ON usecases_table.assignee_id = resources_table.id
+                employee ON usecases_table.assignee_id = employee.id
             WHERE
                 usecases_table.project_id = $1
                 AND usecases_table.workflow_id = $2
             GROUP BY 
-                usecases_table.id, usecases_table.usecase, resources_table.resource
+                usecases_table.id, 
+                usecases_table.usecase->>'name',
+                usecases_table.usecase->'stages',
+                usecases_table.usecase->>'current_stage',
+                usecases_table.assignee_id,
+                employee.first_name,
+                employee.last_name,
+                usecases_table.usecase->>'start_date',
+                usecases_table.usecase->>'end_date';
         `;
 
         const params = [project_id, workflow_id];
@@ -60,7 +69,7 @@ exports.handler = async (event) => {
             usecase_name: row.usecase_name,
             current_stage: row.current_stage,
             assignee_id: row.usecase_assigned_id || "",
-            assignee_name: row.assignee_name || "",
+            assignee_name: (row.assignee_first_name + " " + row.assignee_last_name) || "",
             total_resources: parseInt(row.total_resources) || 0,
             start_date: row.start_date,
             end_date: row.end_date,
