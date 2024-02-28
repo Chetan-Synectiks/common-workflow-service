@@ -133,34 +133,3 @@ const generateStateMachine1 = (stages) => {
 };
 
 module.exports = {generateStateMachine2, generateStateMachine1} ;
-
-console.log(JSON.stringify(
-	generateStateMachine1([
-		{
-		  "name": "Requirements1",
-		  "tasks": [
-			"task-1",
-			"task-2",
-			"task-3"
-		  ],
-		  "checklist": [
-			"thing 1",
-			"thing 2",
-			"thing 3"
-		  ]
-		},
-		{
-		  "name": "mock",
-		  "tasks": [
-			"task-1",
-			"task-2",
-			"task-3"
-		  ],
-		  "checklist": [
-			"thing 1",
-			"thing 2",
-			"thing 3"
-		  ]
-		}
-	  ])
-))

@@ -18,18 +18,21 @@ exports.handler = async (event) => {
 			}),
 		};
 	}
-	const StageSchema = z.object(
-		{
+	const StageSchema = z.array(
+		z.object({
+			name: z.string({
+				message: "name must be atleast 3 characters"
+			}).min(3),
 			tasks: z.array(z.string()),
 			checklist: z.array(z.string()),
-		},
+		}),
 		{ message: "Invalid request body" }
 	);
 	const MetaDataSchema = z.object({
 		status: z.string(),
 		created_by: z.string().uuid({ message: "Invalid resource id" }),
 		updated_by: z.string().uuid({ message: "Invalid resource id" }),
-		stages: z.array(z.record(z.string(), StageSchema)),
+		stages: StageSchema,
 	});
 	const metaData = {
 		status: "inprogress",
