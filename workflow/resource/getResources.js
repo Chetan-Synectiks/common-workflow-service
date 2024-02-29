@@ -1,21 +1,25 @@
 const { connectToDatabase } = require("../db/dbConnector");
 exports.handler = async (event) => {
     const projectFilter = event.queryStringParameters && event.queryStringParameters.project_id;
+    const client = await connectToDatabase();
     try {
-        const client = await connectToDatabase();
+        // const client = await connectToDatabase();
 
         const queryParams = [];
 
         const resourcesQuery = `
-            SELECT 
-                id, 
-                resource->>'name' AS name, 
-                resource->>'role' AS role, 
-                resource->>'image' AS image, 
-                resource->>'email' AS email 
-            FROM 
-                employee;`;
-
+                                SELECT 
+                                    e.id, 
+                                    e.first_name || ' ' || e.last_name AS name,
+                                    e.role_id  AS role,
+                                    e.image as image,
+                                    e.email as email
+                                FROM 
+                                    employee e
+                                LEFT JOIN 
+                                    role r ON e.role_id = r.id
+                                GROUP BY
+                                    e.id, e.first_name, e.last_name, e.image, e.email, e.role_id ;`;
         let projectsQuery = `
         SELECT
             id,
@@ -32,7 +36,7 @@ exports.handler = async (event) => {
                     id = $1`;
             queryParams.push(projectFilter);
         }
-
+        console.log(queryParams)
         const resourcesResult = await client.query(resourcesQuery);
         const projectsResult = await client.query(projectsQuery, queryParams);
 
@@ -72,18 +76,18 @@ function processResourcesData(resources, projects, projectFilter) {
         const resourceEmail = resource.email;
 
         const resourceProjects = projects
-            .filter(project => {
-                const team = JSON.parse(project.team);
-                return team.roles.some(role =>
-                    Object.values(role).flat().includes(resourceId)
-                );
-            })
+            // .filter(project => {
+            //     const team = JSON.parse(project.team);
+            //     return team.roles.some(role =>
+            //         Object.values(role).flat().includes(resourceId)
+            //     );
+            // })
             .map(project => ({
                 project_id: project.id,
                 project_name: project.name,
                 project_img_url: project.project_icon_url,
             }));
-
+            console.log(resourceProjects)
         if (projectFilter) {
             const filteredProjects = resourceProjects.filter(project => project.project_id === projectFilter);
             if (filteredProjects.length > 0) {
