@@ -16,6 +16,8 @@ exports.handler = async (event) => {
 			.string()
 			.min(3, {
 				message: "Project name must be atleast 3 charachters long",
+			}).regex(/^[^-]*$/, {
+				message : 'name should not contain `-`'
 			}),
 		description: z.string(),
 		department: z.string(),
@@ -38,6 +40,18 @@ exports.handler = async (event) => {
 	}
 	const client = await connectToDatabase();
 	try {
+		const isDuplicate = await client.query(`SELECT COUNT(*) FROM projects_table WHERE LOWER(project->>'name') = LOWER($1)`, [newProject.name]);
+		if (isDuplicate.rows[0].count > 0) {
+			return {
+				statusCode: 400,
+				headers: {
+					"Access-Control-Allow-Origin": "*",
+				},
+				body: JSON.stringify({
+					message: "workflow with same name already exists",
+				}),
+			};
+		}
 		const project = {
 			name: newProject.name,
 			status: "unassigned",
@@ -51,7 +65,6 @@ exports.handler = async (event) => {
 			workflows: [],
 			team: {},
 		};
-		console.log("project : ", project);
 		const result = await client.query(
 			`INSERT INTO projects_table (project) VALUES ($1::jsonb) RETURNING *`,
 			[project]
