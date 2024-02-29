@@ -48,7 +48,7 @@ exports.handler = async (event) => {
                     (r.resource->>'image') as image_url,
                     (r.resource->>'email') as email
                 from 
-                    resources_table as r
+                    employee as r
                 WHERE LOWER(r.resource->> 'name') LIKE LOWER('%' || $1 || '%')`,
 			[name]
 		);

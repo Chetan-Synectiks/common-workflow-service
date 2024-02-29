@@ -70,7 +70,7 @@ exports.handler = async (event) => {
 		const resource = await client.query(
 			`SELECT (r.resource -> 'name') as name,
                     (r.resource -> 'image') as image_url
-            FROM resources_table as r
+            FROM employee as r
             WHERE id = $1`,
 			[updated_by_id]
 		);

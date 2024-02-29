@@ -45,7 +45,7 @@ exports.handler = async (event) => {
 						resource->>'image' as image_url,
 						resource->>'email' as email
 					from
-					 resources_table 
+					 employee 
 					where 
 						id IN (${resourceIds.map((id) => `'${id}'`).join(", ")})`;
 			const ress = await client.query(resourceQuery);
