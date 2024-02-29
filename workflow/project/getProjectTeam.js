@@ -42,8 +42,7 @@ exports.handler = async (event) => {
 								SELECT
 									COALESCE(d.designation, '') as Designation,
 								    (emp.id) as resource_id,
-									COALESCE(emp.first_name, '') as first_name,
-									COALESCE(emp.last_name, '') as last_name,
+									COALESCE(emp.first_name || ' ' || emp.last_name, '') as name,
 									COALESCE(emp.image, '') as image_url,
 									COALESCE(emp.email, '') as email
 								FROM
