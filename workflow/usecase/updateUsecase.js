@@ -71,7 +71,7 @@ exports.handler = async (event) => {
                                             (r.resource -> 'name') as name,
 		                                    (r.resource -> 'image') as image_url
 										FROM 
-                                            resources_table as r
+                                            employee as r
 										WHERE
                                             id = $1`,
             [updated_by_id]

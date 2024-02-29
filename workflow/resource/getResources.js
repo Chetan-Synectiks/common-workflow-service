@@ -14,7 +14,7 @@ exports.handler = async (event) => {
                 resource->>'image' AS image, 
                 resource->>'email' AS email 
             FROM 
-                resources_table;`;
+                employee;`;
 
         let projectsQuery = `
         SELECT

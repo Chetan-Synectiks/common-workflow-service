@@ -27,7 +27,7 @@ exports.handler = async (event) => {
 					where id = $1`;
 	const getTokenQuery = `
 					SELECT 
-						token
+						token,usecase_id
 					FROM 
 						tasks_table 
 					WHERE
@@ -35,10 +35,11 @@ exports.handler = async (event) => {
 	await client.query('BEGIN');
 	try {
 		const tokenResult = await client.query(getTokenQuery,[task_id]);
-		const { token} = tokenResult.rows[0];
+		console.log("tokenResult",tokenResult);
+		const { token ,usecase_id } = tokenResult.rows[0];
         const stepFunctionClient = new SFNClient({region : "us-east-1"});
 		const input = {
-			output: "1",
+			output: usecase_id,
 			taskToken: token,
 		};
         const command = new SendTaskSuccessCommand(input);

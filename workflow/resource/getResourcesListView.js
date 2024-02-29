@@ -14,7 +14,7 @@ exports.handler = async (event) => {
                 r.resource->>'email' AS resource_email,
                 COUNT(t.id) AS total_tasks
             FROM
-                resources_table r
+                employee r
                 LEFT JOIN tasks_table t ON r.id = t.assignee_id
             GROUP BY
                 r.id
