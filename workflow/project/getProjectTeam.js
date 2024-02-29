@@ -44,7 +44,7 @@ exports.handler = async (event) => {
 								    (emp.id) as resource_id,
 									COALESCE(emp.first_name || ' ' || emp.last_name, '') as name,
 									COALESCE(emp.image, '') as image_url,
-									COALESCE(emp.email, '') as email
+									COALESCE(emp.work_email, '') as email
 								FROM
 									employee AS emp
 								LEFT JOIN 
