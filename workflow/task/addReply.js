@@ -50,7 +50,7 @@ exports.handler = async (event) => {
     }
     const resourceQuery = ` SELECT id,(r.resource -> 'name') as name,
                                 (r.resource -> 'image') as image_url
-                            FROM resources_table as r
+                            FROM employee as r
                             WHERE id = $1`;
     const client = await connectToDatabase();
     try {

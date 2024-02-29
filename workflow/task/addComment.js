@@ -15,7 +15,7 @@ exports.handler = async (event) => {
     const { id, comment } = JSON.parse(event.body);
     const resourceQuery = `select id,(r.resource -> 'name') as name,
                             (r.resource -> 'image') as image_url
-                          from resources_table as r
+                          from employee as r
                           where id = $1`;
     const updatequery =
         "update tasks_table set comments = comments || $1 where id = $2";

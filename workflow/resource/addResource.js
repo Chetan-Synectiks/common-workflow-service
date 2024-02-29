@@ -50,7 +50,7 @@ exports.handler = async (event) => {
     try {
         const insertedResource = await client.query({
             text: `
-                INSERT INTO resources_table (resource)
+                INSERT INTO employee (resource)
                 VALUES ($1)
                 RETURNING id
             `,

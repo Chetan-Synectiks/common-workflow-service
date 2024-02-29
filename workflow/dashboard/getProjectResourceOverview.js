@@ -31,7 +31,7 @@ exports.handler = async (event) => {
 							select 
 								r.resource->'current_task'
 							from 
-								resources_table as r 
+								employee as r 
 							where 
 								r.id = (p.project->'project_manager'->>'id')::uuid
 						) as manager_current_task,
@@ -74,7 +74,7 @@ exports.handler = async (event) => {
 						resource->>'image' as image_url,
 						resource->>'email' as email
 					FROM
-					 resources_table 
+					 employee 
 					WHERE 
 						id IN (${resourceIds.map((id) => `'${id}'`).join(", ")})`;
 						const ress = await client.query(resourceQuery);

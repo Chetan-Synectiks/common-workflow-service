@@ -24,13 +24,13 @@ exports.handler = async (event) => {
             metadocs_table.doc_name,
             metadocs_table.id as doc_id,
             metadocs_table.doc_url,
-            resources_table.resource->>'name' as name,
-            resources_table.resource->> 'email' as email,
-            resources_table.resource->> 'image' as image,
+            employee.resource->>'name' as name,
+            employee.resource->> 'email' as email,
+            employee.resource->> 'image' as image,
             metadocs_table.created_time
         FROM metadocs_table
             INNER JOIN tasks_table ON metadocs_table.tasks_id = tasks_table.id
-            LEFt JOIN resources_table on metadocs_table.created_by = resources_table.id
+            LEFt JOIN employee on metadocs_table.created_by = employee.id
             WHERE tasks_table.id = $1;
         `;
         const TaskMetaData = await client.query(query, [tasks_id]);

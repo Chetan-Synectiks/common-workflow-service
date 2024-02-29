@@ -9,7 +9,7 @@ exports.handler = async (event) => {
             statusCode: 400,
             headers: {
                "Access-Control-Allow-Origin": "*",
-				"Access-Control-Allow-Credentials": true,
+                "Access-Control-Allow-Credentials": true,
             },
             body: JSON.stringify({
                 error: isUuid.error.issues[0].message,
@@ -19,7 +19,8 @@ exports.handler = async (event) => {
     const client = await connectToDatabase();
     try {
         const query = `
-        SELECT
+        SELECT  d.*,
+                e.*,
                 u.*,
                 u.assignee_id AS assignee_id,
                 u.workflow_id AS workflow_id,
@@ -29,16 +30,20 @@ exports.handler = async (event) => {
             FROM
                 usecases_table AS u
             LEFT JOIN
-                resources_table AS r ON u.assignee_id = r.id
+                employee AS r ON u.assignee_id = r.id
             LEFT JOIN
                 tasks_table AS t ON u.id = t.usecase_id
-            LEFT JOIN 
+            LEFT JOIN
+                emp_detail AS e ON   r.id = e.emp_id  
+            LEFT JOIN
+                emp_designation AS d ON   e.designation_id = d.id    
+            LEFT JOIN
                 workflows_table AS w ON u.workflow_id = w.id
             WHERE u.id =$1
 `;
-
+ 
         const result = await client.query(query, [usecase_id]);
-
+ 
         const taskGroups = {};
         result.rows.forEach((row) => {
             const stageName = row.task.stage;
@@ -51,7 +56,7 @@ exports.handler = async (event) => {
         const usecase_stages = result.rows[0].usecase.stages;
         usecase_stages.forEach((stage) => {
             const stageName = Object.keys(stage)[0];
-
+ 
             if (taskGroups.hasOwnProperty(stageName)) {
                 stage[stageName].tasks = taskGroups[stageName];
             } else {
@@ -64,9 +69,9 @@ exports.handler = async (event) => {
         const response = {
             usecase_id: output.usecase_id,
             assignee_id: output?.assignee_id || "",
-            assignee_name: output?.resource?.name || "",
-            role: output?.resource?.role || "",
-            image: output.resource?.image || "", 
+            assignee_name: output?.first_name + output?.last_name || "",
+            role: output?.designation || "",
+            image: output?.image || "",
             current_task: output?.resource?.current_task || "",
             total_task: parseInt(total_tasks),
             usecase: {
@@ -84,7 +89,7 @@ exports.handler = async (event) => {
             statusCode: 200,
             headers: {
                "Access-Control-Allow-Origin": "*",
-				"Access-Control-Allow-Credentials": true,
+                "Access-Control-Allow-Credentials": true,
             },
             body: JSON.stringify(response),
         };
@@ -94,9 +99,9 @@ exports.handler = async (event) => {
             statusCode: 500,
             headers: {
                "Access-Control-Allow-Origin": "*",
-				"Access-Control-Allow-Credentials": true,
+                "Access-Control-Allow-Credentials": true,
             },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 error: error.message,
                 error: error
             }),

@@ -45,7 +45,7 @@ exports.handler = async (event) => {
                 COUNT(*) FILTER (WHERE t.task->>'status' = 'inprogress') AS inprogress,
                 COUNT(*) FILTER (WHERE t.task->>'status' = 'pending') AS pending
             FROM
-                resources_table AS r
+                employee AS r
             LEFT JOIN
                 tasks_table AS t ON r.id = t.assignee_id
             WHERE
