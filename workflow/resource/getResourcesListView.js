@@ -1,26 +1,28 @@
 const { connectToDatabase } = require("../db/dbConnector");
 exports.handler = async (event) => {
     const projectId = event.queryStringParameters && event.queryStringParameters.project_id;
-
+    const client = await connectToDatabase();
     try {
-        const client = await connectToDatabase();
-
+        // const client = await connectToDatabase();
         const resourcesQuery = `
-            SELECT
-                r.id AS resource_id,
-                r.resource->>'name' AS resource_name,
-                r.resource->>'role' AS role,
-                r.resource->>'image' AS resource_img_url,
-                r.resource->>'email' AS resource_email,
-                COUNT(t.id) AS total_tasks
-            FROM
-                employee r
-                LEFT JOIN tasks_table t ON r.id = t.assignee_id
-            GROUP BY
-                r.id
-            HAVING
-                COUNT(t.id) > 0; -- Only include resources with tasks
-        `;
+                                    SELECT
+                                    e.id AS resource_id,
+                                    e.first_name || ' ' || e.last_name AS resource_name,
+                                    r.id AS role_id,
+                                    e.image AS resource_img_url,
+                                    e.email AS resource_email,
+                                    COUNT(t.id) AS total_tasks
+                                FROM
+                                    employee e
+                                LEFT JOIN
+                                    role r ON e.role_id = r.id
+                                LEFT JOIN
+                                    tasks_table t ON e.id = t.assignee_id
+                                GROUP BY
+                                    e.id, r.id, e.first_name, e.last_name, e.image, e.email
+                                HAVING
+                                    COUNT(t.id) > 0; -- Only include resources with tasks
+                            `;
 
         let projectsQuery = `
             SELECT DISTINCT
