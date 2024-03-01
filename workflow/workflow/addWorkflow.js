@@ -9,10 +9,11 @@ exports.handler = async (event) => {
 	const projectIdSchema = z.string().uuid({ message: "Invalid project id" });
 	const nameVal = z
 		.string()
-		.regex(/^[^-]*$/, {
-			message: "name should not contain `-`",
+		.regex(/^[^#%^&*}{;:"><,?\[\]`|@]+$/, {
+			message: "name should not contain special symbols",
 		})
 		.min(3)
+		.max(67)
 		.safeParse(name);
 	if (!nameVal.success) {
 		return {
@@ -79,13 +80,13 @@ exports.handler = async (event) => {
 	const client = await connectToDatabase();
 	try {
 		const workflowExists = await client.query(
-			`SELECT COUNT(*) 
-			 FROM workflows_table 
-			 WHERE LOWER(split_part(name, '-', 1)) = LOWER($1) 
+			`SELECT COUNT(*)
+			 FROM workflows_table
+			 WHERE
+			 LOWER(SUBSTRING(name, POSITION('@' IN name) + 1)) = LOWER($1)
 			 AND project_id = $2::uuid`,
-			[name, project_id]
+			[name.replace(/ /g,"_"), project_id]
 		);
-
 		if (workflowExists.rows[0].count > 0) {
 			return {
 				statusCode: 400,
@@ -98,7 +99,7 @@ exports.handler = async (event) => {
 			};
 		}
 		const random = uuid().split('-')[4]
-		const workflowName = name+"-"+random;
+		const workflowName = random+"@"+name.replace(/ /g,"_");
 		const input = {
 			name: workflowName,
 			definition: JSON.stringify(newStateMachine),
@@ -111,37 +112,23 @@ exports.handler = async (event) => {
 					insert into workflows_table
 					(name, arn, metadata, project_id) values ($1, $2, $3::jsonb, $4::uuid)
 					returning *`;
-
 		const result = await client.query(query, [
 			workflowName,
 			commandResponse.stateMachineArn,
 			metaData,
 			project_id,
 		]);
-		if (commandResponse.$metadata.httpStatusCode != 200) {
-			console.log(JSON.stringify(commandResponse));
-		}
 		return {
 			statusCode: 200,
 			headers: {
 				"Access-Control-Allow-Origin": "*",
 			},
-			body: JSON.stringify({...result.rows[0],
-			name : result.rows[0].name.split('-')[0]}),
+			body: JSON.stringify({
+				...result.rows[0],
+				name : result.rows[0].name.split('@')[1].replace(/_/g," ")
+			}),
 		};
 	} catch (error) {
-		if (error.name == "StateMachineAlreadyExists") {
-			return {
-				statusCode: 500,
-				headers: {
-					"Access-Control-Allow-Origin": "*",
-				},
-				body: JSON.stringify({
-					message: "workflow with same name already exists",
-					error: error,
-				}),
-			};
-		}
 		return {
 			statusCode: 500,
 			headers: {

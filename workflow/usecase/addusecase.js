@@ -82,14 +82,19 @@ exports.handler = async (event) => {
             project_id: project_id,
         }),
     };
+    let getArnQuery = `select 
+                            arn, 
+                            metadata->'stages' as stages
+                        from 
+                            workflows_table 
+                        where id = $1`;
+    let usecaseExist = `
+                        SELECT COUNT(*)
+                        FROM usecases_table 
+                        WHERE LOWER(usecase->>'name') = LOWER($1);
+    `
     const client = await connectToDatabase();
     try {
-        let getArnQuery = `select 
-                                arn, 
-                                metadata->'stages' as stages
-                            from 
-                                workflows_table 
-                            where id = $1`;
         const arnResult = await client.query(getArnQuery, [workflow_id]);
         input.stateMachineArn = arnResult.rows[0].arn;
         const stages = arnResult.rows[0].stages;
@@ -112,7 +117,6 @@ exports.handler = async (event) => {
                 status: "inprogress",
                 stages: generateStages(stages),
             };
-            console.log("usecase", JSON.stringify(usecase))
             const usecaseInsertQuery = `
                         insert into usecases_table 
                         (id, project_id, workflow_id, arn, usecase)
