@@ -2,7 +2,7 @@ const { connectToDatabase } = require("../db/dbConnector");
 const { z } = require("zod");
 
 exports.handler = async (event) => {
-    const tasks_id = event.pathParameters?.id;
+    const tasks_id = event.pathParameters?.taskId;
     const taskIdSchema = z.string().uuid({ message: "Invalid Task_id" });
     const isUuid = taskIdSchema.safeParse(tasks_id);
     if (!isUuid.success) {
@@ -24,9 +24,9 @@ exports.handler = async (event) => {
             metadocs_table.doc_name,
             metadocs_table.id as doc_id,
             metadocs_table.doc_url,
-            employee.resource->>'name' as name,
-            employee.resource->> 'email' as email,
-            employee.resource->> 'image' as image,
+            employee.first_name || ' ' || last_name AS resource_name,
+            employee.email  as email ,
+            employee.image as image,
             metadocs_table.created_time
         FROM metadocs_table
             INNER JOIN tasks_table ON metadocs_table.tasks_id = tasks_table.id
@@ -35,14 +35,14 @@ exports.handler = async (event) => {
         `;
         const TaskMetaData = await client.query(query, [tasks_id]);
             const resultArray = TaskMetaData.rows.map(row => ({
-                doc_name: row.doc_name,
-                doc_id: row.doc_id,
-                resource_id: row.created_by,
-                resource_name: row.name,
-                email: row.email,
-                image: row.image,
-                created_time: row.created_time,
-                doc_url: row.doc_url
+                doc_name: row.doc_name || "",
+                doc_id: row.doc_id || "",
+                resource_id: row.created_by || "",
+                 resource_name: row.resource_name || "",
+                email: row.email || "" ,
+                image: row.image || "" ,
+                created_time: row.created_time || "",
+                doc_url: row.doc_url || ""
             }));
         return {
 			statusCode: 200,
