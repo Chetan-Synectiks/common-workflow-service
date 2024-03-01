@@ -66,7 +66,7 @@ exports.handler = async (event) => {
         console.log(JSON.stringify(result.rows))
         const usecases = result.rows.map((row) => ({
             usecase_id: row.usecase_id,
-            usecase_name: row.usecase_name,
+            usecase_name: row.usecase_name.split('@')[1].replace(/_/g," "),,
             current_stage: row.current_stage,
             assignee_id: row.usecase_assigned_id || "",
             assignee_name: ((row.assignee_first_name || "") + " " + (row.assignee_last_name || "")) || "",

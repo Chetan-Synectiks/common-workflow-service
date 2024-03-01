@@ -26,6 +26,7 @@ exports.handler = async (event) => {
         const data = workflowQuery.rows[0]
         const res = {
             ...data,
+			name : name.split('@')[1].replace(/_/g," "),
             arn: undefined
         }
 		return {

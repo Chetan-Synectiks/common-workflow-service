@@ -75,7 +75,7 @@ exports.handler = async (event) => {
             current_task: output?.resource?.current_task || "",
             total_task: parseInt(total_tasks),
             usecase: {
-                name: output.usecase.name,
+                name: output.usecase.name.split('@')[1].replace(/_/g," "),
                 description: output.usecase.description,
                 start_date: output.usecase.start_date,
                 end_date: output.usecase.end_date,
