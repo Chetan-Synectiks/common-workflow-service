@@ -40,7 +40,7 @@ exports.handler = async (event) => {
         const tasksQuery = `
             SELECT
                 r.id AS resource_id,
-                (r.resource->>'name') AS resource_name,
+                COALESCE (r.first_name || ' ' || r.last_name, '') as name,
                 COUNT(*) FILTER (WHERE t.task->>'status' = 'completed') AS completed,
                 COUNT(*) FILTER (WHERE t.task->>'status' = 'inprogress') AS inprogress,
                 COUNT(*) FILTER (WHERE t.task->>'status' = 'pending') AS pending
@@ -51,7 +51,7 @@ exports.handler = async (event) => {
             WHERE
                 r.id = ANY($1::uuid[])
             GROUP BY
-                r.id, r.resource->>'name'`;
+                r.id`;
         const tasksResult = await client.query(tasksQuery, [resourceIds]);
         const res = tasksResult.rows.map(obj => {return  obj})
         return {
