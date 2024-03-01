@@ -94,7 +94,7 @@ exports.handler = async (event) => {
 					"Access-Control-Allow-Origin": "*",
 				},
 				body: JSON.stringify({
-					message: "workflow with same name already exists",
+					message: "workflow with same name already exists in the project",
 				}),
 			};
 		}

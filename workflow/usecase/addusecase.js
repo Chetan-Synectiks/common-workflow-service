@@ -47,9 +47,17 @@ exports.handler = async (event) => {
         created_by_id: z.string().uuid({
             message: "Invalid created by id",
         }),
-        usecase_name: z.string().min(3, {
+        usecase_name: z.string()
+        .regex(/^[^#%^&*}{;:"><,?\[\]`|@]+$/, {
+			message: "name should not contain special symbols",
+		})
+        .min(3, {
             message: "usecase name should be atleast 3 characters long",
-        }),
+        })
+        .max(70, {
+            message: "usecase name should should be less than 70 characters long",
+        })
+        ,
         assigned_to_id: z.string().uuid({
             message: "Invalid assigned to id",
         }),
@@ -71,11 +79,12 @@ exports.handler = async (event) => {
         };
     }
     const usecase_id = uuid();
-    //Check for unqiness of usecase name here if required-- TO DO --
+    const usecaseNameWithoutSpaces = usecase_name.replace(/ /g,"_")
+    const newUsecaseName = usecase_id.split('-')[4] + "@"+usecaseNameWithoutSpaces;
     const stepFunctionClient = new SFNClient({ region: "us-east-1" });
     const input = {
         stateMachineArn: "",
-        name: usecase_name + `-1`,
+        name: newUsecaseName,
         input: JSON.stringify({
             flag: "new",
             usecase_id: usecase_id,
@@ -91,10 +100,23 @@ exports.handler = async (event) => {
     let usecaseExist = `
                         SELECT COUNT(*)
                         FROM usecases_table 
-                        WHERE LOWER(usecase->>'name') = LOWER($1);
+                        WHERE LOWER(usecase->>'name') = LOWER($1)
+                        AND project_id = $2::uuid;
     `
     const client = await connectToDatabase();
     try {
+        const exists = await client.query(usecaseExist, usecaseNameWithoutSpaces, project_id)
+        if (exists.rows[0].count > 0) {
+			return {
+				statusCode: 400,
+				headers: {
+					"Access-Control-Allow-Origin": "*",
+				},
+				body: JSON.stringify({
+					message: "usecase with same name already exists in the project",
+				}),
+			};
+		}
         const arnResult = await client.query(getArnQuery, [workflow_id]);
         input.stateMachineArn = arnResult.rows[0].arn;
         const stages = arnResult.rows[0].stages;
@@ -105,7 +127,7 @@ exports.handler = async (event) => {
             const creationDate = response.startDate;
             console.log("name ", stages[0].name)
             const usecase = {
-                name: usecase_name + `-1`,
+                name: newUsecaseName,
                 creation_date: creationDate,
                 created_by_id: created_by_id,
                 assigned_to_id: assigned_to_id,
@@ -128,7 +150,7 @@ exports.handler = async (event) => {
                 project_id,
                 workflow_id,
                 executionArn,
-                usecase,
+                newUsecaseName,
             ]);
             return {
                 statusCode: 201,
@@ -136,7 +158,10 @@ exports.handler = async (event) => {
                    "Access-Control-Allow-Origin": "*",
 				"Access-Control-Allow-Credentials": true,
                 },
-                body: JSON.stringify(result.rows),
+                body: JSON.stringify({
+                    ...result.rows,
+                    usecase_name : result.rows[0].usecase_name.split('@')[1].replace(/_/g," ")
+                }),
             };
         } else {
             return {
