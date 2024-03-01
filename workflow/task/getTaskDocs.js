@@ -25,7 +25,7 @@ exports.handler = async (event) => {
             metadocs_table.id as doc_id,
             metadocs_table.doc_url,
             employee.first_name || ' ' || last_name AS resource_name,
-            employee.email  as email ,
+            employee.work_email  as email ,
             employee.image as image,
             metadocs_table.created_time
         FROM metadocs_table
