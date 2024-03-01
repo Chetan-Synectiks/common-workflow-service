@@ -2,6 +2,7 @@ const { connectToDatabase } = require("../db/dbConnector");
 const { SFNClient, CreateStateMachineCommand } = require("@aws-sdk/client-sfn");
 const { generateStateMachine2 } = require("./generateStateMachine");
 const { z } = require("zod");
+const { v4: uuid} = require("uuid")
 
 exports.handler = async (event) => {
 	const { name, created_by_id, project_id, stages } = JSON.parse(event.body);
@@ -77,19 +78,14 @@ exports.handler = async (event) => {
 
 	const client = await connectToDatabase();
 	try {
-		const projectQueryPromise = client.query(
-			`select * from projects_table where id = $1`,
-			[project_id]
-		);
-		const workflowQueryPromise = client.query(
-			`SELECT COUNT(*) FROM workflows_table WHERE LOWER(SUBSTRING(name, POSITION('-' IN name) + 1)) = LOWER($1);;`,
-			[name]
+		const workflowExists = await client.query(
+			`SELECT COUNT(*) 
+			 FROM workflows_table 
+			 WHERE LOWER(split_part(name, '-', 1)) = LOWER($1) 
+			 AND project_id = $2::uuid`,
+			[name, project_id]
 		);
 
-		const [projectResult, workflowExists] = await Promise.all([
-			projectQueryPromise,
-			workflowQueryPromise,
-		]);
 		if (workflowExists.rows[0].count > 0) {
 			return {
 				statusCode: 400,
@@ -101,8 +97,8 @@ exports.handler = async (event) => {
 				}),
 			};
 		}
-		const project = projectResult.rows[0];
-		const workflowName = project.project.name + "-" + name;
+		const random = uuid().split('-')[4]
+		const workflowName = name+"-"+random;
 		const input = {
 			name: workflowName,
 			definition: JSON.stringify(newStateMachine),
@@ -130,7 +126,8 @@ exports.handler = async (event) => {
 			headers: {
 				"Access-Control-Allow-Origin": "*",
 			},
-			body: JSON.stringify(result.rows[0]),
+			body: JSON.stringify({...result.rows[0],
+			name : result.rows[0].name.split('-')[0]}),
 		};
 	} catch (error) {
 		if (error.name == "StateMachineAlreadyExists") {

@@ -21,8 +21,8 @@ exports.handler = async (event) => {
 			}),
 		description: z.string(),
 		department: z.string(),
-		start_date: z.string().datetime(),
-		end_date: z.string().datetime(),
+		start_date: z.coerce.date(),
+		end_date: z.coerce.date(),
 		image_url: z.string().url({ message: "Invalid url for project icon" }),
 	});
 
