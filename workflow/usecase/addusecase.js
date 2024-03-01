@@ -102,7 +102,7 @@ exports.handler = async (event) => {
     `
     const client = await connectToDatabase();
     try {
-        const exists = await client.query(usecaseExist, usecaseNameWithoutSpaces, project_id)
+        const exists = await client.query(usecaseExist, [usecaseNameWithoutSpaces, project_id])
         if (exists.rows[0].count > 0) {
 			return {
 				statusCode: 400,
@@ -147,8 +147,9 @@ exports.handler = async (event) => {
                 project_id,
                 workflow_id,
                 executionArn,
-                newUsecaseName,
+                usecase,
             ]);
+            console.log(result.rows)
             return {
                 statusCode: 201,
                 headers: {
@@ -156,7 +157,7 @@ exports.handler = async (event) => {
                 },
                 body: JSON.stringify({
                     ...result.rows,
-                    usecase_name : result.rows[0].usecase_name.split('@')[1].replace(/_/g," ")
+                    usecase_name : result.rows[0].usecase.name.split('@')[1].replace(/_/g," ")
                 }),
             };
         } else {
