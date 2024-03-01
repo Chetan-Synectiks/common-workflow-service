@@ -19,28 +19,42 @@ exports.handler = async (event) => {
     const client = await connectToDatabase();
     try {
         const projectQuery = `
-            SELECT project->'team'->'roles' AS roles
+            SELECT project->'team'->'roles' AS roles,project->>'name' AS name
             FROM projects_table
             WHERE id = $1::uuid`;
         const projectResult = await client.query(projectQuery, [projectId]);
+        const projectResult1 = projectResult.rows[0];
+        console.log("projectResult",projectResult.rows[0]);
+        if (!projectResult1 ) {
+            return {
+                statusCode: 200,
+                headers: {
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Credentials": true,
+                },
+                body: JSON.stringify({ message: "No Project is present" }),
+            };
+        }
+        
         const resourceIds = projectResult.rows.flatMap(row => {
-            const roles = row.roles || [];
+            const roles = row.roles;
             return roles.flatMap(role => Object.values(role).flat());
         });
-        if (resourceIds.length === 0) {
+        console.log("resourceIds",resourceIds);
+        if (resourceIds.length == 0) {
             return {
                 statusCode: 200,
                 headers: {
                    "Access-Control-Allow-Origin": "*",
 				"Access-Control-Allow-Credentials": true,
                 },
-                body: JSON.stringify([]),
+                body: JSON.stringify({message : "No Ids present in the roles"}),
             };
         }
         const tasksQuery = `
             SELECT
                 r.id AS resource_id,
-                (r.resource->>'name') AS resource_name,
+                COALESCE (r.first_name || ' ' || r.last_name, '') as name,
                 COUNT(*) FILTER (WHERE t.task->>'status' = 'completed') AS completed,
                 COUNT(*) FILTER (WHERE t.task->>'status' = 'inprogress') AS inprogress,
                 COUNT(*) FILTER (WHERE t.task->>'status' = 'pending') AS pending
@@ -51,7 +65,7 @@ exports.handler = async (event) => {
             WHERE
                 r.id = ANY($1::uuid[])
             GROUP BY
-                r.id, r.resource->>'name'`;
+                r.id`;
         const tasksResult = await client.query(tasksQuery, [resourceIds]);
         const res = tasksResult.rows.map(obj => {return  obj})
         return {

@@ -22,9 +22,8 @@ exports.handler = async (event) => {
         const query = `
             SELECT 
                 e.id AS emp_id,
-                e.first_name,
-                e.last_name,
-                e.email,
+                COALESCE(e.first_name || ' ' || e.last_name, '') AS resource_name,
+                e.work_email,
 				COALESCE(e.image, '') AS image
             FROM 
                 employee e
