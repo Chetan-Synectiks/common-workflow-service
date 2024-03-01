@@ -33,7 +33,7 @@ exports.handler = async (event) => {
 				headers: {
 					"Access-Control-Allow-Origin": "*",
 				},
-				body: JSON.stringify({message : "No team roles present"}),
+				body: JSON.stringify([]),
 			};
 		}
 		const ress = await Promise.all( roles.map(async (role) => {
