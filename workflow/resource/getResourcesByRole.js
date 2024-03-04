@@ -4,6 +4,7 @@ const { z } = require("zod");
 exports.handler = async (event) => {
     const designationName = event.queryStringParameters?.designation ?? null;
     const designationSchema = z.string();
+    console.log(designationName)
     const isDesignationValid = designationSchema.safeParse(designationName);
     if (!isDesignationValid.success) {
         return {
@@ -34,7 +35,7 @@ exports.handler = async (event) => {
                 LEFT join
                     emp_designation d on ed.designation_id = d.id
                 WHERE 
-                    LOWER(d.designation) = LOWER('$1')`;
+                    LOWER(d.designation) = LOWER($1)`;
 
         const result = await client.query(query, [designationName]);
 
