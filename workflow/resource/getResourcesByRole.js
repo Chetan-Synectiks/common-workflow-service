@@ -20,20 +20,21 @@ exports.handler = async (event) => {
     const client = await connectToDatabase();
     try {
         const query = `
-            SELECT 
-                e.id AS emp_id,
-                COALESCE(e.first_name || ' ' || e.last_name, '') AS resource_name,
-                e.work_email,
-				COALESCE(e.image, '') AS image
-            FROM 
-                employee e
-            LEFT JOIN 
-                emp_detail ed ON e.emp_detail_id = ed.id
-            LEFT JOIN 
-                emp_designation edg ON ed.designation_id = edg.id
-            WHERE 
-                edg.designation = $1;
-        `;
+                    SELECT 
+                    e.id AS emp_id,
+                    COALESCE(e.first_name || ' ' || e.last_name, '') AS resource_name,
+                    e.work_email,
+                    COALESCE(e.image, '') AS image,
+                    d.designation  as designation
+                    
+                FROM 
+                    emp_detail ed
+                LEFT JOIN 
+                    employee e ON ed.emp_id = e.id
+                LEFT join
+                    emp_designation d on ed.designation_id = d.id
+                WHERE 
+                    LOWER(d.designation) = LOWER('$1')`;
 
         const result = await client.query(query, [designationName]);
 
