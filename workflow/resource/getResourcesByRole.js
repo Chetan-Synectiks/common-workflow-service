@@ -24,7 +24,7 @@ exports.handler = async (event) => {
                     SELECT 
                     e.id AS emp_id,
                     COALESCE(e.first_name || ' ' || e.last_name, '') AS resource_name,
-                    e.work_email,
+                    COALESCE(e.work_email, '') as work_email,
                     COALESCE(e.image, '') AS image,
                     d.designation  as designation
                     
