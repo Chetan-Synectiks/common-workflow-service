@@ -27,9 +27,7 @@ exports.handler = async (event) => {
         return {
             statusCode: 400,
             headers: {
-               "Access-Control-Allow-Origin": "*",
-				"Access-Control-Allow-Credentials": true,
-            },
+               "Access-Control-Allow-Origin": "*",            },
             body: JSON.stringify({
                 error: error,
             }),
@@ -71,7 +69,6 @@ exports.handler = async (event) => {
             statusCode: 400,
             headers: {
                "Access-Control-Allow-Origin": "*",
-				"Access-Control-Allow-Credentials": true,
             },
             body: JSON.stringify({
                 error: shemaresult.error.formErrors.fieldErrors,
@@ -105,12 +102,12 @@ exports.handler = async (event) => {
     `
     const client = await connectToDatabase();
     try {
-        const exists = await client.query(usecaseExist, usecaseNameWithoutSpaces, project_id)
+        const exists = await client.query(usecaseExist, [usecaseNameWithoutSpaces, project_id])
         if (exists.rows[0].count > 0) {
 			return {
 				statusCode: 400,
 				headers: {
-					"Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Origin": "*",
 				},
 				body: JSON.stringify({
 					message: "usecase with same name already exists in the project",
@@ -150,17 +147,17 @@ exports.handler = async (event) => {
                 project_id,
                 workflow_id,
                 executionArn,
-                newUsecaseName,
+                usecase,
             ]);
+            console.log(result.rows)
             return {
                 statusCode: 201,
                 headers: {
                    "Access-Control-Allow-Origin": "*",
-				"Access-Control-Allow-Credentials": true,
                 },
                 body: JSON.stringify({
                     ...result.rows,
-                    usecase_name : result.rows[0].usecase_name.split('@')[1].replace(/_/g," ")
+                    usecase_name : result.rows[0].usecase.name.split('@')[1].replace(/_/g," ")
                 }),
             };
         } else {
@@ -168,7 +165,6 @@ exports.handler = async (event) => {
                 statusCode: 500,
                 headers: {
                    "Access-Control-Allow-Origin": "*",
-				"Access-Control-Allow-Credentials": true,
                 },
                 body: JSON.stringify({
                     message: error.message,
@@ -181,7 +177,6 @@ exports.handler = async (event) => {
             statusCode: 500,
             headers: {
                "Access-Control-Allow-Origin": "*",
-				"Access-Control-Allow-Credentials": true,
             },
             body: JSON.stringify({
                 message: error.message,
