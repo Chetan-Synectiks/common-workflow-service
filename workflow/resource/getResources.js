@@ -9,17 +9,19 @@ exports.handler = async (event) => {
 
         const resourcesQuery = `
                                 SELECT 
-                                    e.id, 
-                                    e.first_name || ' ' || e.last_name AS name,
-                                    e.role_id  AS role,
-                                    e.image as image,
-                                    e.email as email
-                                FROM 
-                                    employee e
-                                LEFT JOIN 
-                                    role r ON e.role_id = r.id
-                                GROUP BY
-                                    e.id, e.first_name, e.last_name, e.image, e.email, e.role_id ;`;
+                                e.id AS resource_id,
+                                e.first_name || ' ' || e.last_name AS employee_name,
+                                empd.designation AS employee_role,
+                                e.image AS resource_img_url,
+                                e.work_email AS resource_email
+                            FROM 
+                                employee e
+                            LEFT JOIN
+                                emp_detail d ON e.id = d.emp_id
+                            LEFT JOIN
+                                emp_designation empd ON empd.id = d.designation_id
+                            GROUP BY
+                                e.id,empd.designation,  e.first_name, e.last_name, e.image, e.email;`;
         let projectsQuery = `
         SELECT
             id,
@@ -69,11 +71,11 @@ function processResourcesData(resources, projects, projectFilter) {
     const outputData = [];
 
     for (const resource of resources) {
-        const resourceId = resource.id;
-        const resourceName = resource.name;
-        const resourceRole = resource.role;
-        const resourceImgUrl = resource.image;
-        const resourceEmail = resource.email;
+        const resourceId = resource.resource_id;
+        const resourceName = resource.employee_name;
+        const resourceRole = resource.employee_role || "";
+        const resourceImgUrl = resource.resource_img_url || "";
+        const resourceEmail = resource.resource_email || "";
 
         const resourceProjects = projects
             // .filter(project => {
