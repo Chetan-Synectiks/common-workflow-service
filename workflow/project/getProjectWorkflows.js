@@ -37,7 +37,7 @@ exports.handler = async (event) => {
         const usecasesResult = await client.query(usecasesQuery, [project_id]);
         const workflows = usecasesResult.rows.map(row => ({
             workflow_id: row.id,
-            workflow_name: row.workflow_name,
+            workflow_name: row.workflow_name.split('@')[1].replace(/_/g," "),
             total_usecases: parseInt(row.total_usecases) || 0,
             task_completed: calculatePercentage(row.total_tasks, row.task_completed) || 0,
             completed_usecases: parseInt(row.completed_usecases) || 0

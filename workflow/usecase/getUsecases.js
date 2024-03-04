@@ -63,7 +63,6 @@ exports.handler = async (event) => {
         const params = [project_id, workflow_id];
 
         const result = await client.query(query, params);
-        console.log(JSON.stringify(result.rows))
         const usecases = result.rows.map((row) => ({
             usecase_id: row.usecase_id,
             usecase_name: row.usecase_name.split('@')[1].replace(/_/g," "),
