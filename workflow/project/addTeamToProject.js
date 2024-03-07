@@ -29,7 +29,9 @@ exports.handler = async (event) => {
 			}),
 			created_time :  z.string().datetime(),
 			//check for roles names to be unique --- TO DO--
-			roles : z.array(z.record(z.string(), z.array(z.string().uuid())))
+			roles : z.array(
+				z.record(z.string(), z.string().uuid().array().nonempty())
+				)
 		})
 
 		const team = {

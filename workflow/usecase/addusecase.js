@@ -138,8 +138,8 @@ exports.handler = async (event) => {
             };
             const usecaseInsertQuery = `
                         insert into usecases_table 
-                        (id, project_id, workflow_id, arn, usecase)
-                        values ($1, $2, $3, $4, $5::jsonb)
+                        (id, project_id, workflow_id, arn, usecase, assignee_id)
+                        values ($1, $2, $3, $4, $5::jsonb, $6)
                         RETURNING *;
                         `;
             const result = await client.query(usecaseInsertQuery, [
@@ -148,6 +148,7 @@ exports.handler = async (event) => {
                 workflow_id,
                 executionArn,
                 usecase,
+                assigned_to_id
             ]);
             console.log(result.rows)
             return {

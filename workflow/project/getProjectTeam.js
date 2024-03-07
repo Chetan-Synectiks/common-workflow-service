@@ -38,9 +38,10 @@ exports.handler = async (event) => {
 		}
 		const ress = await Promise.all( roles.map(async (role) => {
 			const resourceIds = Object.values(role).flat();
+			console.log(resourceIds)
 			const resourceQuery = `
 								SELECT
-									COALESCE(d.designation, '') as Designation,
+									COALESCE(d.designation, '') as designation,
 								    (emp.id) as resource_id,
 									COALESCE(emp.first_name || ' ' || emp.last_name, '') as name,
 									COALESCE(emp.image, '') as image_url,
