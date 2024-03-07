@@ -33,10 +33,10 @@ getResources:
               method: get
               cors: true
 
-getResourcesListView:
-    handler: resource/getResourcesListView.handler
-    role: ${env:LAMBDA_ROLE}
-    events:
-        - http:
-              path: /resources/list
-              method: get
+# getResourcesListView:
+#     handler: resource/getResourcesListView.handler
+#     role: ${env:LAMBDA_ROLE}
+#     events:
+#         - http:
+#               path: /resources/list
+#               method: get

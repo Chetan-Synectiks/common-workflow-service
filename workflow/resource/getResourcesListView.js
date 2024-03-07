@@ -8,14 +8,16 @@ exports.handler = async (event) => {
                                     SELECT
                                     e.id AS resource_id,
                                     e.first_name || ' ' || e.last_name AS resource_name,
-                                    r.id AS role_id,
+                                    empd.designation AS employee_role,
                                     e.image AS resource_img_url,
                                     e.email AS resource_email,
                                     COUNT(t.id) AS total_tasks
                                 FROM
                                     employee e
                                 LEFT JOIN
-                                    role r ON e.role_id = r.id
+                                    emp_detail d ON e.id = d.emp_id
+                                LEFT JOIN
+                                    emp_designation empd ON empd.id = d.designation_id
                                 LEFT JOIN
                                     tasks_table t ON e.id = t.assignee_id
                                 GROUP BY

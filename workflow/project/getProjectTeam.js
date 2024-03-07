@@ -75,7 +75,7 @@ exports.handler = async (event) => {
 				"Access-Control-Allow-Origin": "*",
 			},
 			body: JSON.stringify({
-				message : e.message,
+				message : "no project ID's present",
 				error : e
 			}),
 		};
