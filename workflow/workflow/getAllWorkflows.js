@@ -27,12 +27,14 @@ exports.handler = async (event) => {
 			return {
 				id,
 				name : name.split('@')[1].replace(/_/g," "),
-				created_by : created_by || "",
+				stages,
+				created_by : {
+				id: created_by || "",
 				first_name,
 				last_name,
 				designation,
 				image: image || "",
-				stages,
+			}
 			};
 		});
 		return {
