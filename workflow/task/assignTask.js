@@ -1,8 +1,7 @@
 const { connectToDatabase } = require("../db/dbConnector");
 const { z } = require("zod");
 exports.handler = async (event) => {
-	const task = JSON.parse(event.body);
-    const taskid = event.pathParameters?.id ?? null;
+    const taskid = event.pathParameters?.taskId ?? null;
     const taskIdSchema = z.string().uuid({message : "Invalid task id"})
     const taskUuid = taskIdSchema.safeParse(taskid)
     if(!taskUuid.success){
@@ -17,7 +16,7 @@ exports.handler = async (event) => {
             }),
         };
     }
-    const assigned_to_id = event.pathParameters?.resource_id??null;
+    const assigned_to_id = event.pathParameters?.resourceId ?? null;
     const assignIdSchema = z.string().uuid({message : "Invalid resource id"})
     const assignUuid = assignIdSchema.safeParse(assigned_to_id)
     if(!assignUuid.success){
@@ -32,31 +31,18 @@ exports.handler = async (event) => {
             }),
         };
     }
-	const {
-		start_date,
-		end_date,
-		comments,
-	} = task;
-	const taskUpdate = {
-		status:"Inprogress",
-		start_date: start_date,
-		end_date: end_date,
-		comments: comments,
-	};
     const client = await connectToDatabase();
 	try {
 		let query = `
                     update
                         tasks_table 
                     set 
-                        assignee_id = $1,
-                        task = task || $2
+                        assignee_id = $1
                     where
-                        id = $3::uuid`;
+                        id = $2::uuid`;
 		const update = await client.query(query, [
 			assigned_to_id,
-			JSON.stringify(taskUpdate),
-			taskid,
+			taskid
 		]);
 		if (update.rowCount === 0) {
 			return {
