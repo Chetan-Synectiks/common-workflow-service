@@ -25,14 +25,11 @@ exports.handler = async (event) => {
                 u.assignee_id AS assignee_id,
                 u.workflow_id AS workflow_id,
                 r.*,
-                w.*,
-                t.*
+                w.*
             FROM
                 usecases_table AS u
             LEFT JOIN
                 employee AS r ON u.assignee_id = r.id
-            LEFT JOIN
-                tasks_table AS t ON u.id = t.usecase_id
             LEFT JOIN
                 emp_detail AS e ON   r.id = e.emp_id  
             LEFT JOIN
@@ -43,29 +40,10 @@ exports.handler = async (event) => {
 `;
  
         const result = await client.query(query, [usecase_id]);
- 
-        const taskGroups = {};
-        result.rows.forEach((row) => {
-            const stageName = row.task.stage;
-            if (!taskGroups[stageName]) {
-                taskGroups[stageName] = [];
-            }
-            const taskWithId = { ...row.task, id: row.id };
-            taskGroups[stageName].push(taskWithId);
-        });
-        const usecase_stages = result.rows[0].usecase.stages;
-        usecase_stages.forEach((stage) => {
-            const stageName = Object.keys(stage)[0];
- 
-            if (taskGroups.hasOwnProperty(stageName)) {
-                stage[stageName].tasks = taskGroups[stageName];
-            } else {
-                stage[stageName].tasks = [];
-            }
-        });
+
         const total_tasks = result.rows.length;
         const output = result.rows[0];
-        console.log("usecase :", output)
+        
         const response = {
             usecase_id: output.usecase_id,
             assignee_id: output?.assignee_id || "",
@@ -82,7 +60,7 @@ exports.handler = async (event) => {
                 creation_date: output.usecase.creation_date,
                 status: output.usecase.status,
                 current_stage: output.usecase.current_stage,
-                stages: usecase_stages,
+                stages: output.usecase.stages,
             },
         };
         return {
