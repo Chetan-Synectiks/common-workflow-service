@@ -23,25 +23,30 @@ exports.handler = async (event) => {
 
     try {
         const query = `
-            SELECT 
-                t.id AS task_id,
-                t.task->>'name' AS task_name,
-                t.task->>'status' AS status,
-                t.assignee_id,
-                e.image,
-                CONCAT(e.first_name, ' ', e.last_name) AS assignee_name,
-                edd.designation AS assignee_designation,
-                md.doc_name,
-                md.id AS doc_id,
-                md.doc_url,
-                md.created_time
-            FROM tasks_table t
-            LEFT JOIN employee e ON t.assignee_id = e.id
-            LEFT JOIN emp_detail ed ON e.id = ed.emp_id
-            LEFT JOIN emp_designation edd ON edd.id = ed.designation_id
-            LEFT JOIN metadocs_table md ON t.id = md.tasks_id
-            WHERE t.usecase_id = $1;
-        `;
+    SELECT
+        t.id as task_id,
+        t.task->>'name' AS task_name,
+        t.task->>'status' AS status,
+        t.assignee_id,
+        CONCAT(e.first_name, ' ', e.last_name) AS assignee_name,
+        e.image AS assignee_image,
+        edd.designation AS assignee_designation,
+        json_agg(json_build_object('id', d.id, 'name', d.doc_name, 'doc_url', d.doc_url, 'created_time', d.created_time)) AS docs
+    FROM
+        tasks_table t
+    LEFT JOIN
+        metadocs_table d ON d.tasks_id = t.id
+    LEFT JOIN
+        employee e ON t.assignee_id = e.id
+    LEFT JOIN   
+        emp_detail ed ON e.id = ed.emp_id
+    LEFT JOIN
+        emp_designation edd ON edd.id = ed.designation_id
+    WHERE
+        t.usecase_id = $1
+    GROUP BY
+        t.id, t.task, t.assignee_id, CONCAT(e.first_name, ' ', e.last_name), e.image, edd.designation, d.id, ed.id;
+`;
 
         const result = await client.query(query, [usecase_id]);
 
@@ -57,7 +62,6 @@ exports.handler = async (event) => {
             };
         }
 
-        // Reorganize the response to group document details under a 'docs' array for each task
         const tasksWithDocs = result.rows.map(row => {
             return {
                 task_id: row.task_id,
@@ -67,14 +71,12 @@ exports.handler = async (event) => {
                 image: row.image || "",
                 assignee_name: row.assignee_name || "",
                 assignee_designation: row.assignee_designation || "",
-                docs: result.rows
-                    .filter(doc => doc.task_id === row.task_id)
-                    .map(doc => ({
-                        doc_name: doc.doc_name,
-                        doc_id: doc.doc_id,
-                        doc_url: doc.doc_url,
-                        created_time: doc.created_time
-                    }))
+                docs: row.docs.map(doc => ({
+                    doc_name: doc.name,
+                    doc_id: doc.id,
+                    doc_url: doc.doc_url,
+                    created_time: doc.created_time
+                }))
             };
         });
 
