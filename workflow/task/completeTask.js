@@ -2,7 +2,11 @@ const { connectToDatabase } = require("../db/dbConnector");
 const { SFNClient, SendTaskSuccessCommand } = require("@aws-sdk/client-sfn");
 const { z } = require("zod")
  
-exports.handler = async (event) => {
+const middy = require("middy");
+const { errorHandler } = require("../util/errorHandler");
+const { authorize } = require("../util/authorizer");
+exports.handler = middy( async (event,context) => {
+    context.callbackWaitsForEmptyEventLoop = false;
     const task_id = event.queryStringParameters?.task_id ?? null;
     const IdSchema = z.string().uuid({ message: "Invalid task id" });
     const isUuid = IdSchema.safeParse(task_id);
@@ -75,4 +79,6 @@ exports.handler = async (event) => {
     } finally {
         await client.end();
     }
-};
+})
+.use(authorize())
+.use(errorHandler());

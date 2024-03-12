@@ -1,7 +1,10 @@
 const { connectToDatabase } = require("../db/dbConnector");
 const { z } = require("zod");
-
-exports.handler = async (event) => {
+const middy = require("middy");
+const { errorHandler } = require("../util/errorHandler");
+const { authorize } = require("../util/authorizer");
+exports.handler = middy( async (event,context) => {
+    context.callbackWaitsForEmptyEventLoop = false;
 	const resourceId = event.queryStringParameters?.resource_id;
 	const uuidSchema = z.string().uuid().optional();
 	const isUuid = uuidSchema.safeParse(resourceId);
@@ -91,7 +94,9 @@ exports.handler = async (event) => {
 	} finally {
 		await client.end();
 	}
-};
+})
+.use(authorize())
+.use(errorHandler());
 
 function getDates() {
 	const currentDate = new Date();

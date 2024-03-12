@@ -2,8 +2,11 @@ const { connectToDatabase } = require("../db/dbConnector");
 const { SFNClient, UpdateStateMachineCommand } = require("@aws-sdk/client-sfn");
 const { generateStateMachine2 } = require("./generateStateMachine");
 const { z } = require("zod");
-
-exports.handler = async (event) => {
+const middy = require("middy");
+const { errorHandler } = require("../util/errorHandler");
+const { authorize } = require("../util/authorizer");
+exports.handler = middy( async (event,context) => {
+    context.callbackWaitsForEmptyEventLoop = false;
 	const id = event.pathParameters?.id;
 	const { updated_by_id, stages } = JSON.parse(event.body);
     const IdSchema = z.string().uuid({ message: "Invalid id" });
@@ -118,4 +121,6 @@ exports.handler = async (event) => {
 			}),
 		};
 	}
-};
+})
+.use(authorize())
+.use(errorHandler());

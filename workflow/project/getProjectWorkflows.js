@@ -1,7 +1,10 @@
 const { connectToDatabase } = require("../db/dbConnector");
 const { z } = require("zod");
-
-exports.handler = async (event) => {
+const middy = require("middy");
+const { errorHandler } = require("../util/errorHandler");
+const { authorize } = require("../util/authorizer");
+exports.handler = middy( async (event,context) => {
+    context.callbackWaitsForEmptyEventLoop = false;
     const project_id =event.pathParameters?.id ?? null;
     const projectIdSchema = z.string().uuid({message : "Invalid project id"})
     const isUuid = projectIdSchema.safeParse(project_id)
@@ -65,7 +68,10 @@ exports.handler = async (event) => {
     } finally {
         await client.end();
     }
-};
+})
+.use(authorize())
+.use(errorHandler());
+
 
 function calculatePercentage(total, completed) {
     return total === 0 ? 0 : (completed / total) * 100;

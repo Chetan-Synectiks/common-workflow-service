@@ -1,7 +1,10 @@
 const { connectToDatabase } = require("../db/dbConnector");
 const { z } = require("zod");
-
-exports.handler = async (event) => {
+const middy = require("middy");
+const { errorHandler } = require("../util/errorHandler");
+const { authorize } = require("../util/authorizer");
+exports.handler = middy( async (event,context) => {
+    context.callbackWaitsForEmptyEventLoop = false;
 	const status = event.queryStringParameters?.status ?? null;
 	const validStatusValues = ["unassigned", "completed", "inprogress"]
 	const statusSchema = z.string().nullable().refine((value) => value === null || validStatusValues.includes(value), {
@@ -85,4 +88,6 @@ exports.handler = async (event) => {
 	} finally {
 		await client.end();
 	}
-};
+})
+.use(authorize())
+.use(errorHandler());

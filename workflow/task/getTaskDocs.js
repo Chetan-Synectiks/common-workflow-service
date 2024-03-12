@@ -1,7 +1,11 @@
 const { connectToDatabase } = require("../db/dbConnector");
 const { z } = require("zod");
 
-exports.handler = async (event) => {
+const middy = require("middy");
+const { errorHandler } = require("../util/errorHandler");
+const { authorize } = require("../util/authorizer");
+exports.handler = middy( async (event,context) => {
+    context.callbackWaitsForEmptyEventLoop = false;
     const tasks_id = event.pathParameters?.taskId;
     const taskIdSchema = z.string().uuid({ message: "Invalid Task_id" });
     const isUuid = taskIdSchema.safeParse(tasks_id);
@@ -65,4 +69,6 @@ exports.handler = async (event) => {
     } finally {
         await client.end();
     }
-};
+})
+.use(authorize())
+.use(errorHandler());

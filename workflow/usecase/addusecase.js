@@ -2,7 +2,11 @@ const { connectToDatabase } = require("../db/dbConnector");
 const { z } = require("zod");
 const { SFNClient, StartExecutionCommand } = require("@aws-sdk/client-sfn");
 const { v4: uuid } = require("uuid");
-exports.handler = async (event) => {
+const middy = require("middy");
+const { errorHandler } = require("../util/errorHandler");
+const { authorize } = require("../util/authorizer");
+exports.handler = middy( async (event,context) => {
+    context.callbackWaitsForEmptyEventLoop = false;
     const {
         project_id,
         created_by_id,
@@ -187,7 +191,9 @@ exports.handler = async (event) => {
     } finally {
         await client.end();
     }
-};
+})
+.use(authorize())
+.use(errorHandler());
 
 const generateStages = (stages) => {
 	return stages.map((stage) => {

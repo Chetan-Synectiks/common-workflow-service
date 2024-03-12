@@ -1,6 +1,11 @@
 const { connectToDatabase } = require("../db/dbConnector");
-const org_id = "482d8374-fca3-43ff-a638-02c8a425c492";
-exports.handler = async (event) => {
+//const org_id = "482d8374-fca3-43ff-a638-02c8a425c492";
+const middy = require("middy");
+const { errorHandler } = require("../util/errorHandler");
+const { authorize } = require("../util/authorizer");
+exports.handler = middy( async (event,context) => {
+    context.callbackWaitsForEmptyEventLoop = false;
+	const org_id = event.user['custom:org_id'];
 	const getWorkflows = `  
                         SELECT
                             w.id,
@@ -61,4 +66,6 @@ exports.handler = async (event) => {
 	} finally {
 		await client.end();
 	}
-};
+})
+.use(authorize())
+.use(errorHandler());

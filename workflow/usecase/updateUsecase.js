@@ -6,7 +6,11 @@ const {
     UpdateStateMachineCommand,
     StartExecutionCommand,
 } = require("@aws-sdk/client-sfn");
-exports.handler = async (event) => {
+const middy = require("middy");
+const { errorHandler } = require("../util/errorHandler");
+const { authorize } = require("../util/authorizer");
+exports.handler = middy( async (event,context) => {
+    context.callbackWaitsForEmptyEventLoop = false;
     const useCaseId = event.pathParameters?.id;
     const { name, updated_by_id, stages } = JSON.parse(event.body);
     const IdSchema = z.string().uuid({ message: "Invalid id" });
@@ -183,4 +187,6 @@ exports.handler = async (event) => {
     } finally {
         await client.end();
     }
-};
+})
+.use(authorize())
+.use(errorHandler());

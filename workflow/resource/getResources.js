@@ -1,5 +1,9 @@
 const { connectToDatabase } = require("../db/dbConnector");
-exports.handler = async (event) => {
+const middy = require("middy");
+const { errorHandler } = require("../util/errorHandler");
+const { authorize } = require("../util/authorizer");
+exports.handler = middy( async (event,context) => {
+    context.callbackWaitsForEmptyEventLoop = false;
     const projectFilter = event.queryStringParameters && event.queryStringParameters.project_id;
     const client = await connectToDatabase();
     try {
@@ -65,7 +69,9 @@ exports.handler = async (event) => {
     } finally {
         await client.end();
     }
-};
+})
+.use(authorize())
+.use(errorHandler());
 
 function processResourcesData(resources, projects, projectFilter) {
     const outputData = [];

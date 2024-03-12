@@ -1,7 +1,10 @@
 const { connectToDatabase } = require("../db/dbConnector");
 const { z } = require("zod");
-
-exports.handler = async (event) => {
+const middy = require("middy");
+const { errorHandler } = require("../util/errorHandler");
+const { authorize } = require("../util/authorizer");
+exports.handler = middy( async (event,context) => {
+    context.callbackWaitsForEmptyEventLoop = false;
 	const projectId = event.pathParameters?.id ?? null;
 	const projectIdSchema = z.string().uuid({message : "Invalid project id"})
     const isUuid = projectIdSchema.safeParse(projectId)
@@ -80,4 +83,6 @@ exports.handler = async (event) => {
 			}),
 		};
 	}
-};
+})
+.use(authorize())
+.use(errorHandler());

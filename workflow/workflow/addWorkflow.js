@@ -4,7 +4,11 @@ const { generateStateMachine2 } = require("./generateStateMachine");
 const { z } = require("zod");
 const { v4: uuid} = require("uuid")
  
-exports.handler = async (event) => {
+const middy = require("middy");
+const { errorHandler } = require("../util/errorHandler");
+const { authorize } = require("../util/authorizer");
+exports.handler = middy( async (event,context) => {
+    context.callbackWaitsForEmptyEventLoop = false;
     const { name, created_by_id, project_id, stages } = JSON.parse(event.body);
     const projectIdSchema = z.string().uuid({ message: "Invalid project id" });
     const nameVal = z
@@ -157,4 +161,6 @@ exports.handler = async (event) => {
             }),
         };
     }
-};
+})
+.use(authorize())
+.use(errorHandler());

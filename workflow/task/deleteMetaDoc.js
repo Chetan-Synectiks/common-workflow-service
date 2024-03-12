@@ -1,7 +1,11 @@
 const { connectToDatabase } = require("../db/dbConnector");
 const { z } = require("zod");
 
-exports.handler = async (event) => {
+const middy = require("middy");
+const { errorHandler } = require("../util/errorHandler");
+const { authorize } = require("../util/authorizer");
+exports.handler = middy( async (event,context) => {
+    context.callbackWaitsForEmptyEventLoop = false;
     const documentId = event.pathParameters?.id ?? null;
     const IdSchema = z.string().uuid({ message: "Invalid document id" });
     const isUuid = IdSchema.safeParse(documentId);
@@ -45,4 +49,6 @@ exports.handler = async (event) => {
     } finally {
         await client.end();
     }
-};
+})
+.use(authorize())
+.use(errorHandler());

@@ -1,5 +1,9 @@
 const { connectToDatabase } = require("../db/dbConnector");
-exports.handler = async (event) => {
+const middy = require("middy");
+const { errorHandler } = require("../util/errorHandler");
+const { authorize } = require("../util/authorizer");
+exports.handler = middy( async (event,context) => {
+    context.callbackWaitsForEmptyEventLoop = false;
     const task_id = event.pathParameters?.id ?? null;
     if (!task_id) {
         return {
@@ -53,4 +57,6 @@ exports.handler = async (event) => {
     } finally {
         await client.end();
     }
-};
+})
+.use(authorize())
+.use(errorHandler());

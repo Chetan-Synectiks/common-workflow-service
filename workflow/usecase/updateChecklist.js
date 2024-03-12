@@ -1,6 +1,10 @@
 const { connectToDatabase } = require("../db/dbConnector");
 const { z } = require("zod");
-exports.handler = async (event) => {
+const middy = require("middy");
+const { errorHandler } = require("../util/errorHandler");
+const { authorize } = require("../util/authorizer");
+exports.handler = middy( async (event,context) => {
+    context.callbackWaitsForEmptyEventLoop = false;
     const usecase_id = event.pathParameters.id;
     const uuidSchema = z.string().uuid();
     const isUuid = uuidSchema.safeParse(usecase_id);
@@ -77,4 +81,6 @@ exports.handler = async (event) => {
     } finally {
         client.end();
     }
-};
+})
+.use(authorize())
+.use(errorHandler());

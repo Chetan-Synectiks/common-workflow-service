@@ -1,5 +1,9 @@
 const { connectToDatabase } = require("../db/dbConnector");
-exports.handler = async (event, context, callback) => {
+const middy = require("middy");
+const { errorHandler } = require("../util/errorHandler");
+const { authorize } = require("../util/authorizer");
+exports.handler = middy(async (event, context, callback) => {
+    context.callbackWaitsForEmptyEventLoop = false;
     const client = await connectToDatabase();
 	try {
 		const total_projects_result = await client.query(`
@@ -59,4 +63,6 @@ exports.handler = async (event, context, callback) => {
 	} finally {
 		await client.end();
 	}
-};
+})
+.use(authorize())
+.use(errorHandler());
