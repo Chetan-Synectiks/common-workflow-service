@@ -85,4 +85,13 @@ updateChecklist:
         - http:
               path: /usecase/{id}/checklist
               method: put
-              cors: true                   
+              cors: true  
+
+getUsecaseTask:
+    handler: usecase/getUsecaseTask.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+        - http:
+              path: /usecase/{id}/task
+              method: get
+              cors: true                                 
