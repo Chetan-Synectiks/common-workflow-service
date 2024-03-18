@@ -67,15 +67,17 @@ exports.handler = async (event) => {
                 task_id: row.task_id,
                 task_name: row.task_name,
                 status: row.status,
+                assigned_to :{
                 assignee_id: row.assignee_id || "",
                 image: row.image || "",
                 assignee_name: row.assignee_name || "",
                 assignee_designation: row.assignee_designation || "",
+             } ,
                 docs: row.docs.map(doc => ({
-                    doc_name: doc.name,
-                    doc_id: doc.id,
-                    doc_url: doc.doc_url,
-                    created_time: doc.created_time
+                    doc_name: doc.name || "",
+                    doc_id: doc.id || "",
+                    doc_url: doc.doc_url || "",
+                    created_time: doc.created_time || ""
                 }))
             };
         });
@@ -85,7 +87,7 @@ exports.handler = async (event) => {
             headers: {
                 "Access-Control-Allow-Origin": "*",
             },
-            body: JSON.stringify({ tasks: tasksWithDocs }),
+            body: JSON.stringify(tasksWithDocs),
         };
     } catch (error) {
         console.error("Error executing query:", error);
