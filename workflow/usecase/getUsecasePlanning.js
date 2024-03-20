@@ -22,15 +22,23 @@ exports.handler = async (event) => {
     try {
         const query = `
             SELECT u.usecase,
+                   e.first_name,
+                   e.last_name,
+                   e.image,
+                   edg.designation,
                    t.id AS id,
                    t.assignee_id AS assignee_id,
                    t.task AS task
             FROM usecases_table u
-                   JOIN tasks_table t ON u.id = t.usecase_id
-             WHERE u.id = $1
-        `;
+                   LEFT JOIN tasks_table t ON u.id = t.usecase_id
+                   LEFT JOIN employee e ON t.assignee_id = e.id
+                   LEFT JOIN emp_detail ed ON e.emp_detail_id = ed.id
+                   LEFT JOIN emp_designation edg ON ed.designation_id = edg.id
+            WHERE u.id = $1
+        `
 
         const jsonData = await client.query(query, [usecaseId]);
+        console.log(jsonData)
         const usecaseData = jsonData.rows[0];
         const stageDetails = usecaseData.usecase.stages.map((stage) => {
             const stageName = Object.keys(stage)[0];
@@ -59,8 +67,12 @@ exports.handler = async (event) => {
                     return {
                         id: row.id,
                         name: row.task.name,
-                        assignee_id:
-                            row.assignee_id !== null ? row.assignee_id : "",
+                        assigned_to: {
+                            id: row.assignee_id !== null ? row.assignee_id : "",
+                            name: `${row.first_name} ${row.last_name}`,
+                            designation: row.designation,
+                            image: row.image || ""
+                        },
                         start_date: row.task.start_date,
                         end_date: row.task.end_date,
                         resource_start_date: row.task.resource_start_date,
@@ -72,7 +84,7 @@ exports.handler = async (event) => {
 
             return {
                 [stageName]: {
-                    task_details: matchingTaskDetails,
+                    task: matchingTaskDetails,
                 },
             };
         });
