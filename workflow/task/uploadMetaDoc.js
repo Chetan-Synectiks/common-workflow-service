@@ -3,7 +3,7 @@ const { z } = require("zod");
 
 exports.handler = async (event) => {
 
-    const task_id = event.queryStringParameters?.id;
+    const task_id = event.pathParameters?.taskId;
     const uuidSchema = z.string().uuid();
     const isUuid = uuidSchema.safeParse(task_id);
     if (!isUuid.success) {
@@ -27,7 +27,9 @@ exports.handler = async (event) => {
     };
     const metadocsSchema = z.object({
         doc_name: z.string(),
-        doc_url: z.string().url()
+        doc_url: z.string().url({
+            message : "invalid string"
+        })
     });
     const result = metadocsSchema.safeParse(metadocsObj);
     if (!result.success) {
