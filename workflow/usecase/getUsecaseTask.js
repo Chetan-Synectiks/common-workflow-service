@@ -72,7 +72,6 @@ exports.handler = async (event) => {
 		}
         const usecaseData = usecaseRes.rows[0].usecase
 		const tasksWithDocs = result.rows.map((row) => {
-            console.log(JSON.stringify(row));
 			let assignee;
 			if (row.assignee_id !== null) {
 				assignee = {
