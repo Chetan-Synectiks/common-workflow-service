@@ -34,7 +34,7 @@ uploadMetaDoc:
               method: post
               cors: true
 
-deleteMetaDoc:
+deleteMetaDoc: 
     handler: task/deleteMetaDoc.handler
     role: ${env:LAMBDA_ROLE}
     events:

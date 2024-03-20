@@ -3,7 +3,7 @@ const { z } = require("zod");
 
 exports.handler = async (event) => {
 
-    const task_id = event.queryStringParameters?.id;
+    const task_id = event.pathParameters?.taskId;
     const uuidSchema = z.string().uuid();
     const isUuid = uuidSchema.safeParse(task_id);
     if (!isUuid.success) {
@@ -18,19 +18,18 @@ exports.handler = async (event) => {
             }),
         };
     }
-    const { created_by: created_by_id, doc_name, doc_url } = JSON.parse(event.body);
+    const { doc_name, doc_url } = JSON.parse(event.body);
     const currentTimestamp = new Date().toISOString();
+    const createdBy = "13a7d5ff-64c2-4a6f-87da-82e5fb78ce8f";
     const metadocsObj = {
-        created_by: created_by_id,
         doc_name: doc_name,
         doc_url: doc_url,
-        currentTimestamp: currentTimestamp
     };
     const metadocsSchema = z.object({
-        created_by: z.string().uuid(),
         doc_name: z.string(),
-        doc_url: z.string().url(),
-        currentTimestamp: z.string().datetime()
+        doc_url: z.string().url({
+            message : "invalid string"
+        })
     });
     const result = metadocsSchema.safeParse(metadocsObj);
     if (!result.success) {
@@ -54,7 +53,7 @@ exports.handler = async (event) => {
 					returning *`;
         let queryparam = [
             task_id,
-            created_by_id,
+            createdBy,
             doc_name,
             doc_url,
             currentTimestamp
