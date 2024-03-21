@@ -21,35 +21,44 @@ exports.handler = async (event) => {
 
     const client = await connectToDatabase();
     const query = `
-        SELECT
-            t.id as task_id,
-            t.task AS task,
-            t.assignee_id,
-            CONCAT(e.first_name, ' ', e.last_name) AS assignee_name,
-            e.image AS assignee_image,
-            edd.designation AS assignee_designation,
-            json_agg(
-                json_build_object(
-                    'id', d.id,
-                    'name', d.doc_name,
-                    'doc_url', d.doc_url,
-                    'created_time', d.created_time
-                )
-            ) AS docs
-        FROM
-            tasks_table t
-        LEFT JOIN
-            metadocs_table d ON d.tasks_id = t.id
-        LEFT JOIN
-            employee e ON t.assignee_id = e.id
-        LEFT JOIN   
-            emp_detail ed ON e.id = ed.emp_id
-        LEFT JOIN
-            emp_designation edd ON edd.id = ed.designation_id
-        WHERE
-            t.usecase_id = $1
-        GROUP BY
-            t.id, t.task, t.assignee_id, CONCAT(e.first_name, ' ', e.last_name), e.image, edd.designation, d.id, ed.id`;
+				SELECT
+				t.id as task_id,
+				t.task AS task,
+				t.assignee_id,
+				CONCAT(e.first_name, ' ', e.last_name) AS assignee_name,
+				e.image AS assignee_image,
+				edd.designation AS assignee_designation,
+				json_agg(
+					json_build_object(
+						'id', d.id,
+						'name', d.doc_name,
+						'doc_url', d.doc_url,
+						'created_time', d.created_time
+					)
+				) AS docs
+			FROM
+				tasks_table t
+			LEFT JOIN
+				employee e ON t.assignee_id = e.id
+			LEFT JOIN   
+				emp_detail ed ON e.id = ed.emp_id
+			LEFT JOIN
+				emp_designation edd ON edd.id = ed.designation_id
+			LEFT JOIN (
+				SELECT
+					tasks_id,
+					id,
+					doc_name,
+					doc_url,
+					created_time
+				FROM
+					metadocs_table
+			) AS d ON d.tasks_id = t.id
+			WHERE
+				t.usecase_id = $1
+			GROUP BY
+				t.id, t.task, t.assignee_id, CONCAT(e.first_name, ' ', e.last_name), e.image, edd.designation;
+`;
     const usecaseQuery = `
         SELECT 
             usecase as usecase
