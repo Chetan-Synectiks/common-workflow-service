@@ -1,22 +1,28 @@
 {
-  "name": "workflow-lambda",
-  "version": "1.0.0",
-  "description": "",
-  "main": "handler.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "@aws-sdk/client-secrets-manager": "^3.470.0",
-    "@aws-sdk/client-sfn": "^3.490.0",
-    "dotenv": "^16.4.5",
-    "pg": "^8.11.3",
-    "uuid": "^9.0.1",
-    "zod": "^3.22.4"
-  },
-  "devDependencies": {
-    "serverless-offline": "^13.2.0"
-  }
+	"name": "workflow-lambda",
+	"version": "1.0.0",
+	"description": "",
+	"main": "handler.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.515.0",
+		"@aws-sdk/client-secrets-manager": "^3.470.0",
+		"@aws-sdk/client-sfn": "^3.490.0",
+		"dotenv": "^16.4.5",
+		"@middy/core": "^4.7.0",
+		"@middy/error-logger": "^4.7.0",
+    "jsonwebtoken": "^9.0.2",
+		"jwks-rsa": "^3.1.0",
+		"pg": "^8.11.3",
+		"uuid": "^9.0.1",
+		"zod": "^3.22.4"
+	},
+	"devDependencies": {
+    "prettier": "3.2.5",
+		"serverless-offline": "^13.2.0"
+	}
 }
