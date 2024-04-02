@@ -79,6 +79,7 @@ exports.handler = middy(async (event, context) => {
     body: JSON.stringify(response),
   };
 })
+
   .use(authorize())
   .use(queryParamsValidator(idSchema))
   .use(errorHandler());

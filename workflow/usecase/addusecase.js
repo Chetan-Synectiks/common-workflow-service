@@ -42,26 +42,6 @@ exports.handler = middy(async (event, context) => {
     start_date,
     end_date,
   } = JSON.parse(event.body);
-  const newUsecase = {
-    created_by_id: created_by_id,
-    usecase_name: usecase_name,
-    assigned_to_id: assigned_to_id,
-    description: description,
-    start_date: start_date,
-    end_date: end_date,
-  };
-  const shemaresult = UsecaseSchema.safeParse(newUsecase);
-  if (!shemaresult.success) {
-    return {
-      statusCode: 400,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-      },
-      body: JSON.stringify({
-        error: shemaresult.error.formErrors.fieldErrors,
-      }),
-    };
-  }
   const usecase_id = uuid();
   const usecaseNameWithoutSpaces = usecase_name.replace(/ /g, "_");
   const newUsecaseName =

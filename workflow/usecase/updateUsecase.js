@@ -10,6 +10,7 @@ const middy = require("@middy/core");
 const { errorHandler } = require("../util/errorHandler");
 const { authorize } = require("../util/authorizer");
 const { pathParamsValidator } = require("../util/pathParamsValidator");
+const { bodyValidator } = require("../util/bodyValidator");
 
 const idSchema = z.object({
   id: z.string().uuid({ message: "Invalid employee id" }),
@@ -33,24 +34,6 @@ exports.handler = middy(async (event, context) => {
     context.callbackWaitsForEmptyEventLoop = false;
     const useCaseId = event.pathParameters?.id;
   const { name, updated_by_id, stages } = JSON.parse(event.body);
-  const updateUsecase = {
-    name: name,
-    stages: stages,
-  };
-  const shemaresult = UpdateSchema.safeParse(updateUsecase);
-  console.log(shemaresult);
-  if (!shemaresult.success) {
-    return {
-      statusCode: 400,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Credentials": true,
-      },
-      body: JSON.stringify({
-        error: shemaresult.error.formErrors.fieldErrors,
-      }),
-    };
-  }
   const client = await connectToDatabase();
   const sfnClient = new SFNClient({ region: "us-east-1" });
   const details = await client.query(

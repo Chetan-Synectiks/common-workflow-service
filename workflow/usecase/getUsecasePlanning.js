@@ -85,6 +85,7 @@ exports.handler = middy(async (event, context) => {
     body: JSON.stringify(stageDetails),
   };
 })
+
   .use(authorize())
   .use(pathParamsValidator(idSchema))
   .use(errorHandler());

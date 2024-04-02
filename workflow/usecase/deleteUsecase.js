@@ -58,6 +58,7 @@ exports.handler = middy(async (event, context) => {
     body: JSON.stringify("usecase data updated successfully"),
   };
 })
+
   .use(authorize())
   .use(pathParamsValidator(idSchema))
   .use(errorHandler());
