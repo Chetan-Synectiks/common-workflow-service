@@ -39,7 +39,7 @@ deleteMetaDoc:
     role: ${env:LAMBDA_ROLE}
     events:
         - http:
-              path: /task/{taskId}/docs/{docId}
+              path: /task/docs/{docId}
               method: delete
               cors: true
 
