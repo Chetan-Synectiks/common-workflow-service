@@ -30,7 +30,8 @@ const StageSchema = z.object(
   });
 
 exports.handler = middy(async (event, context) => {
-  const useCaseId = event.pathParameters?.id;
+    context.callbackWaitsForEmptyEventLoop = false;
+    const useCaseId = event.pathParameters?.id;
   const { name, updated_by_id, stages } = JSON.parse(event.body);
   const updateUsecase = {
     name: name,

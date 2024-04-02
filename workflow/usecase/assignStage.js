@@ -55,6 +55,7 @@ exports.handler = middy(async (event, context) => {
     body: JSON.stringify({ message: "Stage assigned successfully" }),
   };
 })
+
   .use(authorize())
   .use(pathParamsValidator(idSchema))
   .use(errorHandler());

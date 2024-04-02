@@ -4,6 +4,7 @@ const middy = require("@middy/core");
 const { errorHandler } = require("../util/errorHandler");
 const { authorize } = require("../util/authorizer");
 const { pathParamsValidator } = require("../util/pathParamsValidator");
+const { bodyValidator } = require("../util/bodyValidator");
 
 const idSchema = z.object({
   id: z.string().uuid({ message: "Invalid usecase id" }),
@@ -76,6 +77,7 @@ exports.handler = middy(async (event, context) => {
     client.end();
   }
 })
+
   .use(authorize())
   .use(pathParamsValidator(idSchema))
   .use(bodyValidator(checklistSchema))
