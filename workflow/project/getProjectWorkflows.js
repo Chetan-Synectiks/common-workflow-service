@@ -7,11 +7,7 @@ const { pathParamsValidator } = require("../util/pathParamsValidator")
 const idSchema = z.object({
 	id: z.string().uuid({ message: "Invalid project id" }),
 })
-exports.handler = middy(async (event, context) => {
-	context.callbackWaitsForEmptyEventLoop = false
-	const project_id = event.pathParameters?.id ?? null
-	const client = await connectToDatabase()
-	const usecasesQuery = `
+const usecasesQuery = `
                 SELECT
                      w.id,
                      w.name AS workflow_name,
@@ -25,7 +21,10 @@ exports.handler = middy(async (event, context) => {
                 WHERE w.project_id = $1
                 GROUP BY u.workflow_id, w.name, w.id
                  `
-
+exports.handler = middy(async (event, context) => {
+	context.callbackWaitsForEmptyEventLoop = false
+	const project_id = event.pathParameters?.id ?? null
+	const client = await connectToDatabase()
 	const usecasesResult = await client.query(usecasesQuery, [project_id])
 	const workflows = usecasesResult.rows.map(row => ({
 		workflow_id: row.id,

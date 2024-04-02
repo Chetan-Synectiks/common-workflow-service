@@ -20,15 +20,14 @@ const reqSchema = z.object({
 	end_date: z.coerce.date(),
 	image_url: z.string().url({ message: "Invalid url for project icon" }),
 })
+const getProjects = `SELECT COUNT(*) FROM projects_table WHERE LOWER(project->>'name') = LOWER($1)`
+const addproject = `INSERT INTO projects_table (project) VALUES ($1::jsonb) RETURNING *`
 exports.handler = middy(async (event, context) => {
 	context.callbackWaitsForEmptyEventLoop = false
 	const { name, description, department, start_date, end_date, image_url } =
 		JSON.parse(event.body)
 	const client = await connectToDatabase()
-	const isDuplicate = await client.query(
-		`SELECT COUNT(*) FROM projects_table WHERE LOWER(project->>'name') = LOWER($1)`,
-		[name],
-	)
+	const isDuplicate = await client.query(getProjects,[name])
 	if (isDuplicate.rows[0].count > 0) {
 		return {
 			statusCode: 400,
@@ -53,10 +52,7 @@ exports.handler = middy(async (event, context) => {
 		workflows: [],
 		team: {},
 	}
-	const result = await client.query(
-		`INSERT INTO projects_table (project) VALUES ($1::jsonb) RETURNING *`,
-		[project],
-	)
+	const result = await client.query(addproject,[project])
 	const insertedData = result.rows[0]
 	insertedData.project.id = insertedData.id
 	await client.end()

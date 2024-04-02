@@ -4,33 +4,18 @@ const { z } = require("zod")
 const { authorize } = require("../util/authorizer")
 const { errorHandler } = require("../util/errorHandler")
 const { queryParamsValidator } = require("../util/queryParamsValidator")
-
-const idSchema = z.object({
-	status: z.string({ message: "Invalid status value" }),
-})
-exports.handler = middy(async (event, context) => {
-	context.callbackWaitsForEmptyEventLoop = false
-	const org_id = event.user["custom:org_id"]
-	const status = event.queryStringParameters?.status ?? null
-	const validStatusValues = ["unassigned", "completed", "inprogress"]
-	const statusSchema = z
+const validStatusValues = ["unassigned", "completed", "inprogress"]
+	const statusSchema = z.object({ status:  z
 		.string()
 		.nullable()
 		.refine(value => value === null || validStatusValues.includes(value), {
 			message: "Invalid status value",
 		})
-	const isValidStatus = statusSchema.safeParse(status)
-	if (!isValidStatus.success) {
-		return {
-			statusCode: 400,
-			headers: {
-				"Access-Control-Allow-Origin": "*",
-			},
-			body: JSON.stringify({
-				error: isValidStatus.error.issues[0].message,
-			}),
-		}
-	}
+	})
+exports.handler = middy(async (event, context) => {
+	context.callbackWaitsForEmptyEventLoop = false
+	const org_id = event.user["custom:org_id"]
+	const status = event.queryStringParameters?.status ?? null
 	const client = await connectToDatabase()
 	let query = `
                     select 
@@ -85,5 +70,5 @@ exports.handler = middy(async (event, context) => {
 	}
 })
 	.use(authorize())
-	.use(queryParamsValidator(idSchema))
+	.use(queryParamsValidator(statusSchema))
 	.use(errorHandler())

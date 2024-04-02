@@ -7,31 +7,17 @@ const { pathParamsValidator } = require("../util/pathParamsValidator")
 const idSchema = z.object({
 	id: z.string().uuid({ message: "Invalid project id" }),
 })
-exports.handler = middy(async (event, context) => {
-	context.callbackWaitsForEmptyEventLoop = false
-	const projectId = event.pathParameters?.id ?? null
-	const projectIdSchema = z.string().uuid({ message: "Invalid project id" })
-	const isUuid = projectIdSchema.safeParse(projectId)
-	if (!isUuid.success) {
-		return {
-			statusCode: 400,
-			headers: {
-				"Access-Control-Allow-Origin": "*",
-			},
-			body: JSON.stringify({
-				error: isUuid.error.issues[0].message,
-			}),
-		}
-	}
-	const client = await connectToDatabase()
-	let query = `
+let query = `
                 select 
                     p.project->'team'->'roles' as roles 
                 from  
                 	projects_table as p
                 where p.id = $1::uuid`
+exports.handler = middy(async (event, context) => {
+	context.callbackWaitsForEmptyEventLoop = false
+	const projectId = event.pathParameters?.id ?? null
+	const client = await connectToDatabase()
 	const result = await client.query(query, [projectId])
-	console.log("roles ", result.rowCount)
 	const roles = result.rows[0].roles
 	if (roles == null) {
 		return {
