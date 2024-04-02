@@ -3,61 +3,57 @@ const { z } = require("zod");
 const middy = require("@middy/core");
 const { errorHandler } = require("../util/errorHandler");
 const { authorize } = require("../util/authorizer");
+const { optionalParamsValidator } = require("../util/optionalParamsValidator")
 
-let query = `
-			select 
-				p.id as project_id,
-				(p.project->>'name') as project_name,
+const validStatusValues = ["unassigned", "completed", "inprogress"];
+
+const statusSchema = z
+  .object({
+    status: z
+      .string()
+      .nullable()
+      .refine((value) => value === null || validStatusValues.includes(value), {
+        message: "Invalid status value",
+      }),
+  })
+  .nullable();
+
+exports.handler = middy(async (event) => {
+  // context.callbackWaitsForEmptyEventLoop = false
+  const org_id = event.user["custom:org_id"];
+  const status = event.queryStringParameters?.status ?? null;
+
+  const client = await connectToDatabase();
+
+  let query = `
+  			SELECT 
+	  			p.id as project_id,
+	  			(p.project->>'name') as project_name,
 				(p.project->>'status') as status,
 				(p.project->>'end_date') as due_date,
 				COUNT(distinct u.id) as total_usecases,
 				COUNT(t.id) as total_tasks,
 				COUNT(t.id) FILTER (WHERE t.task->>'status' = 'completed') as tasks_completed
 				from projects_table as p 
-			left join
+			LEFT JOIN
 				usecases_table as u on p.id = u.project_id 
-					left join
-						tasks_table as t on u.id = t.usecase_id and p.id = t.project_id`;
+			LEFT JOIN
+				tasks_table as t on u.id = t.usecase_id and p.id = t.project_id
+			WHERE
+				p.org_id = $1`;
 
-const queryParams = [];
-
-exports.handler = middy(async (event) => {
-  // context.callbackWaitsForEmptyEventLoop = false
-  const org_id = event.user["custom:org_id"];
-  const status = event.queryStringParameters?.status ?? null;
-  const validStatusValues = ["status", "completed", "inprogress"];
-  const statusSchema = z
-    .string()
-    .nullable()
-    .refine((value) => value === null || validStatusValues.includes(value), {
-      message: "Invalid status value",
-    });
-  const isValidStatus = statusSchema.safeParse(status);
-  if (!isValidStatus.success) {
-    return {
-      statusCode: 400,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-      },
-      body: JSON.stringify({
-        error: isValidStatus.error.issues[0].message,
-      }),
-    };
-  }
-  const client = await connectToDatabase();
+  const queryParams = [];
+  queryParams.push(org_id);
 
   if (status !== null) {
     query += `
-                    where
-                        (p.project->>'status' = $1)
-					AND
-						p.org_id = $2`;
+			AND
+                (p.project->>'status' = $2)`;
     queryParams.push(status);
-    queryParams.push(org_id);
   }
   query += `
-                    group by 
-                        p.id`;
+            group by 
+                p.id`;
   const result = await client.query(query, queryParams);
   const projectsOverview = result.rows.map(
     ({
@@ -90,4 +86,5 @@ exports.handler = middy(async (event) => {
   };
 })
   .use(authorize())
+  .use(optionalParamsValidator(statusSchema))
   .use(errorHandler());

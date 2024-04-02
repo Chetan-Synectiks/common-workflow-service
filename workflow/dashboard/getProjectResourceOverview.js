@@ -3,49 +3,45 @@ const { z } = require("zod");
 const middy = require("@middy/core");
 const { errorHandler } = require("../util/errorHandler");
 const { authorize } = require("../util/authorizer");
-let query = `
-        SELECT 
-            p.id AS project_id,
-            p.project->>'name' AS project_name,
-            (p.project->'team'->'roles') as team
-        FROM projects_table AS p`;
-let queryParams = [];
+const { optionalParamsValidator } = require("../util/optionalParamsValidator")
+
+
+const validStatusValues = ["unassigned", "completed", "inprogress"];
+const statusSchema = z
+  .object({
+    status: z
+      .string()
+      .nullable()
+      .refine((value) => value === null || validStatusValues.includes(value), {
+        message: "Invalid status value",
+      }),
+  })
+  .nullable();
 
 exports.handler = middy(async (event, context) => {
   // context.callbackWaitsForEmptyEventLoop = false
   const org_id = event.user["custom:org_id"];
 
   const status = event.queryStringParameters?.status ?? null;
-  const validStatusValues = ["unassigned", "completed", "inprogress"];
-  const statusSchema = z
-    .string()
-    .nullable()
-    .refine((value) => value === null || validStatusValues.includes(value), {
-      message: "Invalid status value",
-    });
-  const isValidStatus = statusSchema.safeParse(status);
-  if (!isValidStatus.success) {
-    return {
-      statusCode: 400,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-      },
-      body: JSON.stringify({
-        error: isValidStatus.error.issues[0].message,
-      }),
-    };
-  }
 
   const client = await connectToDatabase();
-
+  let query = `
+            SELECT 
+                p.id AS project_id,
+                p.project->>'name' AS project_name,
+                (p.project->'team'->'roles') as team
+            FROM projects_table AS p
+            WHERE
+                p.org_id = $1`;
+  let queryParams = [];
+  queryParams.push(org_id);
   if (status != null) {
     query += `
-                WHERE 
-                    (p.project->>'status' = $1)
-                AND
-                    p.org_id = $2`;
+                AND 
+                    (p.project->>'status' = $2)`;
+    console.log("query", query);
     queryParams.push(status);
-    queryParams.push(org_id);
+    console.log("queryParams", queryParams);
   }
   const result = await client.query(query, queryParams);
   console.log(result);
@@ -136,4 +132,5 @@ exports.handler = middy(async (event, context) => {
   };
 })
   .use(authorize())
+  .use(optionalParamsValidator(statusSchema))
   .use(errorHandler());
