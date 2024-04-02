@@ -166,6 +166,7 @@ exports.handler = middy(async (event, context) => {
     };
   }
 })
+
   .use(authorize())
   .use(bodyValidator(UsecaseSchema))
   .use(errorHandler());

@@ -77,7 +77,6 @@ exports.handler = middy(async (event, context) => {
     client.end();
   }
 })
-
   .use(authorize())
   .use(pathParamsValidator(idSchema))
   .use(bodyValidator(checklistSchema))
