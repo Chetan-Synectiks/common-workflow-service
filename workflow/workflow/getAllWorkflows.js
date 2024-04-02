@@ -3,26 +3,27 @@ const middy = require("@middy/core")
 const { errorHandler } = require("../util/errorHandler")
 const { authorize } = require("../util/authorizer")
 
+const getWorkflows = `  
+			SELECT
+                w.id,
+                w.name,
+				w.created_by,
+                w.metadata->'stages' AS stages,
+				e.first_name,
+				e.last_name,
+				e.image,
+				edg.designation
+            FROM                            
+            	workflows_table w
+			LEFT JOIN
+        		employee e ON e.id = w.created_by
+			LEFT JOIN
+				emp_detail ed ON e.id = ed.emp_id
+			LEFT JOIN
+        		emp_designation edg ON ed.designation_id = edg.id`
+
 exports.handler = middy(async (event, context) => {
 	context.callbackWaitsForEmptyEventLoop = false
-	const getWorkflows = `  
-                        SELECT
-                            w.id,
-                            w.name,
-							w.created_by,
-                            w.metadata->'stages' AS stages,
-							e.first_name,
-							e.last_name,
-							e.image,
-							edg.designation
-                        FROM                            
-                        	workflows_table w
-						LEFT JOIN
-        					employee e ON e.id = w.created_by
-						LEFT JOIN
-							emp_detail ed ON e.id = ed.emp_id
-						LEFT JOIN
-        					emp_designation edg ON ed.designation_id = edg.id`
 	const client = await connectToDatabase()
 	const getWorkflowsResult = await client.query(getWorkflows)
 	const response = getWorkflowsResult.rows.map(

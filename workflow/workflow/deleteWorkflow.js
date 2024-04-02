@@ -10,18 +10,24 @@ const idSchema = z.object({
 	id: z.string().uuid({ message: "Invalid workflow id" }),
 })
 
+const getarnQuery = `
+			SELECT arn FROM workflows_table WHERE id = $1`
+
+const updateStatusQuery = `
+			UPDATE 
+				workflows_table
+            SET 
+				metadata = jsonb_set(
+                        	metadata,
+                            '{status}',
+                            '"terminated"',
+                            true) 
+            WHERE 
+				id = $1`
+
 exports.handler = middy(async (event, context) => {
 	context.callbackWaitsForEmptyEventLoop = false
 	const workflow_id = event.pathParameters?.id ?? null
-	const getarnQuery = `SELECT arn FROM workflows_table WHERE id = $1`
-	const updateStatusQuery = `UPDATE workflows_table
-                        SET metadata = jsonb_set(
-                            metadata,
-                            '{status}',
-                            '"terminated"',
-                            true
-                            ) 
-                            WHERE id = $1`
 	const client = await connectToDatabase()
 	await client.query("BEGIN")
 	try {
@@ -64,6 +70,6 @@ exports.handler = middy(async (event, context) => {
 		await client.end()
 	}
 })
-	.use(pathParamsValidator(idSchema))
 	.use(authorize())
+	.use(pathParamsValidator(idSchema))
 	.use(errorHandler())

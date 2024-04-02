@@ -21,16 +21,42 @@ const MetaDataSchema = z.object({
 	stages: z.array(StageSchema),
 })
 
+const workflowQuery = `
+			SELECT 
+				arn, 
+				metadata
+			FROM 
+				workflows_table 
+			WHERE 
+				id = $1`
+
+const resourceQuery = `
+			SELECT 
+				first_name,
+				last_name,
+				image
+			FROM 
+				employee
+			WHERE 
+				id = $1`
+
+const updateQuery = `
+			UPDATE 
+				workflows_table 
+			SET 
+				metadata = $1 
+			WHERE 
+				id = $2
+			RETURNING 
+				metadata->'stages' AS stages`
+
 exports.handler = middy(async (event, context) => {
 	context.callbackWaitsForEmptyEventLoop = false
 	const id = event.pathParameters?.id
 	const { updated_by_id, stages } = JSON.parse(event.body)
 	const sfnClient = new SFNClient({ region: "us-east-1" })
 	const client = await connectToDatabase()
-	const workflowData = await client.query(
-		`select arn, metadata from workflows_table where id = $1`,
-		[id],
-	)
+	const workflowData = await client.query(workflowQuery, [id])
 
 	const metaData = workflowData.rows[0].metadata
 	const newStateMachine = generateStateMachine2(stages)
@@ -42,14 +68,7 @@ exports.handler = middy(async (event, context) => {
 	}
 	const command = new UpdateStateMachineCommand(input)
 	const commandResponse = await sfnClient.send(command)
-	const resource = await client.query(
-		`SELECT first_name,
-					last_name,
-                    image
-            FROM employee
-            WHERE id = $1`,
-		[updated_by_id],
-	)
+	const resource = await client.query(resourceQuery, [updated_by_id])
 	metaData.stages = stages
 	metaData.updated_by = {
 		id: updated_by_id,
@@ -57,11 +76,7 @@ exports.handler = middy(async (event, context) => {
 		image_url: resource.rows[0].image || "",
 	}
 	metaData.updated_time = commandResponse.updateDate
-	let query = `
-            UPDATE workflows_table SET metadata = $1 WHERE id = $2
-        	returning metadata->'stages' AS stages`
-
-	const result = await client.query(query, [metaData, id])
+	const result = await client.query(updateQuery, [metaData, id])
 	await client.end()
 	return {
 		statusCode: 200,
@@ -72,6 +87,6 @@ exports.handler = middy(async (event, context) => {
 	}
 })
 	.use(authorize())
-	.use(errorHandler())
-	.use(bodyValidator(MetaDataSchema))
 	.use(pathParamsValidator(idSchema))
+	.use(bodyValidator(MetaDataSchema))
+	.use(errorHandler())

@@ -9,16 +9,21 @@ const idSchema = z.object({
 	id: z.string().uuid({ message: "Invalid workflow id" }),
 })
 
+const query = `
+			SELECT 
+				* 
+			FROM 
+				workflows_table 
+			WHERE 
+				id = $1`
+
 exports.handler = middy(async (event, context) => {
 	context.callbackWaitsForEmptyEventLoop = false
 	const id = event.pathParameters?.id
 
 	const client = await connectToDatabase()
 
-	const workflowQuery = await client.query(
-		`select * from workflows_table where id = $1`,
-		[id],
-	)
+	const workflowQuery = await client.query(query, [id])
 	const data = workflowQuery.rows[0]
 	const res = {
 		...data,
@@ -35,6 +40,6 @@ exports.handler = middy(async (event, context) => {
 		body: JSON.stringify(res),
 	}
 })
-	.use(pathParamsValidator(idSchema))
 	.use(authorize())
+	.use(pathParamsValidator(idSchema))
 	.use(errorHandler())

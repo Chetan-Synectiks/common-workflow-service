@@ -3,38 +3,44 @@ const middy = require("@middy/core")
 const { errorHandler } = require("../util/errorHandler")
 const { authorize } = require("../util/authorizer")
 
+const resourcesQuery = `
+            SELECT 
+                e.id AS resource_id,
+                e.first_name || ' ' || e.last_name AS employee_name,
+                empd.designation AS employee_role,
+                e.image AS resource_img_url,
+                e.work_email AS resource_email
+            FROM 
+                employee e
+            LEFT JOIN
+                emp_detail d ON e.id = d.emp_id
+            LEFT JOIN
+                emp_designation empd ON empd.id = d.designation_id
+            WHERE
+				e.org_id = $1
+            GROUP BY
+                e.id,empd.designation,  
+                e.first_name, 
+                e.last_name, 
+                e.image, 
+                e.email`
+
 exports.handler = middy(async (event, context) => {
 	context.callbackWaitsForEmptyEventLoop = false
+	const org_id = event.user["custom:org_id"]
 	const projectFilter =
 		event.queryStringParameters && event.queryStringParameters.project_id
 	const client = await connectToDatabase()
 
 	const queryParams = []
-
-	const resourcesQuery = `
-                                SELECT 
-                                e.id AS resource_id,
-                                e.first_name || ' ' || e.last_name AS employee_name,
-                                empd.designation AS employee_role,
-                                e.image AS resource_img_url,
-                                e.work_email AS resource_email
-                            FROM 
-                                employee e
-                            LEFT JOIN
-                                emp_detail d ON e.id = d.emp_id
-                            LEFT JOIN
-                                emp_designation empd ON empd.id = d.designation_id
-                            GROUP BY
-                                e.id,empd.designation,  e.first_name, e.last_name, e.image, e.email;`
 	let projectsQuery = `
-        SELECT
-            id,
-            project->>'name' AS name,
-            project->>'project_icon_url' AS project_icon_url,
-            project->>'team' AS team
-        FROM
-            projects_table
-      `
+            SELECT
+                p.id,
+                p.project->>'name' AS name,
+                p.project->>'project_icon_url' AS project_icon_url,
+                p.project->>'team' AS team
+            FROM
+                projects_table p`
 
 	if (projectFilter) {
 		projectsQuery += `
@@ -42,8 +48,11 @@ exports.handler = middy(async (event, context) => {
                     id = $1`
 		queryParams.push(projectFilter)
 	}
-	const resourcesResult = await client.query(resourcesQuery)
+	const resourcesResult = await client.query(resourcesQuery, [org_id])
+	console.log(resourcesResult)
 	const projectsResult = await client.query(projectsQuery, queryParams)
+	console.log(queryParams)
+	console.log(projectsResult)
 
 	const outputData = processResourcesData(
 		resourcesResult.rows,

@@ -8,7 +8,7 @@ const totalProjectsQuery = `
                 COUNT(*) AS total_projects
             FROM
                 projects_table`;
-
+			
 const totalTasksQuery = `
             SELECT
                 COUNT(DISTINCT id) AS task_count

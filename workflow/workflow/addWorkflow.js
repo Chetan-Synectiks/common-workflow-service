@@ -31,6 +31,29 @@ const bodySchema = z.object({
 	),
 })
 
+const projectQuery = `
+            SELECT 
+                * 
+            FROM 
+                projects_table 
+            WHERE
+                id = $1`
+
+const workflowQuery = `
+            SELECT 
+                COUNT(*) 
+            FROM 
+                workflows_table 
+            WHERE 
+                LOWER(SUBSTRING(name, POSITION('-' IN name) + 1)) = LOWER($1)`
+
+const insertQuery = `
+            INSERT INTO 
+                workflows_table
+                (name, arn, metadata, project_id, created_by) 
+            VALUES ($1, $2, $3::jsonb, $4::uuid, $5::uuid)
+            RETURNING *`
+
 exports.handler = middy(async (event, context) => {
 	context.callbackWaitsForEmptyEventLoop = false
 	const { name, created_by_id, project_id, stages } = JSON.parse(event.body)
@@ -42,16 +65,9 @@ exports.handler = middy(async (event, context) => {
 	}
 	const sfnClient = new SFNClient({ region: "us-east-1" })
 	const newStateMachine = generateStateMachine1(stages)
-
 	const client = await connectToDatabase()
-	const projectQueryPromise = client.query(
-		`select * from projects_table where id = $1`,
-		[project_id],
-	)
-	const workflowQueryPromise = client.query(
-		`SELECT COUNT(*) FROM workflows_table WHERE LOWER(SUBSTRING(name, POSITION('-' IN name) + 1)) = LOWER($1);;`,
-		[name],
-	)
+	const projectQueryPromise = client.query(projectQuery, [project_id])
+	const workflowQueryPromise = client.query(workflowQuery, [name])
 
 	const [projectResult, workflowExists] = await Promise.all([
 		projectQueryPromise,
@@ -78,12 +94,7 @@ exports.handler = middy(async (event, context) => {
 	const command = new CreateStateMachineCommand(input)
 	const commandResponse = await sfnClient.send(command)
 	metaData.created_time = new Date().toISOString()
-	let query = `
-                    insert into workflows_table
-                    (name, arn, metadata, project_id, created_by) values ($1, $2, $3::jsonb, $4::uuid, $5::uuid)
-                    returning *`
-
-	const result = await client.query(query, [
+	const result = await client.query(insertQuery, [
 		workflowName,
 		commandResponse.stateMachineArn,
 		metaData,
@@ -103,5 +114,5 @@ exports.handler = middy(async (event, context) => {
 	}
 })
 	.use(authorize())
-	.use(errorHandler())
 	.use(bodyValidator(bodySchema))
+	.use(errorHandler())
