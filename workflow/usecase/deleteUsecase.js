@@ -7,26 +7,12 @@ const { authorize } = require("../util/authorizer");
 const { pathParamsValidator } = require("../util/pathParamsValidator");
 
 const idSchema = z.object({
-  id: z.string().uuid({ message: "Invalid employee id" }),
+  id: z.string().uuid({ message: "Invalid usecase id" }),
 });
 
 exports.handler = middy(async (event, context) => {
   context.callbackWaitsForEmptyEventLoop = false;
   const usecase_id = event.pathParameters?.id ?? null;
-  const usecaseIdSchema = z.string().uuid({ message: "Invalid usecase id" });
-  const isUuid = usecaseIdSchema.safeParse(usecase_id);
-  if (!isUuid.success) {
-    return {
-      statusCode: 400,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Credentials": true,
-      },
-      body: JSON.stringify({
-        error: isUuid.error.issues[0].message,
-      }),
-    };
-  }
   const client = await connectToDatabase();
   const stopdate = new Date().toISOString();
   const stop_date = JSON.stringify(stopdate);

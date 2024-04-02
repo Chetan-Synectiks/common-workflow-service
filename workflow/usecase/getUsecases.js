@@ -15,28 +15,6 @@ exports.handler = middy(async (event, context) => {
   const org_id = event.user["custom:org_id"];
   const project_id = event.queryStringParameters?.project_id;
   const workflow_id = event.queryStringParameters?.workflow_id;
-  const IdSchema = z.string().uuid({ message: "Invalid id" });
-  const isUuid = IdSchema.safeParse(project_id);
-  const isUuid1 = IdSchema.safeParse(workflow_id);
-  if (
-    !isUuid.success ||
-    !isUuid1.success ||
-    (!isUuid.success && !isUuid1.success)
-  ) {
-    const error =
-      (isUuid.success ? "" : isUuid.error.issues[0].message) +
-      (isUuid1.success ? "" : isUuid1.error.issues[0].message);
-    return {
-      statusCode: 400,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Credentials": true,
-      },
-      body: JSON.stringify({
-        error: error,
-      }),
-    };
-  }
   const client = await connectToDatabase();
   let query = `
             SELECT

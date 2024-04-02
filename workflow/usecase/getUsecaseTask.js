@@ -6,27 +6,12 @@ const { authorize } = require("../util/authorizer");
 const { pathParamsValidator } = require("../util/pathParamsValidator");
 
 const idSchema = z.object({
-  id: z.string().uuid({ message: "Invalid employee id" }),
+  id: z.string().uuid({ message: "Invalid Usecase id" }),
 });
 
 exports.handler = middy(async (event, context) => {
   context.callbackWaitsForEmptyEventLoop = false;
   const usecase_id = event.pathParameters?.id;
-  const uuidSchema = z.string().uuid({ message: "Invalid Usecase Id" });
-  const isUuid = uuidSchema.safeParse(usecase_id);
-
-  if (!isUuid.success) {
-    return {
-      statusCode: 400,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-      },
-      body: JSON.stringify({
-        error: isUuid.error.issues[0].message,
-      }),
-    };
-  }
-
   const client = await connectToDatabase();
   const query = `
 				SELECT
@@ -74,7 +59,6 @@ exports.handler = middy(async (event, context) => {
             usecases_table
         WHERE id = $1::uuid
         `;
-  try {
     const usecaseRes = await client.query(usecaseQuery, [usecase_id]);
     const result = await client.query(query, [usecase_id]);
 
@@ -173,21 +157,6 @@ exports.handler = middy(async (event, context) => {
       },
       body: JSON.stringify(usecaseData),
     };
-  } catch (error) {
-    console.error("Error executing query:", error);
-    return {
-      statusCode: 500,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-      },
-      body: JSON.stringify({
-        message: error.message,
-        error: error,
-      }),
-    };
-  } finally {
-    await client.end();
-  }
 })
   .use(authorize())
   .use(pathParamsValidator(idSchema))

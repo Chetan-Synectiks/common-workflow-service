@@ -31,6 +31,7 @@ const UsecaseSchema = z.object({
 });
 
 exports.handler = middy(async (event, context) => {
+  context.callbackWaitsForEmptyEventLoop = false;
   const {
     project_id,
     created_by_id,
@@ -41,27 +42,6 @@ exports.handler = middy(async (event, context) => {
     start_date,
     end_date,
   } = JSON.parse(event.body);
-  const IdSchema = z.string().uuid({ message: "Invalid id" });
-  const isUuid = IdSchema.safeParse(project_id);
-  const isUuid1 = IdSchema.safeParse(workflow_id);
-  if (
-    !isUuid.success ||
-    !isUuid1.success ||
-    (!isUuid.success && !isUuid1.success)
-  ) {
-    const error =
-      (isUuid.success ? "" : isUuid.error.issues[0].message) +
-      (isUuid1.success ? "" : isUuid1.error.issues[0].message);
-    return {
-      statusCode: 400,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-      },
-      body: JSON.stringify({
-        error: error,
-      }),
-    };
-  }
   const newUsecase = {
     created_by_id: created_by_id,
     usecase_name: usecase_name,
@@ -187,8 +167,8 @@ exports.handler = middy(async (event, context) => {
   }
 })
   .use(authorize())
-  .use(errorHandler())
-  .use(bodyValidator(UsecaseSchema));
+  .use(bodyValidator(UsecaseSchema))
+  .use(errorHandler());
 
 const generateStages = (stages) => {
   return stages.map((stage) => {

@@ -15,48 +15,27 @@ const idSchema = z.object({
   id: z.string().uuid({ message: "Invalid employee id" }),
 });
 
-exports.handler = middy(async (event, context) => {
-  const useCaseId = event.pathParameters?.id;
-  const { name, updated_by_id, stages } = JSON.parse(event.body);
-  const IdSchema = z.string().uuid({ message: "Invalid id" });
-  const isUuid = IdSchema.safeParse(useCaseId);
-  const isUuid1 = IdSchema.safeParse(updated_by_id);
-  if (
-    !isUuid.success ||
-    !isUuid1.success ||
-    (!isUuid.success && !isUuid1.success)
-  ) {
-    const error =
-      (isUuid.success ? "" : isUuid.error.issues[0].message) +
-      (isUuid1.success ? "" : isUuid1.error.issues[0].message);
-    return {
-      statusCode: 400,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Credentials": true,
-      },
-      body: JSON.stringify({
-        error: error,
-      }),
-    };
-  }
-  const StageSchema = z.object(
+const StageSchema = z.object(
     {
       tasks: z.array(z.string()),
       checklist: z.array(z.string()),
     },
     { message: "Invalid request body" }
   );
-  const updateUsecase = {
-    name: name,
-    stages: stages,
-  };
   const UpdateSchema = z.object({
     name: z.string().min(3, {
       message: "usecase name should be atleast 3 characters long",
     }),
     stages: z.array(z.record(z.string(), StageSchema)),
   });
+
+exports.handler = middy(async (event, context) => {
+  const useCaseId = event.pathParameters?.id;
+  const { name, updated_by_id, stages } = JSON.parse(event.body);
+  const updateUsecase = {
+    name: name,
+    stages: stages,
+  };
   const shemaresult = UpdateSchema.safeParse(updateUsecase);
   console.log(shemaresult);
   if (!shemaresult.success) {
@@ -176,4 +155,5 @@ exports.handler = middy(async (event, context) => {
 })
   .use(authorize())
   .use(pathParamsValidator(idSchema))
+  .use(bodyValidator(UpdateSchema))
   .use(errorHandler());

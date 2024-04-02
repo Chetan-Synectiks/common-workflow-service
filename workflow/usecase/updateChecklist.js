@@ -6,36 +6,24 @@ const { authorize } = require("../util/authorizer");
 const { pathParamsValidator } = require("../util/pathParamsValidator");
 
 const idSchema = z.object({
-  id: z.string().uuid({ message: "Invalid employee id" }),
+  id: z.string().uuid({ message: "Invalid usecase id" }),
 });
+
+const checklistSchema = z.object({
+    stage_name: z.string(),
+    item_id: z.number(),
+    checked: z.boolean(),
+  });
+
 exports.handler = middy(async (event, context) => {
   context.callbackWaitsForEmptyEventLoop = false;
   const usecase_id = event.pathParameters.id;
-  const uuidSchema = z.string().uuid();
-  const isUuid = uuidSchema.safeParse(usecase_id);
-  if (!isUuid.success) {
-    return {
-      statusCode: 400,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Credentials": true,
-      },
-      body: JSON.stringify({
-        error: isUuid.error.issues[0].message,
-      }),
-    };
-  }
   const { stage_name, item_id, checked } = JSON.parse(event.body);
   const checklistObj = {
     stage_name: stage_name,
     item_id: item_id,
     checked: checked,
   };
-  const checklistSchema = z.object({
-    stage_name: z.string(),
-    item_id: z.number(),
-    checked: z.boolean(),
-  });
   const result = checklistSchema.safeParse(checklistObj);
   if (!result.success) {
     return {
@@ -45,7 +33,7 @@ exports.handler = middy(async (event, context) => {
         "Access-Control-Allow-Credentials": true,
       },
       body: JSON.stringify({
-        error: result.error.formErrors.fieldErrors,
+        error: shemaresult.error.formErrors.fieldErrors,
       }),
     };
   }
@@ -90,4 +78,5 @@ exports.handler = middy(async (event, context) => {
 })
   .use(authorize())
   .use(pathParamsValidator(idSchema))
+  .use(bodyValidator(checklistSchema))
   .use(errorHandler());
