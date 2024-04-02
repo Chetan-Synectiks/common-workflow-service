@@ -2,31 +2,33 @@ const { connectToDatabase } = require("../db/dbConnector")
 const { SFNClient, SendTaskSuccessCommand } = require("@aws-sdk/client-sfn")
 const { z } = require("zod")
 const middy = require("@middy/core");
-const { errorHandler } = require("../util/errorHandler")
 const { authorize } = require("../util/authorizer")
 const { pathParamsValidator } = require("../util/pathParamsValidator")
+const { errorHandler } = require("../util/errorHandler")
 
 const idSchema = z.object({
     taskId: z.string().uuid({ message: "Invalid task id" }),
 })
+const updateQuery = `
+    UPDATE tasks_table
+    SET task = jsonb_set(
+            task,
+            '{status}',
+            '"completed"'
+        )
+    WHERE id = $1`;
 
-exports.handler = middy(async event => {
+const getTokenQuery = `
+    SELECT
+        token, usecase_id
+    FROM
+        tasks_table
+    WHERE
+        id = $1::uuid`;
+
+exports.handler = middy(async (event) => {
     const task_id = event.pathParameters?.taskId ?? null
     const client = await connectToDatabase()
-    const updateQuery = `
-                    update tasks_table
-                    set task = jsonb_set(
-                        task,
-                        '{status}',
-                        '"completed"')
-                    where id = $1`
-    const getTokenQuery = `
-                    SELECT
-                        token,usecase_id
-                    FROM
-                        tasks_table
-                    WHERE
-                        id = $1::uuid`
     await client.query("BEGIN")
     try {
         const tokenResult = await client.query(getTokenQuery, [task_id])
@@ -70,6 +72,6 @@ exports.handler = middy(async event => {
         await client.end()
     }
 })
-    .use(pathParamsValidator(idSchema))
     .use(authorize())
+    .use(pathParamsValidator(idSchema))
     .use(errorHandler())

@@ -17,24 +17,37 @@ const replySchema = z.object({
         message: "commentIndex should be either 0 or greater than 0",
     }),
 });
+const resourceQuery = `
+    SELECT
+        id,
+        r.first_name || '' || r.last_name AS name,
+        r.image AS image_url
+    FROM
+        employee AS r
+    WHERE
+        id = $1`;
+
+const updateQuery = `
+    UPDATE tasks_table 
+    SET comments = jsonb_set(
+        comments,
+        $1, 
+        $2, 
+        true 
+    )
+    WHERE 
+        id = $3`;
 
 exports.handler = middy(async (event) => {
     const taskId = event.pathParameters?.taskId ?? null;
-    const client = await connectToDatabase();
     const { resource_id, comment, commentIndex } = JSON.parse(event.body);
-    const isUuid = taskIdSchema.safeParse(taskId);
-    const isUuid1 = taskIdSchema.safeParse(resource_id);
-
+    
     const newReply = {
         comment: comment,
         commentIndex: commentIndex,
     };
     const validate = replySchema.safeParse(newReply);
-
-    const resourceQuery = `select id,r.first_name||''|| r.last_name as name,
-                           r.image as image_url
-                           from employee as r
-                           where id = $1`;
+    const client = await connectToDatabase();
     const resourceQueryResult = await client.query(resourceQuery, [resource_id]);
     const resource = resourceQueryResult.rows[0];
     let reply = JSON.stringify({
@@ -42,17 +55,7 @@ exports.handler = middy(async (event) => {
         comment: comment,
         created_date: new Date(),
     });
-    const updatequery = ` UPDATE tasks_table 
-                        SET comments = jsonb_set(
-                            comments,
-                            $1, 
-                            $2, 
-                            true 
-                        )
-                       WHERE id = $3;
-                    `;
-
-    const updatequeryResult = await client.query(updatequery, [
+    const updatequeryResult = await client.query(updateQuery, [
         `{${commentIndex}, reply}`,
         reply,
         taskId,

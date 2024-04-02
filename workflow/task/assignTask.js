@@ -12,27 +12,23 @@ const taskIdSchema = z.object({
 const assignIdSchema = z.object({
     taskId: z.string().uuid({ message: "Invalid task id" })
 });
+const query = `
+    UPDATE
+        tasks_table
+    SET
+        assignee_id = $1
+    WHERE
+        id = $2::uuid`;
 
 exports.handler = middy(async (event) => {
     const taskid = event.pathParameters?.taskId ?? null;
     const assigned_to_id = event.pathParameters?.resourceId ?? null;
-
     const client = await connectToDatabase();
-    let query = `
-        update
-            tasks_table 
-        set 
-            assignee_id = $1
-        where
-            id = $2::uuid`;
-
     const update = await client.query(query, [
         assigned_to_id,
         taskid
     ]);
-
     await client.end();
-
     return {
         statusCode: 201,
         headers: {
