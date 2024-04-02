@@ -1,124 +1,92 @@
-const { connectToDatabase } = require("../db/dbConnector");
-const { SFNClient, UpdateStateMachineCommand } = require("@aws-sdk/client-sfn");
-const { generateStateMachine2 } = require("./generateStateMachine");
-const { z } = require("zod");
+const { connectToDatabase } = require("../db/dbConnector")
+const { SFNClient, UpdateStateMachineCommand } = require("@aws-sdk/client-sfn")
+const { generateStateMachine2 } = require("./generateStateMachine")
+const { z } = require("zod")
+const middy = require("@middy/core")
+const { authorize } = require("../util/authorizer")
+const { errorHandler } = require("../util/errorHandler")
+const { bodyValidator } = require("../util/bodyValidator")
+const { pathParamsValidator } = require("../util/pathParamsValidator")
 
-exports.handler = async (event) => {
-	const id = event.pathParameters?.id;
-	const { updated_by_id, stages } = JSON.parse(event.body);
-    const IdSchema = z.string().uuid({ message: "Invalid id" });
-    const isUuid = IdSchema.safeParse(id);
-    const isUuid1 = IdSchema.safeParse(updated_by_id);
-    if (
-        !isUuid.success ||
-        !isUuid1.success ||
-        (!isUuid.success && !isUuid1.success)
-    ) {
-        const error =
-            (isUuid.success ? "" : isUuid.error.issues[0].message) +
-            (isUuid1.success ? "" : isUuid1.error.issues[0].message);
-        return {
-            statusCode: 400,
-            headers: {
-               "Access-Control-Allow-Origin": "*",
-				"Access-Control-Allow-Credentials": true,
-            },
-            body: JSON.stringify({
-                error: error,
-            }),
-        };
-    }
-	const StageSchema = z.object(
-        {
-            tasks: z.array(z.string()),
-            checklist: z.array(z.string()),
-        },
-        { message: "Invalid request body" }
-    );
-    const MetaDataSchema = z.array(z.record(z.string(), StageSchema))
-	const metadataresult = MetaDataSchema.safeParse(stages)
-		if (!metadataresult.success) {
-		return {
-			statusCode: 400,
-			headers: {
-				"Access-Control-Allow-Origin": "*",
-			},
-			body: JSON.stringify({
-				error: metadataresult.error.formErrors.fieldErrors,
-			}),
-		};
+const idSchema = z.object({
+	id: z.string().uuid({ message: "Invalid workflow id" }),
+})
+const StageSchema = z.object({
+	name: z.string({ message: "Invalid stage name" }),
+	tasks: z.array(z.string()),
+	checklist: z.array(z.string()),
+})
+const MetaDataSchema = z.object({
+	updated_by_id: z.string().uuid(),
+	stages: z.array(StageSchema),
+})
+
+const workflowQuery = `
+			SELECT 
+				arn, 
+				metadata
+			FROM 
+				workflows_table 
+			WHERE 
+				id = $1`
+
+const resourceQuery = `
+			SELECT 
+				first_name,
+				last_name,
+				image
+			FROM 
+				employee
+			WHERE 
+				id = $1`
+
+const updateQuery = `
+			UPDATE 
+				workflows_table 
+			SET 
+				metadata = $1 
+			WHERE 
+				id = $2
+			RETURNING 
+				metadata->'stages' AS stages`
+
+exports.handler = middy(async (event, context) => {
+	context.callbackWaitsForEmptyEventLoop = false
+	const id = event.pathParameters?.id
+	const { updated_by_id, stages } = JSON.parse(event.body)
+	const sfnClient = new SFNClient({ region: "us-east-1" })
+	const client = await connectToDatabase()
+	const workflowData = await client.query(workflowQuery, [id])
+
+	const metaData = workflowData.rows[0].metadata
+	const newStateMachine = generateStateMachine2(stages)
+
+	const input = {
+		stateMachineArn: workflowData.rows[0].arn,
+		definition: JSON.stringify(newStateMachine),
+		roleArn: "arn:aws:iam::657907747545:role/backendstepfunc-Role",
 	}
-	const sfnClient = new SFNClient({ region: "us-east-1" });
-	const client = await connectToDatabase();
-	try {
-		const workflowData = await client.query(
-			`select arn, metadata from workflows_table where id = $1`,
-			[id]
-		);
-
-		const metaData = workflowData.rows[0].metadata;
-		const newStateMachine = generateStateMachine2(stages);
-
-		const input = {
-			stateMachineArn: workflowData.rows[0].arn,
-			definition: JSON.stringify(newStateMachine),
-			roleArn: "arn:aws:iam::657907747545:role/backendstepfunc-Role",
-		};
-		const command = new UpdateStateMachineCommand(input);
-		const commandResponse = await sfnClient.send(command);
-
-		const resource = await client.query(
-			`SELECT (r.resource -> 'name') as name,
-                    (r.resource -> 'image') as image_url
-            FROM employee as r
-            WHERE id = $1`,
-			[updated_by_id]
-		);
-
-		metaData.stages = stages;
-		metaData.updated_by = {
-			id: updated_by_id,
-			name: resource.rows[0].name,
-			image_url: resource.rows[0].image_url,
-		};
-		metaData.updated_time = commandResponse.updateDate;
-		let query = `
-            UPDATE workflows_table SET metadata = $1 WHERE id = $2
-        	returning metadata->'stages' AS stages`;
-
-		const result = await client.query(query, [metaData, id]);
-
-		return {
-			statusCode: 200,
-			headers: {
-				"Access-Control-Allow-Origin": "*",
-			},
-			body: JSON.stringify(result.rows[0]),
-		};
-	} catch (error) {
-		if (error.name == "StateMachineAlreadyExists") {
-			return {
-				statusCode: 500,
-				headers: {
-					"Access-Control-Allow-Origin": "*",
-				},
-				body: JSON.stringify({
-					error: "Workflow with same name already exists",
-				}),
-			};
-		}
-		return {
-			statusCode: 500,
-			headers: {
-				"Access-Control-Allow-Origin": "*",
-			},
-			body: JSON.stringify({
-				message: error.message,
-				error: error,
-			}),
-		};
+	const command = new UpdateStateMachineCommand(input)
+	const commandResponse = await sfnClient.send(command)
+	const resource = await client.query(resourceQuery, [updated_by_id])
+	metaData.stages = stages
+	metaData.updated_by = {
+		id: updated_by_id,
+		name: `${resource.rows[0].first_name} ${resource.rows[0].last_name}`,
+		image_url: resource.rows[0].image || "",
 	}
-	finally {
-		await client.end();
+	metaData.updated_time = commandResponse.updateDate
+	const result = await client.query(updateQuery, [metaData, id])
+	await client.end()
+	return {
+		statusCode: 200,
+		headers: {
+			"Access-Control-Allow-Origin": "*",
+		},
+		body: JSON.stringify(result.rows[0]),
 	}
-};
+})
+	.use(authorize())
+	.use(pathParamsValidator(idSchema))
+	.use(bodyValidator(MetaDataSchema))
+	.use(errorHandler())
