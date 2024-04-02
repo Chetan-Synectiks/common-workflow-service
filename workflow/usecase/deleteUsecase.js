@@ -2,8 +2,8 @@ const { SFNClient, StopExecutionCommand } = require("@aws-sdk/client-sfn");
 const { connectToDatabase } = require("../db/dbConnector");
 const { z } = require("zod");
 const middy = require("@middy/core");
-const { errorHandler } = require("../util/errorHandler");
 const { authorize } = require("../util/authorizer");
+const { errorHandler } = require("../util/errorHandler");
 const { pathParamsValidator } = require("../util/pathParamsValidator");
 
 const idSchema = z.object({

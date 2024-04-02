@@ -1,8 +1,8 @@
 const { connectToDatabase } = require("../db/dbConnector");
 const { z } = require("zod");
 const middy = require("@middy/core");
-const { errorHandler } = require("../util/errorHandler");
 const { authorize } = require("../util/authorizer");
+const { errorHandler } = require("../util/errorHandler");
 const { bodyValidator } = require("../util/bodyValidator");
 const { SFNClient, StartExecutionCommand } = require("@aws-sdk/client-sfn");
 const { v4: uuid } = require("uuid");

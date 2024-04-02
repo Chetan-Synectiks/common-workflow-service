@@ -7,8 +7,8 @@ const {
   StartExecutionCommand,
 } = require("@aws-sdk/client-sfn");
 const middy = require("@middy/core");
-const { errorHandler } = require("../util/errorHandler");
 const { authorize } = require("../util/authorizer");
+const { errorHandler } = require("../util/errorHandler");
 const { pathParamsValidator } = require("../util/pathParamsValidator");
 const { bodyValidator } = require("../util/bodyValidator");
 
