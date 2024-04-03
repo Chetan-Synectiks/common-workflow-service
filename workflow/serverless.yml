@@ -16,6 +16,9 @@ provider:
     timeout: 15
     runtime: nodejs18.x
     region: us-east-1
+    deploymentBucket:
+      name: workflow-lambda-dev-serverlessdeploymentbucket-kkydemn5hkgz
+
 
 functions: 
     - ${file(./project/function.yml)}
