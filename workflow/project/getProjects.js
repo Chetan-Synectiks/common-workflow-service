@@ -2,6 +2,15 @@ const { connectToDatabase } = require("../db/dbConnector");
 const { z } = require("zod");
 
 exports.handler = async (event) => {
+	let page = event.queryStringParameters?.page ?? null
+	if (page == null) {
+		page = 1
+	}
+	page = parseInt(page)
+	const limit = 10
+	let offset = (page - 1) * 10
+	offset = Math.max(offset, 0)
+
 	const status = event.queryStringParameters?.status ?? null;
 	const validStatusValues = ["unassigned", "completed", "inprogress"];
 	const statusSchema = z
@@ -48,9 +57,14 @@ exports.handler = async (event) => {
 		}
 		query += `
                     group by
-                        p.id`;
+                        p.id
+					LIMIT 10 OFFSET ${offset}`;
+		
 		const result = await client.query(query, queryparams);
-		const response = result.rows.map(
+		console.log("result", result.rowCount)
+		const totalRecords = result.rowCount
+		const totalPages = Math.ceil(totalRecords / limit)
+		let response = result.rows.map(
 			({
 				project_id,
 				proejct_name,
@@ -75,7 +89,11 @@ exports.handler = async (event) => {
 			headers: {
 				"Access-Control-Allow-Origin": "*",
 			},
-			body: JSON.stringify(response),
+			body: JSON.stringify({
+				totalPages: totalPages,
+				currentPage: page,
+				projects: response,
+			}),
 		};
 	} catch (error) {
 		return {
