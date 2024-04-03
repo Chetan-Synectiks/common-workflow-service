@@ -45,17 +45,20 @@ const workflowQuery = `
             FROM 
                 workflows_table 
             WHERE 
-                LOWER(SUBSTRING(name, POSITION('-' IN name) + 1)) = LOWER($1)`
+                LOWER(SUBSTRING(name, POSITION('-' IN name) + 1)) = LOWER($1)
+			AND
+				org_id = $2`
 
 const insertQuery = `
             INSERT INTO 
                 workflows_table
-                (name, arn, metadata, project_id, created_by) 
-            VALUES ($1, $2, $3::jsonb, $4::uuid, $5::uuid)
+                (name, arn, metadata, project_id, created_by, org_id) 
+            VALUES ($1, $2, $3::jsonb, $4::uuid, $5::uuid, $6::uuid)
             RETURNING *`
 
 exports.handler = middy(async (event, context) => {
 	context.callbackWaitsForEmptyEventLoop = false
+	const org_id = event.user["custom:org_id"]
 	const { name, created_by_id, project_id, stages } = JSON.parse(event.body)
 	const metaData = {
 		status: "inprogress",
@@ -67,7 +70,7 @@ exports.handler = middy(async (event, context) => {
 	const newStateMachine = generateStateMachine1(stages)
 	const client = await connectToDatabase()
 	const projectQueryPromise = client.query(projectQuery, [project_id])
-	const workflowQueryPromise = client.query(workflowQuery, [name])
+	const workflowQueryPromise = client.query(workflowQuery, [name, org_id])
 
 	const [projectResult, workflowExists] = await Promise.all([
 		projectQueryPromise,
@@ -100,6 +103,7 @@ exports.handler = middy(async (event, context) => {
 		metaData,
 		project_id,
 		created_by_id,
+		org_id,
 	])
 	if (commandResponse.$metadata.httpStatusCode != 200) {
 		console.log(JSON.stringify(commandResponse))
