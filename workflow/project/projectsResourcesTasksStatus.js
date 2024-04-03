@@ -35,11 +35,21 @@ exports.handler = async (event) => {
                 body: JSON.stringify({ message: "No Project is present" }),
             };
         }
-        
+        if ( projectResult.rows[0].roles == null ) {
+            return {
+                statusCode: 200,
+                headers: {
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Credentials": true,
+                },
+                body: JSON.stringify([]),
+            };
+        }
         const resourceIds = projectResult.rows.flatMap(row => {
             const roles = row.roles;
             return roles.flatMap(role => Object.values(role).flat());
         });
+    
         console.log("resourceIds",resourceIds);
         if (resourceIds.length == 0) {
             return {
