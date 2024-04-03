@@ -7,14 +7,15 @@ useDotenv: true
 plugins:
     - serverless-offline
 
+custom:
+  stage: ${opt:stage, 'dev'}
+
 provider:
     name: aws
-    stage: dev
+    stage: ${self:custom.stage}
     timeout: 15
     runtime: nodejs18.x
     region: us-east-1
-    cors:
-        origin: '*'
 
 functions: 
     - ${file(./project/function.yml)}
@@ -24,8 +25,8 @@ functions:
     - ${file(./task/function.yml)}
     - ${file(./resource/function.yml)}
 
-custom:
-  http:
-    cors:
-      origin: '*' # Allow requests from any origin
-      methods: ['OPTIONS', 'POST', 'PUT']    
+# custom:
+#   http:
+#     cors:
+#       origin: '*' # Allow requests from any origin
+#       methods: ['OPTIONS', 'POST', 'PUT']    
