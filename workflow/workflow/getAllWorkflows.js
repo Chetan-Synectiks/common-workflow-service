@@ -20,12 +20,16 @@ const getWorkflows = `
 			LEFT JOIN
 				emp_detail ed ON e.id = ed.emp_id
 			LEFT JOIN
-        		emp_designation edg ON ed.designation_id = edg.id`
+        		emp_designation edg ON ed.designation_id = edg.id
+			WHERE
+				w.org_id = $1`
 
 exports.handler = middy(async (event, context) => {
 	context.callbackWaitsForEmptyEventLoop = false
+	const org_id = event.user["custom:org_id"]
+
 	const client = await connectToDatabase()
-	const getWorkflowsResult = await client.query(getWorkflows)
+	const getWorkflowsResult = await client.query(getWorkflows,[org_id])
 	const response = getWorkflowsResult.rows.map(
 		({
 			id,

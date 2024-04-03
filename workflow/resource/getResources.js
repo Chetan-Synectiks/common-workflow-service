@@ -1,7 +1,15 @@
 const { connectToDatabase } = require("../db/dbConnector")
+const { z } = require("zod")
 const middy = require("@middy/core")
 const { errorHandler } = require("../util/errorHandler")
 const { authorize } = require("../util/authorizer")
+const { optionalParamsValidator } = require("../util/optionalParamsValidator");
+
+const querySchema = z
+  .object({
+    resource_id: z.string().uuid().optional(),
+  })
+  .nullable();
 
 const resourcesQuery = `
             SELECT 
@@ -40,20 +48,19 @@ exports.handler = middy(async (event, context) => {
                 p.project->>'project_icon_url' AS project_icon_url,
                 p.project->>'team' AS team
             FROM
-                projects_table p`
+                projects_table p
+			WHERE
+				p.org_id = $1`
 
+	queryParams.push(org_id);
 	if (projectFilter) {
 		projectsQuery += `
-                WHERE
-                    id = $1`
+                AND
+                	id = $2`
 		queryParams.push(projectFilter)
 	}
 	const resourcesResult = await client.query(resourcesQuery, [org_id])
-	console.log(resourcesResult)
 	const projectsResult = await client.query(projectsQuery, queryParams)
-	console.log(queryParams)
-	console.log(projectsResult)
-
 	const outputData = processResourcesData(
 		resourcesResult.rows,
 		projectsResult.rows,
@@ -70,6 +77,7 @@ exports.handler = middy(async (event, context) => {
 	}
 })
 	.use(authorize())
+	.use(optionalParamsValidator(querySchema))
 	.use(errorHandler())
 
 function processResourcesData(resources, projects, projectFilter) {
