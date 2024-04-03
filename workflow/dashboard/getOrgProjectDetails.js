@@ -7,7 +7,9 @@ const totalProjectsQuery = `
             SELECT
                 COUNT(*) AS total_projects
             FROM
-                projects_table`;
+                projects_table
+            WHERE
+                org_id = $1`;
 			
 const totalTasksQuery = `
             SELECT
@@ -21,19 +23,22 @@ const projectByStatusQuery = `
                 (project->>'status') AS status
             FROM
                 projects_table
+            WHERE
+                org_id = $1
             GROUP BY
                 project->>'status'`;
 
 exports.handler = middy(async (event, context, callback) => {
+    const org_id = event.user["custom:org_id"];
 	const client = await connectToDatabase();
 
-	const total_projects_result = await client.query(totalProjectsQuery);
+	const total_projects_result = await client.query(totalProjectsQuery,[org_id]);
 	const total_projects = total_projects_result.rows[0].total_projects;
 
 	const total_tasks_result = await client.query(totalTasksQuery);
 	const total_tasks = total_tasks_result.rows[0].task_count;
 
-	const projectByStatusResult = await client.query(projectByStatusQuery);
+const projectByStatusResult = await client.query(projectByStatusQuery,[org_id]);
 
 	const projects_by_status = {};
 	projectByStatusResult.rows.forEach((row) => {
