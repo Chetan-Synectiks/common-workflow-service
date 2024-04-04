@@ -1,5 +1,6 @@
 const { connectToDatabase } = require("../db/dbConnector");
 const { z } = require("zod");
+const { uploadToS3 } = require("./uploadDocs")
 
 exports.handler = async (event) => {
 
@@ -18,16 +19,21 @@ exports.handler = async (event) => {
             }),
         };
     }
-    const { doc_name, doc_url } = JSON.parse(event.body);
+    const { createdBy, doc_name, data } = JSON.parse(event.body);
+	const upload = await uploadToS3(doc_name, data)
+    const url = upload.link
+    const type = upload.fileExtension
+    const statusCode = upload.statusCode
     const currentTimestamp = new Date().toISOString();
-    const createdBy = "13a7d5ff-64c2-4a6f-87da-82e5fb78ce8f";
     const metadocsObj = {
+        createdBy: createdBy,
         doc_name: doc_name,
-        doc_url: doc_url,
+        data: data,
     };
     const metadocsSchema = z.object({
+        createdBy: z.string().uuid(),
         doc_name: z.string(),
-        doc_url: z.string().url({
+        data: z.string({
             message : "invalid string"
         })
     });
@@ -46,17 +52,18 @@ exports.handler = async (event) => {
     }
     const client = await connectToDatabase();
     try {
-
+        if(statusCode === 200 ){
         let query = `
 					insert into metadocs_table
-					(tasks_id, created_by, doc_name, doc_url, created_time) values ($1, $2, $3, $4, $5)
+					(tasks_id, created_by, doc_name, doc_url, created_time, type) values ($1, $2, $3, $4, $5, $6)
 					returning *`;
         let queryparam = [
             task_id,
             createdBy,
             doc_name,
-            doc_url,
-            currentTimestamp
+            url,
+            currentTimestamp,
+            type
         ];
         const result = await client.query(query, queryparam);
         return {
@@ -67,6 +74,7 @@ exports.handler = async (event) => {
             },
             body: JSON.stringify(result.rows[0]),
         };
+    }
     } catch (error) {
         console.error("Error inserting data:", error);
         return {
