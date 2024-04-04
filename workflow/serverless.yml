@@ -16,6 +16,9 @@ provider:
     timeout: 15
     runtime: nodejs18.x
     region: us-east-1
+    environment:
+        BUCKET_NAME: ${env:BUCKET_NAME}
+        BUCKET_FOLDER_NAME: ${env:BUCKET_FOLDER_NAME}
 
 functions: 
     - ${file(./project/function.yml)}
