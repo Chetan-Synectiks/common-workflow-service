@@ -24,6 +24,7 @@ exports.handler = async (event) => {
     } = requestBody;
     const client = await connectToDatabase();
     try {
+        const assigned_date = new Date().toISOString();
         const result = await client.query(
             "SELECT usecase FROM usecases_table WHERE id = $1",
             [usecase_id]
@@ -49,6 +50,8 @@ exports.handler = async (event) => {
                 stageData.assignee_id = assigned_to_id;
                 if (!stageData.description)
                     stageData.description = description;
+                if (!stageData.assigned_date)
+                    stageData.assigned_date = assigned_date;
             }
         });
         await client.query(`  UPDATE usecases_table
