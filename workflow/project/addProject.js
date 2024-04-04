@@ -21,9 +21,10 @@ const reqSchema = z.object({
 	image_url: z.string().url({ message: "Invalid url for project icon" }),
 })
 const getProjects = `SELECT COUNT(*) FROM projects_table WHERE LOWER(project->>'name') = LOWER($1)`
-const addproject = `INSERT INTO projects_table (project) VALUES ($1::jsonb) RETURNING *`
+const addproject = `INSERT INTO projects_table (project,org_id) VALUES ($1::jsonb,$2) RETURNING *`
 exports.handler = middy(async (event, context) => {
 	context.callbackWaitsForEmptyEventLoop = false
+	const org_id = event.user["custom:org_id"]
 	const { name, description, department, start_date, end_date, image_url } =
 		JSON.parse(event.body)
 	const client = await connectToDatabase()
@@ -52,7 +53,7 @@ exports.handler = middy(async (event, context) => {
 		workflows: [],
 		team: {},
 	}
-	const result = await client.query(addproject,[project])
+	const result = await client.query(addproject,[project,org_id])
 	const insertedData = result.rows[0]
 	insertedData.project.id = insertedData.id
 	await client.end()

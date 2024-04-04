@@ -11,17 +11,18 @@ const idSchema = z.object({
 })
 
 const getarnQuery = `
-			SELECT arn FROM workflows_table WHERE id = $1`
+			SELECT 
+				arn 
+			FROM 
+				workflows_table 
+			WHERE 
+				id = $1`
 
 const updateStatusQuery = `
 			UPDATE 
 				workflows_table
             SET 
-				metadata = jsonb_set(
-                        	metadata,
-                            '{status}',
-                            '"terminated"',
-                            true) 
+				metadata = jsonb_set(metadata, '{status}', '"terminated"', true) 
             WHERE 
 				id = $1`
 
