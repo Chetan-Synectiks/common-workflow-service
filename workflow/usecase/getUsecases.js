@@ -12,7 +12,6 @@ const idSchema = z.object({
 
 exports.handler = middy(async (event, context) => {
   context.callbackWaitsForEmptyEventLoop = false;
-  const org_id = event.user["custom:org_id"];
   const project_id = event.queryStringParameters?.project_id;
   const workflow_id = event.queryStringParameters?.workflow_id;
   const client = await connectToDatabase();
@@ -37,7 +36,6 @@ exports.handler = middy(async (event, context) => {
             WHERE
                 usecases_table.project_id = $1
                 AND usecases_table.workflow_id = $2
-                AND employee.org_id = $3
             GROUP BY 
                 usecases_table.id, 
                 usecases_table.usecase->>'name',
@@ -50,7 +48,7 @@ exports.handler = middy(async (event, context) => {
                 usecases_table.usecase->>'end_date';
         `;
 
-  const params = [project_id, workflow_id, org_id];
+  const params = [project_id, workflow_id];
 
   const result = await client.query(query, params);
   const usecases = result.rows.map((row) => ({
