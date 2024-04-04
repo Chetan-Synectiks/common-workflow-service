@@ -14,6 +14,7 @@ exports.handler = middy(async (event, context) => {
   const requestBody = JSON.parse(event.body);
   const usecase_id = event.pathParameters?.id ?? null;
   const { stage_name, assigned_to_id, description } = requestBody;
+  const assigned_date = new Date().toISOString();
   const client = await connectToDatabase();
   const result = await client.query(
     "SELECT usecase FROM usecases_table WHERE id = $1",
@@ -38,7 +39,10 @@ exports.handler = middy(async (event, context) => {
       console.log(stageData);
 
       stageData.assignee_id = assigned_to_id;
-      if (!stageData.description) stageData.description = description;
+      if (!stageData.description) 
+         stageData.description = description;
+      if (!stageData.assigned_date)
+         stageData.assigned_date = assigned_date;
     }
   });
   await client.query(
