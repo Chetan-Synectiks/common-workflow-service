@@ -1,6 +1,8 @@
 const { connectToDatabase } = require("../db/dbConnector");
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const { z } = require("zod");
-const { uploadToS3 } = require("./uploadDocs");
+
+const s3Client = new S3Client({ region: "us-east-1" });
 
 let query = `
 insert into metadocs_table
@@ -23,66 +25,35 @@ exports.handler = async (event) => {
       }),
     };
   }
-  const { doc_name, data } = JSON.parse(event.body);
-  const metadocsObj = {
-    doc_name: doc_name,
-    data: data,
+  const body = JSON.parse(event.body);
+  const fileName = body.doc_name;
+  const data1 = body.data;
+  const contentType = data1.split(";")[0].split(":")[1];
+  const fileExtension = contentType.split("/")[1];
+  const newfileName = `${fileName}.${fileExtension}`;
+  const bucket = process.env.BUCKET_NAME;
+  const folder = process.env.BUCKET_FOLDER_NAME;
+  const buffer = Buffer.from(data1.split(",")[1], "base64");
+  const s3Params = {
+    Bucket: bucket,
+    Key: `${folder}/${newfileName}`,
+    Body: buffer,
+    ContentType: contentType,
   };
-  const metadocsSchema = z.object({
-    doc_name: z.string(),
-    data: z.string({
-      message: "invalid string",
-    }),
-  });
-  const result = metadocsSchema.safeParse(metadocsObj);
-  if (!result.success) {
-    return {
-      statusCode: 400,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Credentials": true,
-      },
-      body: JSON.stringify({
-        error: result.error.formErrors.fieldErrors,
-      }),
-    };
-  }
 
+  await s3Client.send(new PutObjectCommand(s3Params));
   const currentTimestamp = new Date().toISOString();
   let queryparam = [];
   const client = await connectToDatabase();
   try {
-    const isLink = isURL(data);
-    if (isLink) {
+    const bucket = process.env.BUCKET_NAME
+	const folder = process.env.BUCKET_FOLDER_NAME
+    const link = `https://${bucket}.s3.amazonaws.com/${folder}${newfileName}`
+    const type = fileExtension;
       queryparam.push(
         task_id,
-        doc_name,
-        data,
-        currentTimestamp,
-        "url"
-      );
-
-      const result = await client.query(query, queryparam);
-
-      return {
-        statusCode: 200,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Credentials": true,
-        },
-        body: JSON.stringify(result.rows[0]),
-      };
-    }
-    const upload = await uploadToS3(doc_name, data);
-    console.log("upload :", upload.link);
-    const url = upload.link;
-    const type = upload.fileExtension;
-    const statusCode = upload.statusCode;
-    if (statusCode === 200) {
-      queryparam.push(
-        task_id,
-        doc_name,
-        url,
+        fileName,
+        link,
         currentTimestamp,
         type
       );
@@ -95,7 +66,6 @@ exports.handler = async (event) => {
         },
         body: JSON.stringify(result.rows[0]),
       };
-    }
   } catch (error) {
     console.error("Error inserting data:", error);
     return {
