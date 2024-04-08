@@ -74,6 +74,7 @@ exports.handler = async (event) => {
       };
     }
     const upload = await uploadToS3(doc_name, data);
+    console.log("upload :", upload.link);
     const url = upload.link;
     const type = upload.fileExtension;
     const statusCode = upload.statusCode;

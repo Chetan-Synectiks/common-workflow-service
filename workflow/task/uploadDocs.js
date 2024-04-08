@@ -3,10 +3,13 @@ const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3")
 
 const s3Client = new S3Client({ region: "us-east-1" })
 
-async function uploadToS3(fileName, data) {
+module.exports.uploadToS3 = async (fileName, data) =>  {
 	const contentType = data.split(";")[0].split(":")[1]
 	const fileExtension = contentType.split("/")[1]
-	const newfileName = formatFileName(fileName, fileExtension)
+	fileName = fileName.substring(0, fileName.lastIndexOf("."))
+	const newfileName = `${fileName
+		.replace(/ /g, "")
+		.toLowerCase()}_${Date.now()}.${fileExtension}`
 	const bucket = process.env.BUCKET_NAME
 	const folder = process.env.BUCKET_FOLDER_NAME
 	const buffer = Buffer.from(data.split(",")[1], "base64")
@@ -30,16 +33,4 @@ async function uploadToS3(fileName, data) {
 		console.error("Error uploading to S3:", error)
 		throw error
 	}
-}
-
-function formatFileName(fileName, fileExtension) {
-	fileName = fileName.substring(0, fileName.lastIndexOf("."))
-	const newfileName = `${fileName
-		.replace(/ /g, "")
-		.toLowerCase()}_${Date.now()}.${fileExtension}`
-	return newfileName
-}
-
-module.exports = {
-	uploadToS3,
 }
