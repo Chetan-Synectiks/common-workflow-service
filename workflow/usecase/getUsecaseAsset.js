@@ -47,9 +47,10 @@ exports.handler = async (event) => {
         const stageNamesAndStartDates = usecaseData.map(obj => {
             const stageName = Object.keys(obj)[0];
             const startDate = obj[stageName].start_date;
+            const status = obj[stageName].status;
             const assignedDate = obj[stageName].assigned_date  || "";
             const assigned_to = obj[stageName].assignee_id || "";
-            return { stageName, startDate,assignedDate ,assigned_to};
+            return { stageName,status, startDate,assignedDate ,assigned_to};
         });
         const employeeDetails = {};
         for (const { assigned_to } of stageNamesAndStartDates) {
@@ -70,12 +71,13 @@ exports.handler = async (event) => {
             const Url = result.doc_url;
         
             if (!DocNamesByStage[stage]) {
-                DocNamesByStage[stage] = { start_date: ""  ,assigned_date: "" , documents: [] };
+                DocNamesByStage[stage] = { start_date: "", status:"" ,assigned_date: "" , documents: [] };
             }
             DocNamesByStage[stage].documents.push({ name,id, docName, Url });
         });
-        stageNamesAndStartDates.forEach(({ stageName, startDate, assignedDate, assigned_to }) => {
+        stageNamesAndStartDates.forEach(({ stageName,status, startDate, assignedDate, assigned_to }) => {
             if (DocNamesByStage[stageName]) {
+                DocNamesByStage[stageName].status = status;
                 DocNamesByStage[stageName].start_date = startDate;
                 DocNamesByStage[stageName].assigned_date = assignedDate;
                 const resource_name = employeeDetails[assigned_to]?.resource_name || "";

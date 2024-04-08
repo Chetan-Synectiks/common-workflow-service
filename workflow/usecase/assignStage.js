@@ -48,6 +48,7 @@ exports.handler = async (event) => {
                 console.log(stageData);
 
                 stageData.assignee_id = assigned_to_id;
+                stageData.status = "inprogress";
                 if (!stageData.description)
                     stageData.description = description;
                 if (!stageData.assigned_date)
