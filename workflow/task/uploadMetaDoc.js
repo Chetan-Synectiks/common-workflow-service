@@ -23,14 +23,12 @@ exports.handler = async (event) => {
       }),
     };
   }
-  const { createdBy, doc_name, data } = JSON.parse(event.body);
+  const { doc_name, data } = JSON.parse(event.body);
   const metadocsObj = {
-    createdBy: createdBy,
     doc_name: doc_name,
     data: data,
   };
   const metadocsSchema = z.object({
-    createdBy: z.string().uuid(),
     doc_name: z.string(),
     data: z.string({
       message: "invalid string",
