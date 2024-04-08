@@ -3,7 +3,7 @@ const { SFNClient, SendTaskSuccessCommand } = require("@aws-sdk/client-sfn");
 const { z } = require("zod")
  
 exports.handler = async (event) => {
-    const task_id = event.queryStringParameters?.task_id ?? null;
+    const task_id = event.pathParameters?.taskId ?? null
     const IdSchema = z.string().uuid({ message: "Invalid task id" });
     const isUuid = IdSchema.safeParse(task_id);
     if (!isUuid.success) {
@@ -35,7 +35,7 @@ exports.handler = async (event) => {
     await client.query('BEGIN');
     try {
         const tokenResult = await client.query(getTokenQuery,[task_id]);
-        console.log("tokenResult",tokenResult);
+        console.log("tokenResult",tokenResult.rows[0]);
         const { token ,usecase_id } = tokenResult.rows[0];
         const stepFunctionClient = new SFNClient({region : "us-east-1"});
         const input = {
