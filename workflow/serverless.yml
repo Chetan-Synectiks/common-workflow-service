@@ -18,6 +18,9 @@ provider:
     region: us-east-1
     deploymentBucket:
       name: workflow-lambda-dev-serverlessdeploymentbucket-kkydemn5hkgz
+    environment:
+        BUCKET_NAME: ${env:BUCKET_NAME}
+        BUCKET_FOLDER_NAME: ${env:BUCKET_FOLDER_NAME}      
 
 
 functions: 
