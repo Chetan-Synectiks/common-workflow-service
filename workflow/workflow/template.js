@@ -1,23 +1,20 @@
 const { connectToDatabase } = require("../db/dbConnector")
-const query = `  
+const getMasterWorkflows = `  
 			SELECT *
             FROM                            
-            master_workflow WHERE id = $1`
+            master_workflow `
 exports.handler = async (event, context) => {
 	context.callbackWaitsForEmptyEventLoop = false
-	const id = event.pathParameters?.id
 	const client = await connectToDatabase()
 	try{
-	const workflowQuery = await client.query(query, [id])
-    const data = workflowQuery.rows[0]
-	await client.end()
+	const masterWorkflowsResult = await client.query(getMasterWorkflows)
 	return {
 		statusCode: 200,
 		headers: {
 			"Access-Control-Allow-Origin": "*",
 			"Access-Control-Allow-Credentials": true,
 		},
-		body: JSON.stringify([data]),
+		body: JSON.stringify(masterWorkflowsResult.rows),
 	}
 } catch (error) {
 	console.error("Error executing query", error);

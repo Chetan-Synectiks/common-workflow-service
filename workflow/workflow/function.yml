@@ -41,19 +41,12 @@ getWorkflow:
               path: /workflow/{id}
               method: get
               cors: true
-getMasterWorkflow:
-    handler: workflow/getMasterWorkflow.handler
+template:
+    handler: workflow/template.handler
     role: ${env:LAMBDA_ROLE}
     events:
         - http:
-              path: /workflow/MasterWorkflow
+              path: /workflow/template
               method: get
               cors: true  
-getTemplateWorkflow:
-    handler: workflow/getTemplateWorkflow.handler
-    role: ${env:LAMBDA_ROLE}
-    events:
-        - http:
-              path: /workflow/MasterWorkflow/{id}
-              method: get
-              cors: true                          
+                          
