@@ -1,6 +1,6 @@
 const { connectToDatabase } = require("../db/dbConnector")
 const { z } = require("zod")
-const { uploadToS3 } = require("./uploadDocs")
+const { uploadToS3 } = require("../util/uploadDocs")
 
 let query = `
 insert into metadocs_table
