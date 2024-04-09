@@ -3,7 +3,7 @@ const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3")
 
 const s3Client = new S3Client({ region: "us-east-1" })
 
-module.exports.uploadToS3 = async (fileName, data) =>  {
+module.exports.uploadToS3 = async (fileName, data) => {
 	const contentType = data.split(";")[0].split(":")[1]
 	const fileExtension = contentType.split("/")[1]
 	fileName = fileName.substring(0, fileName.lastIndexOf("."))
@@ -27,7 +27,7 @@ module.exports.uploadToS3 = async (fileName, data) =>  {
 		if (statusCode === 200) {
 			console.log("sss")
 			const link = `https://${bucket}.s3.amazonaws.com/${folder}${newfileName}`
-			return { link, fileExtension, statusCode}
+			return { link, fileExtension, statusCode }
 		}
 	} catch (error) {
 		console.error("Error uploading to S3:", error)
