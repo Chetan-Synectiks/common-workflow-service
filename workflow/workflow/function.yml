@@ -41,3 +41,12 @@ getWorkflow:
               path: /workflow/{id}
               method: get
               cors: true
+template:
+    handler: workflow/template.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+        - http:
+              path: /workflow/template
+              method: get
+              cors: true  
+                          
