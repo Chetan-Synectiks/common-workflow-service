@@ -5,28 +5,9 @@ const { z } = require("zod");
 const { v4: uuid } = require("uuid");
 
 exports.handler = async (event) => {
-  const { name, created_by_id, project_id, template_id } = JSON.parse(
-    event.body
-  );
+  const { project_id, template_id } = JSON.parse(event.body);
+
   const projectIdSchema = z.string().uuid({ message: "Invalid project id" });
-  const nameVal = z
-    .string()
-    .regex(/^[^-]*$/, {
-      message: "name should not contain `-`",
-    })
-    .min(3)
-    .safeParse(name);
-  if (!nameVal.success) {
-    return {
-      statusCode: 400,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-      },
-      body: JSON.stringify({
-        error: nameVal.error.issues[0].message,
-      }),
-    };
-  }
   const isUuid = projectIdSchema.safeParse(project_id);
   if (!isUuid.success) {
     return {
@@ -39,31 +20,32 @@ exports.handler = async (event) => {
       }),
     };
   }
-  const MetaDataSchema = z.object({
-    status: z.string(),
-    created_by: z.string().uuid({ message: "Invalid resource id" }),
-    updated_by: z.string().uuid({ message: "Invalid resource id" }),
-  });
-  const metaData = {
-    status: "inprogress",
-    created_by: created_by_id,
-    updated_by: created_by_id,
-  };
-  const parseResult = MetaDataSchema.safeParse(metaData);
-  if (!parseResult.success) {
+
+  const templateSchema = z.string({ message: "Invalid template id" });
+  const tempValResult = templateSchema.safeParse(template_id);
+  if (!tempValResult.success) {
     return {
       statusCode: 400,
       headers: {
         "Access-Control-Allow-Origin": "*",
       },
       body: JSON.stringify({
-        error: parseResult.error.formErrors.fieldErrors,
+        error: tempValResult.error.issues[0].message,
       }),
     };
   }
-
   const client = await connectToDatabase();
   try {
+    const metaData = {
+      status: "inprogress",
+    };
+    const workflowQuery =
+      "select workflow, name from master_workflow where id = $1";
+    const workflpwResult = await client.query(workflowQuery, [template_id]);
+    const stages = workflpwResult.rows[0].workflow.stages;
+    const name = workflpwResult.rows[0].name;
+    metaData.stages = stages;
+
     const projectQueryPromise = client.query(
       `select * from projects_table where id = $1`,
       [project_id]
@@ -88,10 +70,6 @@ exports.handler = async (event) => {
         }),
       };
     }
-    const workflowQuery = "select workflow from master_workflow where id = $1";
-    const workflpwResult = await client.query(workflowQuery, [template_id]);
-    const stages = workflpwResult.rows[0].workflow.stages;
-    metaData.stages = stages;
     const sfnClient = new SFNClient({ region: "us-east-1" });
     const newStateMachine = generateStateMachine1(stages);
 
