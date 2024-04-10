@@ -23,7 +23,7 @@ exports.handler = async (event) => {
 		department: z.string(),
 		start_date: z.coerce.date(),
 		end_date: z.coerce.date(),
-		image_url: z.string().url({ message: "Invalid url for project icon" }),
+		image_url: z.string().url({ message: "Invalid url for project icon" }).optional(),
 	});
 
 	const result = ProjectSchema.safeParse(newProject);
