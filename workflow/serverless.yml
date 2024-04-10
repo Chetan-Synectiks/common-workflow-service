@@ -29,6 +29,7 @@ functions:
     - ${file(./dashboard/function.yml)}
     - ${file(./task/function.yml)}
     - ${file(./resource/function.yml)}
+    - ${file(./upload/function.yml)}
 
 # custom:
 #   http:
