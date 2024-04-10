@@ -5,7 +5,8 @@ const { z } = require("zod");
 const { v4: uuid} = require("uuid")
  
 exports.handler = async (event) => {
-    const { name, created_by_id, project_id, stages } = JSON.parse(event.body);
+    let { name, created_by_id, project_id, stages} = JSON.parse(event.body);
+
     const projectIdSchema = z.string().uuid({ message: "Invalid project id" });
     const nameVal = z
         .string()

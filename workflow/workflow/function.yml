@@ -50,3 +50,11 @@ template:
               method: get
               cors: true  
                           
+addTemplate:
+    handler: workflow/addTemplate.handler
+    role: ${env:LAMBDA_ROLE}
+    events:
+        - http:
+              path: /workflow/template
+              method: post
+              cors: true
