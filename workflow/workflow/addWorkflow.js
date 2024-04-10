@@ -5,7 +5,7 @@ const { z } = require("zod");
 const { v4: uuid} = require("uuid")
  
 exports.handler = async (event) => {
-    let { name, created_by_id, project_id, stages, template_id } = JSON.parse(event.body);
+    let { name, created_by_id, project_id, stages} = JSON.parse(event.body);
 
     const projectIdSchema = z.string().uuid({ message: "Invalid project id" });
     const nameVal = z
@@ -48,7 +48,8 @@ exports.handler = async (event) => {
             tasks: z.array(z.string()),
             checklist: z.array(z.string()),
         }),
-    ).optional({ message: "Invalid request body" });
+        { message: "Invalid request body" }
+    );
     const MetaDataSchema = z.object({
         status: z.string(),
         created_by: z.string().uuid({ message: "Invalid resource id" }),
@@ -74,18 +75,7 @@ exports.handler = async (event) => {
         };
     }
     const sfnClient = new SFNClient({ region: "us-east-1" });
-
-    let newStateMachine;
-    
-    if (template_id) {
-        console.log("temp_id",template_id)
-        const templateWorkflow = await getTemplateWorkflow(template_id);
-        console.log("templateWorkflow",templateWorkflow)
-        metaData.stages = templateWorkflow.stages
-        newStateMachine = generateStateMachine1(templateWorkflow.stages);
-    } else {
-        newStateMachine = generateStateMachine1(stages);
-    }
+    const newStateMachine = generateStateMachine1(stages);
  
     const client = await connectToDatabase();
     try {
@@ -172,17 +162,3 @@ exports.handler = async (event) => {
 		await client.end();
 	}
 };
-
-async function getTemplateWorkflow(template_id) {
-    const client = await connectToDatabase();
-    try {
-        const workflowQuery = 'select workflow from master_workflow where id = $1';
-        const result = await client.query(workflowQuery, [template_id]);
-        console.log("result",result);
-        return result.rows[0].workflow;
-    } catch (error) {
-        throw error;
-    } finally {
-        await client.end();
-    }
-}
